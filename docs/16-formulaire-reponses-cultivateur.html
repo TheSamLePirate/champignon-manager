@@ -1,0 +1,1569 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Questionnaire cultivateur — Champignon Manager</title>
+  <style>
+    :root {
+      --bg: #f6f7f2;
+      --paper: #fffef8;
+      --ink: #17211a;
+      --muted: #63705f;
+      --line: #dfe6d9;
+      --green: #2f6b3f;
+      --green-2: #3f8d55;
+      --green-soft: #e8f4e8;
+      --amber: #c67b1f;
+      --amber-soft: #fff3dc;
+      --red: #b54747;
+      --red-soft: #ffe8e8;
+      --blue: #356ea8;
+      --blue-soft: #e8f1fb;
+      --gray-soft: #eef0ec;
+      --shadow: 0 18px 45px rgba(23, 33, 26, .10);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(64, 141, 85, .20), transparent 34rem),
+        radial-gradient(circle at top right, rgba(198, 123, 31, .16), transparent 30rem),
+        linear-gradient(180deg, #fbfbf6 0%, var(--bg) 35%, #eff3ea 100%);
+    }
+
+    a { color: inherit; }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .hero {
+      padding: 32px 24px 22px;
+      border-bottom: 1px solid rgba(47, 107, 63, .15);
+      background:
+        linear-gradient(135deg, rgba(47, 107, 63, .95), rgba(26, 63, 38, .94)),
+        url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='2' fill='%23ffffff' fill-opacity='.16'/%3E%3Ccircle cx='80' cy='60' r='3' fill='%23ffffff' fill-opacity='.12'/%3E%3Cpath d='M20 90q18-30 36 0' stroke='%23ffffff' stroke-opacity='.09' fill='none'/%3E%3C/svg%3E");
+      color: #fff;
+    }
+
+    .hero-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 999px;
+      color: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.10);
+      backdrop-filter: blur(10px);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    h1 {
+      margin: 16px 0 10px;
+      font-size: clamp(32px, 5vw, 58px);
+      line-height: .95;
+      letter-spacing: -.055em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 850px;
+      color: rgba(255,255,255,.84);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 11px 15px;
+      border-radius: 999px;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 10px 25px rgba(0,0,0,.12);
+      font-weight: 800;
+      white-space: nowrap;
+      transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 14px 32px rgba(0,0,0,.16); }
+    .btn:active { transform: translateY(0); }
+    .btn.secondary { color: #fff; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); box-shadow: none; }
+    .btn.green { color: #fff; background: var(--green); }
+    .btn.amber { color: #fff; background: var(--amber); }
+    .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); box-shadow: none; }
+    .btn.small { min-height: 34px; padding: 8px 11px; font-size: 13px; }
+    .btn.danger { color: #fff; background: var(--red); }
+
+    .shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 22px 24px 48px;
+      display: grid;
+      grid-template-columns: 315px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      background: rgba(255, 254, 248, .84);
+      border: 1px solid rgba(47, 107, 63, .13);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+
+    .panel-pad { padding: 16px; }
+
+    .progress-wrap {
+      display: grid;
+      gap: 12px;
+    }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      font-weight: 900;
+    }
+
+    .progress-big { font-size: 28px; letter-spacing: -.04em; }
+    .progress-label { color: var(--muted); font-size: 13px; }
+
+    .progress-bar {
+      height: 12px;
+      background: #e6eadf;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(47,107,63,.12);
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--green-2), #9fbf5b);
+      transition: width .25s ease;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .stat {
+      padding: 10px;
+      border-radius: 14px;
+      background: var(--gray-soft);
+      display: grid;
+      gap: 2px;
+    }
+
+    .stat strong { font-size: 20px; }
+    .stat span { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .stat.ok { background: var(--green-soft); color: var(--green); }
+    .stat.na { background: #edf0ed; color: #59645a; }
+    .stat.warn { background: var(--amber-soft); color: var(--amber); }
+    .stat.todo { background: var(--red-soft); color: var(--red); }
+
+    .tools {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label.label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 900;
+    }
+
+    input[type="text"], input[type="date"], input[type="email"], textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.88);
+      color: var(--ink);
+      padding: 11px 12px;
+      outline: none;
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    textarea { resize: vertical; min-height: 94px; line-height: 1.45; }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(47,107,63,.65);
+      box-shadow: 0 0 0 4px rgba(47,107,63,.10);
+      background: #fff;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+    }
+
+    .nav-list {
+      max-height: calc(100vh - 420px);
+      overflow: auto;
+      padding: 8px;
+    }
+
+    .nav-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 14px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .nav-item:hover { background: var(--green-soft); color: var(--green); }
+    .nav-item .count { font-family: var(--mono); font-size: 12px; opacity: .8; }
+
+    .main { display: grid; gap: 18px; }
+
+    .notice {
+      padding: 16px;
+      border: 1px solid rgba(53,110,168,.18);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--blue-soft), rgba(255,255,255,.85));
+      color: #20486d;
+      display: grid;
+      gap: 8px;
+    }
+
+    .notice strong { font-size: 16px; }
+    .notice p { margin: 0; line-height: 1.5; }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .meta-grid .full { grid-column: 1 / -1; }
+
+    .section {
+      scroll-margin-top: 18px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .section-head {
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(255,254,248,.95), rgba(232,244,232,.92));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-kicker {
+      color: var(--green);
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: clamp(22px, 2.8vw, 34px);
+      letter-spacing: -.04em;
+    }
+
+    .section-desc {
+      margin: 9px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 850px;
+    }
+
+    .questions {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .question-card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255,255,255,.78);
+      overflow: hidden;
+      transition: opacity .18s ease, transform .18s ease, border-color .18s ease;
+    }
+
+    .question-card[data-status="answered"] { border-color: rgba(47,107,63,.28); }
+    .question-card[data-status="na"] { opacity: .76; background: rgba(238,240,236,.72); }
+    .question-card[data-status="clarify"] { border-color: rgba(198,123,31,.32); background: rgba(255,243,220,.48); }
+
+    .question-top {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 12px;
+      align-items: start;
+      border-bottom: 1px solid rgba(223,230,217,.72);
+      background: rgba(255,254,248,.62);
+    }
+
+    .q-code {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .question-title {
+      min-height: 52px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none !important;
+      background: transparent;
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+    }
+
+    .question-title:focus { background: #fff; padding: 8px; border: 1px solid var(--line); border-radius: 12px; }
+
+    .status-select {
+      font-weight: 850;
+      border-radius: 999px;
+    }
+
+    .question-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .help {
+      padding: 12px;
+      border-radius: 14px;
+      background: #f5f7f1;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .help ul { margin: 6px 0 0 18px; padding: 0; }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 8px;
+    }
+
+    .check-option {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 750;
+    }
+
+    .check-option input { width: 18px; height: 18px; accent-color: var(--green); }
+
+    .note-area {
+      min-height: 62px;
+      background: #fffdf6;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f4f7ef;
+      color: var(--green);
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 950;
+    }
+
+    td:last-child, th:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
+
+    .table-input {
+      min-height: 38px;
+      padding: 8px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .row-actions { width: 64px; text-align: center; }
+
+    .hidden { display: none !important; }
+
+    .empty-filter {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.55);
+    }
+
+    .footer-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+      margin-top: 16px;
+      padding: 12px;
+      border: 1px solid rgba(47,107,63,.16);
+      border-radius: var(--radius-lg);
+      background: rgba(255,254,248,.88);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 -12px 30px rgba(23,33,26,.08);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .save-state {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 50;
+      max-width: min(420px, calc(100vw - 36px));
+      padding: 13px 15px;
+      border-radius: 16px;
+      background: #142019;
+      color: #fff;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      font-weight: 800;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .file-input { display: none; }
+
+    @media (max-width: 1040px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-actions { justify-content: flex-start; }
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: relative; top: 0; }
+      .nav-list { max-height: 260px; }
+    }
+
+    @media (max-width: 720px) {
+      .hero { padding: 24px 16px; }
+      .shell { padding: 16px; }
+      .meta-grid { grid-template-columns: 1fr; }
+      .question-top { grid-template-columns: 1fr; }
+      .footer-actions { align-items: stretch; }
+      .footer-actions > div { width: 100%; display: grid; gap: 8px; }
+      .btn { width: 100%; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .hero-actions, .sidebar, .footer-actions, .btn, .status-select, .tools { display: none !important; }
+      .shell { display: block; max-width: none; padding: 0; }
+      .panel, .question-card { box-shadow: none; border-color: #ccc; break-inside: avoid; }
+      .hero { color: #111; background: #fff; border-bottom: 2px solid #111; }
+      .hero p, .eyebrow { color: #111; }
+      .question-title { border: 0; }
+      textarea, input { border: 0 !important; background: #fff !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow">🍄 Champignon Manager · questionnaire cultivateur</div>
+        <h1>Process pleurotes, QR, chambres et récoltes</h1>
+        <p>
+          Remplis ce formulaire tranquillement. Chaque question peut être répondue, modifiée si elle est mal formulée,
+          ou marquée comme non pertinente. À la fin, exporte le fichier JSON et transmets-le au développeur.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn" id="exportJsonTop">⬇️ Export JSON</button>
+        <button class="btn secondary" id="importJsonTop">⬆️ Import JSON</button>
+        <button class="btn secondary" id="printTop">🖨️ Imprimer</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <section class="panel panel-pad progress-wrap">
+        <div class="progress-head">
+          <div>
+            <div class="progress-big" id="progressPct">0%</div>
+            <div class="progress-label">progression utile</div>
+          </div>
+          <div class="progress-label" id="progressRatio">0 / 0</div>
+        </div>
+        <div class="progress-bar" aria-label="Progression"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="stats-grid">
+          <div class="stat ok"><strong id="countAnswered">0</strong><span>répondues</span></div>
+          <div class="stat na"><strong id="countNa">0</strong><span>non pertinentes</span></div>
+          <div class="stat warn"><strong id="countClarify">0</strong><span>à clarifier</span></div>
+          <div class="stat todo"><strong id="countTodo">0</strong><span>à répondre</span></div>
+        </div>
+      </section>
+
+      <section class="panel panel-pad tools">
+        <div class="field">
+          <label class="label" for="searchInput">Rechercher</label>
+          <input id="searchInput" type="text" placeholder="ex: incubation, QR, humidité..." />
+        </div>
+        <div class="field">
+          <label class="label" for="statusFilter">Filtrer par statut</label>
+          <select id="statusFilter">
+            <option value="all">Tous les statuts</option>
+            <option value="todo">À répondre</option>
+            <option value="answered">Répondu</option>
+            <option value="na">Non pertinent</option>
+            <option value="clarify">À clarifier</option>
+          </select>
+        </div>
+        <button class="btn green small" id="exportJsonSide">⬇️ Exporter JSON</button>
+        <button class="btn ghost small" id="exportMarkdownSide">Exporter Markdown</button>
+        <button class="btn ghost small" id="importJsonSide">Importer JSON</button>
+        <button class="btn ghost small" id="resetFilters">Réinitialiser filtres</button>
+      </section>
+
+      <nav class="panel nav-list" id="sectionNav" aria-label="Sections du questionnaire"></nav>
+    </aside>
+
+    <main class="main">
+      <section class="notice">
+        <strong>Mode d’emploi rapide</strong>
+        <p>
+          Le navigateur sauvegarde automatiquement les réponses sur cet appareil. Mais pour transmettre ou sécuriser le travail,
+          il faut cliquer sur <b>Exporter JSON</b>. Le fichier JSON contient les réponses, les questions modifiées, les statuts,
+          les cases cochées et les tableaux.
+        </p>
+      </section>
+
+      <section class="panel panel-pad">
+        <div class="section-kicker">Informations générales</div>
+        <h2 style="margin:0 0 12px; letter-spacing:-.04em;">Qui répond ?</h2>
+        <div class="meta-grid" id="metaForm">
+          <div class="field">
+            <label class="label">Nom du cultivateur</label>
+            <input data-meta="cultivatorName" type="text" placeholder="Prénom / nom" />
+          </div>
+          <div class="field">
+            <label class="label">Exploitation / lieu</label>
+            <input data-meta="farmName" type="text" placeholder="Nom de la ferme ou du site" />
+          </div>
+          <div class="field">
+            <label class="label">Date de réponse</label>
+            <input data-meta="answeredAt" type="date" />
+          </div>
+          <div class="field">
+            <label class="label">Contact optionnel</label>
+            <input data-meta="contact" type="text" placeholder="Téléphone, email, autre" />
+          </div>
+          <div class="field full">
+            <label class="label">Contexte général / commentaire libre</label>
+            <textarea data-meta="generalNotes" placeholder="Ex: process actuel en test, réponses valables surtout pour le pleurote gris, détails à revoir ensemble..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <div id="sections"></div>
+
+      <div class="empty-filter hidden" id="emptyFilter">
+        Aucun résultat avec les filtres actuels.
+      </div>
+
+      <div class="footer-actions">
+        <div class="save-state" id="saveState">Autosauvegarde prête.</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+          <button class="btn green" id="exportJsonBottom">⬇️ Exporter le fichier JSON</button>
+          <button class="btn ghost" id="exportMarkdownBottom">Exporter Markdown</button>
+          <button class="btn amber" id="markVisibleAnswered">Marquer visibles répondues</button>
+          <button class="btn danger" id="clearLocal">Effacer local</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <input class="file-input" id="importFile" type="file" accept="application/json,.json" />
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const FORM_VERSION = "2026-06-17.v1";
+    const STORAGE_KEY = "champignon-manager:cultivator-process-form:v1";
+
+    const STATUS_LABELS = {
+      todo: "À répondre",
+      answered: "Répondu",
+      na: "Non pertinent",
+      clarify: "À clarifier"
+    };
+
+    const SECTIONS = [
+      {
+        id: "understanding",
+        title: "Validation de ce que nous avons compris",
+        desc: "Cette section sert à corriger la vision actuelle avant de détailler le process.",
+        questions: [
+          { id: "q2_confirm", title: "Est-ce que le résumé actuel est correct ?", help: "Résumé : plusieurs espèces/variétés de pleurotes, QR par unité, étapes inoculation → incubations 1/2/3 → fructifications 1/2 → récoltes flush 1/2/3, poids par unité, suivi iPhone en Wi‑Fi local, chambres avec conditions différentes, stats détaillées.", type: "longtext" },
+          { id: "q2_missing", title: "Qu’est-ce qui manque ou est faux dans ce résumé ?", help: "Note ici les erreurs, oublis, mots pas adaptés, ou cas particuliers importants.", type: "longtext" }
+        ]
+      },
+      {
+        id: "vocabulaire",
+        title: "Vocabulaire et unité de suivi",
+        desc: "Il faut choisir les mots qui seront utilisés dans l’application.",
+        questions: [
+          { id: "q4_1_1", title: "Comment appelles-tu naturellement une unité ?", help: "Exemples : ballot, bloc, sac, pain, substrat, autre.", type: "longtext" },
+          { id: "q4_1_2", title: "Une unité correspond à quoi physiquement ?", help: "Exemples : sac de substrat, ballot inoculé, bac, caisse, autre.", type: "longtext" },
+          { id: "q4_1_3", title: "Est-ce que l’unité peut être divisée physiquement en plusieurs enfants ?", help: "Exemple : un parent donne plusieurs sous-unités, chacune avec son QR code.", type: "longtext" },
+          { id: "q4_1_4", title: "Si une unité est divisée, le parent continue-t-il à exister ou devient-il seulement un historique ?", help: "Important pour savoir si le parent reste manipulable dans l’app ou s’il sert juste à relier les enfants.", type: "longtext" }
+        ]
+      },
+      {
+        id: "especes",
+        title: "Espèces, variétés et souches de pleurotes",
+        desc: "Ces réponses permettront de faire des statistiques par type cultivé.",
+        questions: [
+          { id: "q5_1", title: "Quelles espèces ou variétés de pleurotes cultives-tu actuellement ?", help: "Exemples : pleurote gris, pleurote jaune, pleurote rose, pleurote du panicaut, autre.", type: "longtext" },
+          { id: "q5_2", title: "Pour chaque espèce/variété, est-ce que le process change ?", help: "Exemples : durée d’incubation différente, température différente, humidité différente, nombre de flushs différent.", type: "longtext" },
+          { id: "q5_3", title: "Veux-tu suivre la souche précise, le fournisseur, ou seulement le type de pleurote ?", help: "Plus on trace précisément, plus les statistiques peuvent expliquer les différences de rendement.", type: "longtext" },
+          { id: "q5_4", title: "Quelles statistiques veux-tu comparer par espèce/variété ?", help: "Exemples : rendement total, rendement par flush, durée d’incubation, taux de contamination, poids moyen par unité.", type: "longtext" }
+        ]
+      },
+      {
+        id: "depart",
+        title: "Départ du process : inoculation ou réception",
+        desc: "Il faut savoir où commence la traçabilité.",
+        questions: [
+          { id: "q6_1", title: "Le process commence-t-il toujours à l’inoculation ?", help: "Ou parfois plus tard, par exemple si les unités arrivent déjà inoculées.", type: "longtext" },
+          { id: "q6_2", title: "Est-ce que certaines unités arrivent déjà inoculées ?", help: "Si oui, noter comment elles sont reçues et quelles infos sont connues.", type: "longtext" },
+          { id: "q6_3", title: "Quelles informations faut-il enregistrer à l’inoculation ?", help: "Exemples : date, heure, espèce, souche, poids substrat, poids spawn, taux d’inoculation, opérateur, lot de matière première, fournisseur.", type: "longtext" },
+          { id: "q6_4", title: "Le QR code doit-il être imprimé au moment de l’inoculation ou plus tard ?", help: "Préciser le moment idéal sur le terrain.", type: "longtext" },
+          { id: "q6_5", title: "Est-ce qu’une inoculation crée plusieurs unités en même temps ?", help: "Exemple : une session d’inoculation produit 30 sacs.", type: "longtext" },
+          { id: "q6_6", title: "Si oui, veux-tu pouvoir sélectionner toutes les unités d’une même session d’inoculation ?", help: "Utile pour actions en masse et statistiques par session.", type: "longtext" }
+        ]
+      },
+      {
+        id: "parents",
+        title: "Parent, enfants et lots groupés",
+        desc: "Pour gérer les sélections en masse et la traçabilité complète.",
+        questions: [
+          { id: "q7_1", title: "Dans ton fonctionnement, qu’est-ce qui devrait être le parent ?", help: "Exemples : session d’inoculation, lot de substrat, espèce/souche, fournisseur, autre.", type: "longtext" },
+          { id: "q7_2", title: "Les enfants sont-ils les unités physiques avec QR code ?", help: "Confirme si chaque enfant correspond bien à un objet manipulé sur le terrain.", type: "longtext" },
+          { id: "q7_3", title: "Dois-tu parfois faire avancer tous les enfants d’un même parent en même temps ?", help: "Exemple : passer tous les sacs inoculés le même jour en incubation 2.", type: "longtext" },
+          { id: "q7_4", title: "Dois-tu parfois faire avancer seulement une partie des enfants ?", help: "Exemple : seulement ceux d’une chambre, ou seulement ceux qui sont prêts.", type: "longtext" },
+          { id: "q7_5", title: "Quels filtres sont indispensables pour sélectionner des unités en masse ?", help: "Coche les filtres utiles et ajoute des précisions si besoin.", type: "checklist", options: ["parent", "date d’inoculation", "espèce/variété", "souche", "chambre", "phase", "incubation 1/2/3", "statut sanitaire", "autre"] }
+        ]
+      },
+      {
+        id: "process-global",
+        title: "Process global à décrire",
+        desc: "Ici on valide les grandes phases et la logique de passage d’une étape à l’autre.",
+        questions: [
+          { id: "q8_1", title: "La liste des phases est-elle correcte ?", help: "Liste proposée : inoculation, incubation 1, incubation 2, incubation 3, fructification 1, fructification 2, récolte flush 1, récolte flush 2, récolte flush 3, fin de cycle. Corrige, renomme, ajoute ou supprime.", type: "longtext" },
+          { id: "q8_2", title: "La distinction phase / étape est-elle utile pour toi ?", help: "Dans l’app : une phase est une grande période, une étape est un moment plus précis. Exemple : phase incubation avec étapes incubation 1/2/3.", type: "longtext" },
+          { id: "q8_3", title: "Le passage d’une étape à l’autre est-il basé sur durée, observation, mesure, décision humaine ou règle fixe ?", help: "Réponse générale. Le détail sera demandé étape par étape ensuite.", type: "longtext" }
+        ]
+      },
+      {
+        id: "inoculation",
+        title: "Détail étape — Inoculation",
+        desc: "Création ou préparation de l’unité de culture avec le mycélium/spawn.",
+        questions: [
+          { id: "q9_1_1", title: "Que fait-on exactement à l’inoculation ?", help: "Décris les gestes et décisions importantes.", type: "longtext" },
+          { id: "q9_1_2", title: "Combien d’unités sont créées en général ?", help: "Donner une quantité typique ou une fourchette.", type: "longtext" },
+          { id: "q9_1_3", title: "Quelles informations faut-il saisir à l’inoculation ?", help: "Informations obligatoires ou utiles pour la traçabilité.", type: "longtext" },
+          { id: "q9_1_4", title: "Quelle étiquette QR doit être imprimée à l’inoculation ?", help: "QR par unité ? QR par parent/session ? Quelles infos imprimées en texte ?", type: "longtext" },
+          { id: "q9_1_5", title: "Quel poids faut-il enregistrer à l’inoculation ?", help: "Poids substrat, poids spawn, poids total, poids par unité, autre.", type: "longtext" },
+          { id: "q9_1_6", title: "Y a-t-il un contrôle qualité à ce moment ?", help: "Exemples : aspect, odeur, propreté, température, lot matière première.", type: "longtext" },
+          { id: "q9_1_7", title: "Quelle est l’étape suivante après inoculation ?", help: "Exemple : incubation 1, repos, contrôle, autre.", type: "longtext" }
+        ]
+      },
+      {
+        id: "incubation-1",
+        title: "Détail étape — Incubation 1",
+        desc: "Première période où le mycélium colonise le substrat.",
+        questions: [
+          { id: "q9_2_1", title: "Combien de temps dure généralement incubation 1 ?", help: "Donner une durée typique et une fourchette.", type: "longtext" },
+          { id: "q9_2_2", title: "Quelle est la température cible en incubation 1 ?", help: "Donner une valeur ou plage, et préciser si ça dépend de la variété.", type: "longtext" },
+          { id: "q9_2_3", title: "Quelle est l’humidité cible en incubation 1 ?", help: "Donner une valeur ou plage si elle est suivie.", type: "longtext" },
+          { id: "q9_2_4", title: "Incubation 1 se fait-elle en lumière ou obscurité ?", help: "Préciser si c’est important ou non.", type: "longtext" },
+          { id: "q9_2_5", title: "Le CO2 ou l’aération sont-ils importants en incubation 1 ?", help: "Préciser si c’est mesuré, observé, ou réglé empiriquement.", type: "longtext" },
+          { id: "q9_2_6", title: "Qu’est-ce qu’on doit observer en incubation 1 ?", help: "Exemples : colonisation, contamination, couleur, odeur, humidité du sac.", type: "longtext" },
+          { id: "q9_2_7", title: "Quand sait-on qu’on peut passer en incubation 2 ?", help: "Critère visuel, durée, pourcentage de colonisation, décision humaine, autre.", type: "longtext" },
+          { id: "q9_2_8", title: "Quelles actions doit proposer l’app en incubation 1 ?", help: "Exemples : ajouter observation, mesure, signaler contamination, passer étape, déplacer.", type: "longtext" }
+        ]
+      },
+      {
+        id: "incubation-2",
+        title: "Détail étape — Incubation 2",
+        desc: "Deuxième période d’incubation, si elle existe vraiment dans le process.",
+        questions: [
+          { id: "q9_3_1", title: "Pourquoi séparer incubation 1 et incubation 2 ?", help: "Explique la différence métier entre les deux.", type: "longtext" },
+          { id: "q9_3_2", title: "Qu’est-ce qui change en incubation 2 ?", help: "Conditions, manipulation, état du mycélium, objectif, chambre, etc.", type: "longtext" },
+          { id: "q9_3_3", title: "Quelle est la durée habituelle d’incubation 2 ?", help: "Durée typique et fourchette.", type: "longtext" },
+          { id: "q9_3_4", title: "Quelles sont les conditions cible en incubation 2 ?", help: "Température, humidité, lumière, aération/CO2.", type: "longtext" },
+          { id: "q9_3_5", title: "Quelle observation est attendue en incubation 2 ?", help: "Ce qu’il faut regarder pour savoir si tout va bien.", type: "longtext" },
+          { id: "q9_3_6", title: "Quel est le critère de passage à incubation 3 ?", help: "Durée, aspect, mesure, décision humaine.", type: "longtext" },
+          { id: "q9_3_7", title: "Quelles actions sont utiles dans l’app en incubation 2 ?", help: "Actions terrain depuis iPhone ou desktop.", type: "longtext" }
+        ]
+      },
+      {
+        id: "incubation-3",
+        title: "Détail étape — Incubation 3",
+        desc: "Troisième période d’incubation ou fin de colonisation avant fructification.",
+        questions: [
+          { id: "q9_4_1", title: "À quoi correspond incubation 3 ?", help: "Décris l’objectif de cette étape.", type: "longtext" },
+          { id: "q9_4_2", title: "Incubation 3 est-elle obligatoire pour tous les pleurotes ?", help: "Précise les exceptions selon variété ou méthode.", type: "longtext" },
+          { id: "q9_4_3", title: "Quelle est la durée habituelle d’incubation 3 ?", help: "Durée typique et fourchette.", type: "longtext" },
+          { id: "q9_4_4", title: "Quelles sont les conditions cible en incubation 3 ?", help: "Température, humidité, lumière, aération/CO2.", type: "longtext" },
+          { id: "q9_4_5", title: "Quels signes visuels faut-il noter en incubation 3 ?", help: "Colonisation complète, couleur, densité, anomalies.", type: "longtext" },
+          { id: "q9_4_6", title: "Quels sont les risques particuliers en incubation 3 ?", help: "Exemples : contamination, dessèchement, retard.", type: "longtext" },
+          { id: "q9_4_7", title: "Quel est le critère de passage en fructification ?", help: "Durée, signe visuel, action humaine, mesure, autre.", type: "longtext" }
+        ]
+      },
+      {
+        id: "fructification-1",
+        title: "Détail étape — Fructification 1",
+        desc: "Étape où l’on déclenche ou accompagne l’apparition des champignons.",
+        questions: [
+          { id: "q9_5_1", title: "Que changes-tu en passant en fructification 1 ?", help: "Température, humidité, lumière, aération, ouverture du sac/bloc, déplacement, choc, autre.", type: "longtext" },
+          { id: "q9_5_2", title: "Combien de temps avant de voir les premiers signes en fructification 1 ?", help: "Durée typique et fourchette.", type: "longtext" },
+          { id: "q9_5_3", title: "Quelles observations sont importantes en fructification 1 ?", help: "Exemples : primordia, humidité surface, couleur, densité, contamination.", type: "longtext" },
+          { id: "q9_5_4", title: "Quels problèmes peuvent apparaître en fructification 1 ?", help: "Exemples : dessèchement, excès d’eau, CO2, déformation, contamination.", type: "longtext" },
+          { id: "q9_5_5", title: "Quelle chambre ou zone est utilisée en fructification 1 ?", help: "Précise si plusieurs chambres possibles.", type: "longtext" },
+          { id: "q9_5_6", title: "Quelles actions sont utiles dans l’app en fructification 1 ?", help: "Observations, mesures, photos, passage étape, alerte, etc.", type: "longtext" }
+        ]
+      },
+      {
+        id: "fructification-2",
+        title: "Détail étape — Fructification 2",
+        desc: "Deuxième phase de fructification, peut-être maturation ou préparation de récolte.",
+        questions: [
+          { id: "q9_6_1", title: "Pourquoi séparer fructification 1 et fructification 2 ?", help: "Explique la différence concrète.", type: "longtext" },
+          { id: "q9_6_2", title: "Qu’est-ce qui change entre fructification 1 et 2 ?", help: "Conditions, observation, maturité, actions, chambre, etc.", type: "longtext" },
+          { id: "q9_6_3", title: "Quelle est la durée habituelle de fructification 2 ?", help: "Durée typique et fourchette.", type: "longtext" },
+          { id: "q9_6_4", title: "Quelles sont les conditions cible en fructification 2 ?", help: "Température, humidité, lumière, aération/CO2.", type: "longtext" },
+          { id: "q9_6_5", title: "Comment sait-on que la récolte flush 1 est prête ?", help: "Signes visuels, taille, forme du chapeau, timing, décision humaine.", type: "longtext" },
+          { id: "q9_6_6", title: "Faut-il une observation “maturité récolte” ?", help: "Exemple : pas prêt, bientôt, prêt, trop tard.", type: "longtext" },
+          { id: "q9_6_7", title: "Quelles actions sont utiles dans l’app en fructification 2 ?", help: "Préparer récolte, ajouter photo, marquer maturité, alerte, etc.", type: "longtext" }
+        ]
+      },
+      {
+        id: "flush-1",
+        title: "Détail étape — Récolte flush 1",
+        desc: "Première vague de récolte sur une unité.",
+        questions: [
+          { id: "q9_7_1", title: "Comment décides-tu de récolter le flush 1 ?", help: "Critères visuels, durée, planning, qualité.", type: "longtext" },
+          { id: "q9_7_2", title: "Mesures-tu le poids par unité au flush 1 ?", help: "Précise comment la pesée est faite.", type: "longtext" },
+          { id: "q9_7_3", title: "Au flush 1, notes-tu poids brut, poids net, pertes, ou seulement poids récolté ?", help: "Important pour les statistiques et le stock.", type: "longtext" },
+          { id: "q9_7_4", title: "Notes-tu la qualité au flush 1 ?", help: "Exemples : A/B/C, vendable/non vendable, calibre.", type: "longtext" },
+          { id: "q9_7_5", title: "Notes-tu la cause des pertes au flush 1 ?", help: "Exemples : trop vieux, abîmé, contamination, casse, sec.", type: "longtext" },
+          { id: "q9_7_6", title: "Que devient l’unité après le flush 1 ?", help: "Repos, relance, fructification suivante, fin, autre.", type: "longtext" },
+          { id: "q9_7_7", title: "Après flush 1, l’unité passe-t-elle en repos, fructification 2, ou directement flush 2 ?", help: "Précise le chemin réel.", type: "longtext" }
+        ]
+      },
+      {
+        id: "flush-2",
+        title: "Détail étape — Récolte flush 2",
+        desc: "Deuxième vague de récolte.",
+        questions: [
+          { id: "q9_8_1", title: "Toutes les unités font-elles un flush 2 ?", help: "Sinon, préciser les raisons d’arrêt.", type: "longtext" },
+          { id: "q9_8_2", title: "Quelle est la durée entre flush 1 et flush 2 ?", help: "Durée typique et fourchette.", type: "longtext" },
+          { id: "q9_8_3", title: "Y a-t-il des conditions particulières entre flush 1 et flush 2 ?", help: "Repos, humidité, température, manipulation, nettoyage, autre.", type: "longtext" },
+          { id: "q9_8_4", title: "Le poids est-il aussi mesuré par unité au flush 2 ?", help: "Même méthode que flush 1 ?", type: "longtext" },
+          { id: "q9_8_5", title: "La qualité est-elle différente du flush 1 ?", help: "Différences fréquentes ou non.", type: "longtext" },
+          { id: "q9_8_6", title: "Que devient l’unité après flush 2 ?", help: "Flush 3, fin, compost, autre.", type: "longtext" }
+        ]
+      },
+      {
+        id: "flush-3",
+        title: "Détail étape — Récolte flush 3",
+        desc: "Troisième vague, souvent optionnelle selon rendement et espace.",
+        questions: [
+          { id: "q9_9_1", title: "Le flush 3 est-il fréquent ou optionnel ?", help: "Précise selon variété ou contexte.", type: "longtext" },
+          { id: "q9_9_2", title: "Quand décide-t-on d’arrêter avant flush 3 ?", help: "Rendement trop faible, contamination, besoin de place, qualité, autre.", type: "longtext" },
+          { id: "q9_9_3", title: "Le rendement du flush 3 vaut-il encore le coût et l’espace ?", help: "Réponse pratique : oui/non/selon les cas.", type: "longtext" },
+          { id: "q9_9_4", title: "Le poids est-il mesuré par unité au flush 3 ?", help: "Même méthode que les autres flushs ?", type: "longtext" },
+          { id: "q9_9_5", title: "Que devient l’unité après flush 3 ?", help: "Fin, compost, rebut, autre.", type: "longtext" }
+        ]
+      },
+      {
+        id: "fin-cycle",
+        title: "Détail étape — Fin de cycle",
+        desc: "Ce qui se passe quand l’unité ne produit plus ou sort du process.",
+        questions: [
+          { id: "q9_10_1", title: "Quels sont les statuts possibles en fin de cycle ?", help: "Exemples : terminé, compost, rebut, contaminé, autre.", type: "longtext" },
+          { id: "q9_10_2", title: "Faut-il mesurer un poids final ?", help: "Utile ou non pour calculer perte/rendement matière.", type: "longtext" },
+          { id: "q9_10_3", title: "Faut-il noter une raison de fin ?", help: "Exemples : fin normale, contamination, manque de place, rendement faible.", type: "longtext" },
+          { id: "q9_10_4", title: "Faut-il garder la chambre/emplacement jusqu’au nettoyage ?", help: "Pour savoir si l’emplacement reste occupé dans l’app.", type: "longtext" },
+          { id: "q9_10_5", title: "Faut-il créer une tâche de nettoyage en fin de cycle ?", help: "Exemple : après sortie des unités, nettoyage chambre/rack.", type: "longtext" }
+        ]
+      },
+      {
+        id: "chambres",
+        title: "Conditions de culture par chambre",
+        desc: "Relier les unités aux espaces et aux conditions réelles.",
+        questions: [
+          { id: "q10_1", title: "Quels espaces veux-tu suivre ?", help: "Exemples : chambre incubation, chambre fructification, zone préparation, zone stockage, étagères/racks, autre.", type: "longtext" },
+          { id: "q10_2", title: "Faut-il suivre seulement la chambre, ou aussi l’étagère/le niveau/la position ?", help: "Plus le niveau est fin, plus la traçabilité est précise mais plus la saisie est lourde.", type: "longtext" },
+          { id: "q10_3", title: "Quelles sont les conditions cibles par chambre ?", help: "Remplis le tableau. Tu peux ajouter des lignes.", type: "table", columns: ["Chambre/zone", "Température cible", "Humidité cible", "Lumière", "Aération/CO2", "Usage"], rows: 3 },
+          { id: "q10_4", title: "Une unité peut-elle changer plusieurs fois de chambre ?", help: "Précise les cas typiques.", type: "longtext" },
+          { id: "q10_5", title: "Veux-tu scanner le QR d’une chambre pour voir toutes les unités présentes ?", help: "Utile pour mesures de chambre et inventaire rapide.", type: "longtext" }
+        ]
+      },
+      {
+        id: "mesures",
+        title: "Mesures à saisir ou récupérer",
+        desc: "Mesures manuelles aujourd’hui, appareils Inkbird plus tard.",
+        questions: [
+          { id: "q11_1", title: "Quelles mesures fais-tu aujourd’hui manuellement ?", help: "Exemples : température, humidité, poids, nombre de sacs, contamination.", type: "longtext" },
+          { id: "q11_2", title: "À quelle fréquence fais-tu ces mesures ?", help: "Exemples : matin/soir, quotidien, par étape, seulement si problème.", type: "longtext" },
+          { id: "q11_3", title: "Quelles mesures sont liées à une unité et lesquelles sont liées à une chambre ?", help: "Exemple : poids = unité ; température = chambre.", type: "longtext" },
+          { id: "q11_4", title: "Les appareils Inkbird doivent-ils seulement servir d’historique, ou aussi déclencher des alertes ?", help: "ITC-308-WIFI pour température, IHC-200-WIFI pour humidité. Contrôle actif plus tard seulement si souhaité.", type: "longtext" },
+          { id: "q11_5", title: "Quelles valeurs veux-tu voir dans les statistiques ?", help: "Exemples : température moyenne par chambre, humidité au moment de fructification, écart aux consignes.", type: "longtext" }
+        ]
+      },
+      {
+        id: "observations",
+        title: "Observations terrain",
+        desc: "Constats rapides depuis l’iPhone : pousse visible, contamination, trop sec, prêt à récolter, etc.",
+        questions: [
+          { id: "q12_1", title: "Quelles observations veux-tu pouvoir saisir rapidement ?", help: "Liste les observations utiles sur le terrain.", type: "longtext" },
+          { id: "q12_2", title: "Quelles observations doivent être proposées selon l’étape ?", help: "Exemple : en incubation, contamination/colonisation ; en fructification, maturité/humidité.", type: "longtext" },
+          { id: "q12_3", title: "Faut-il pouvoir prendre une photo à chaque observation ?", help: "Photo optionnelle ou systématique ?", type: "longtext" },
+          { id: "q12_4", title: "Pour quelles observations la photo devrait-elle être obligatoire ?", help: "Exemple : contamination, anomalie, test expérimental.", type: "longtext" },
+          { id: "q12_5", title: "Faut-il une notion de gravité ?", help: "Exemple : faible, moyen, critique.", type: "longtext" }
+        ]
+      },
+      {
+        id: "iphone-actions",
+        title: "Actions à faire depuis l’iPhone",
+        desc: "Après scan QR, l’app doit proposer les bonnes actions au bon moment.",
+        questions: [
+          { id: "q13_1", title: "Quelles actions veux-tu absolument après scan d’une unité ?", help: "Coche les actions utiles et ajoute tes précisions.", type: "checklist", options: ["voir fiche", "avancer à l’étape suivante", "ajouter observation", "ajouter mesure", "déplacer chambre", "récolter", "déclarer contamination", "mettre en pause", "terminer / compost", "réimprimer QR", "autre"] },
+          { id: "q13_2", title: "Quelles actions veux-tu faire en masse sur plusieurs unités ?", help: "Exemples : déplacer 40 unités en chambre fructification, passer toutes les unités du parent X en incubation 2.", type: "longtext" },
+          { id: "q13_3", title: "Faut-il une validation avant action en masse ?", help: "Important pour éviter une erreur sur beaucoup d’unités.", type: "longtext" },
+          { id: "q13_4", title: "Faut-il pouvoir annuler ou corriger une action ?", help: "Si oui, qui a le droit et jusqu’à quand ?", type: "longtext" }
+        ]
+      },
+      {
+        id: "recoltes",
+        title: "Récoltes et poids par unité",
+        desc: "La pesée par unité est centrale pour les statistiques de rendement.",
+        questions: [
+          { id: "q14_1", title: "Le poids est-il mesuré pour chaque unité à chaque flush ?", help: "Précise la méthode et les exceptions.", type: "longtext" },
+          { id: "q14_2", title: "Quelle unité de poids utilises-tu ?", help: "Grammes, kilogrammes, les deux selon contexte ?", type: "longtext" },
+          { id: "q14_3", title: "Faut-il enregistrer poids total, poids vendable, pertes, qualité, calibre, destination ?", help: "Explique ce qui est utile ou trop lourd à saisir.", type: "longtext" },
+          { id: "q14_4", title: "La récolte d’une unité peut-elle être mélangée avec celle d’une autre unité ?", help: "Important pour la traçabilité ascendante des produits finaux.", type: "longtext" },
+          { id: "q14_5", title: "Si les récoltes sont mélangées, faut-il garder les proportions exactes ?", help: "Exemple : produit final issu à 60% unité A et 40% unité B.", type: "longtext" },
+          { id: "q14_6", title: "Quels indicateurs de rendement veux-tu ?", help: "Exemples : poids total par unité, rendement par flush, rendement par kg de substrat, rendement par chambre, rendement par espèce.", type: "longtext" }
+        ]
+      },
+      {
+        id: "statistiques",
+        title: "Statistiques souhaitées",
+        desc: "On priorise les stats vraiment utiles pour piloter la culture.",
+        questions: [
+          { id: "q15_1", title: "Quelles statistiques veux-tu voir en premier ?", help: "Coche les indicateurs importants.", type: "checklist", options: ["rendement total par unité", "rendement par flush", "rendement par espèce/variété", "rendement par date d’inoculation", "rendement par parent/session", "rendement par chambre", "durée moyenne incubation", "durée moyenne fructification", "taux de contamination", "pertes", "comparaison température/humidité", "autre"] },
+          { id: "q15_2", title: "Veux-tu comparer les enfants d’un même parent entre eux ?", help: "Utile pour voir quelles unités d’une même session performent mieux.", type: "longtext" },
+          { id: "q15_3", title: "Veux-tu comparer les performances entre chambres ?", help: "Rendement, contamination, durée, qualité, etc.", type: "longtext" },
+          { id: "q15_4", title: "Veux-tu exporter les données en CSV/Excel ?", help: "Pour analyses externes ou partage.", type: "longtext" }
+        ]
+      },
+      {
+        id: "alertes",
+        title: "Alertes et tâches",
+        desc: "Définir ce que l’application doit signaler automatiquement.",
+        questions: [
+          { id: "q16_1", title: "Quelles situations doivent créer une alerte ?", help: "Exemples : incubation trop longue, humidité trop basse, contamination, récolte prête, chambre hors température.", type: "longtext" },
+          { id: "q16_2", title: "Faut-il des tâches automatiques ?", help: "Exemples : vérifier incubation, récolter aujourd’hui, nettoyer chambre.", type: "longtext" },
+          { id: "q16_3", title: "Les alertes doivent-elles être visibles seulement dans l’app ou aussi envoyées ailleurs ?", help: "Exemples : notification téléphone, email, Telegram, autre — pas forcément MVP.", type: "longtext" }
+        ]
+      },
+      {
+        id: "qr",
+        title: "QR code et étiquettes",
+        desc: "Le QR relie l’unité physique à l’application.",
+        questions: [
+          { id: "q17_1", title: "Quelles unités doivent avoir un QR ?", help: "Unité de culture, parent/session, chambre, récolte, produit final, caisse, autre.", type: "longtext" },
+          { id: "q17_2", title: "Que doit afficher l’étiquette en texte lisible ?", help: "Exemples : code unité, espèce, date inoculation, parent, chambre, phase.", type: "longtext" },
+          { id: "q17_3", title: "Faut-il un QR pour les chambres ?", help: "Utile pour voir toutes les unités présentes et saisir des mesures de chambre.", type: "longtext" },
+          { id: "q17_4", title: "Faut-il un QR pour les récoltes ou produits finaux ?", help: "Utile pour traçabilité jusqu’à la vente ou au stock.", type: "longtext" },
+          { id: "q17_5", title: "Que faire si un QR est abîmé ou perdu ?", help: "Réimprimer même QR, créer nouveau QR, révoquer ancien, autre.", type: "longtext" }
+        ]
+      },
+      {
+        id: "problemes",
+        title: "Cas particuliers et problèmes",
+        desc: "Les cas rares doivent être prévus pour éviter de bloquer l’utilisateur.",
+        questions: [
+          { id: "q18_1", title: "Que fais-tu en cas de contamination ?", help: "Quarantaine, rebut, observation, photo, nettoyage, poursuite, autre.", type: "longtext" },
+          { id: "q18_2", title: "Est-ce qu’une unité contaminée peut encore produire ?", help: "Préciser les cas ou interdictions.", type: "longtext" },
+          { id: "q18_3", title: "Que fais-tu si une unité est en retard ?", help: "Attente, changement conditions, rebut, alerte, observation.", type: "longtext" },
+          { id: "q18_4", title: "Que fais-tu si une unité est déplacée sans scan ?", help: "Correction manuelle, scan plus tard, inventaire, autre.", type: "longtext" },
+          { id: "q18_5", title: "Y a-t-il des cas où il faut regrouper ou fusionner des unités ?", help: "Important car la fusion complique la traçabilité.", type: "longtext" }
+        ]
+      },
+      {
+        id: "synthese",
+        title: "Synthèse finale du process",
+        desc: "Tableau simple pour transformer les réponses en process configurable dans l’application.",
+        questions: [
+          { id: "q20_table", title: "Version simplifiée du process à confirmer", help: "Remplis ou corrige les lignes. Tu peux ajouter une étape.", type: "table", columns: ["Ordre", "Phase/étape", "Durée typique", "Température", "Humidité", "Observation clé", "Action suivante"], rowsData: [
+            ["1", "Inoculation", "", "", "", "", ""],
+            ["2", "Incubation 1", "", "", "", "", ""],
+            ["3", "Incubation 2", "", "", "", "", ""],
+            ["4", "Incubation 3", "", "", "", "", ""],
+            ["5", "Fructification 1", "", "", "", "", ""],
+            ["6", "Fructification 2", "", "", "", "", ""],
+            ["7", "Récolte flush 1", "", "", "", "poids par unité", ""],
+            ["8", "Récolte flush 2", "", "", "", "poids par unité", ""],
+            ["9", "Récolte flush 3", "", "", "", "poids par unité", ""],
+            ["10", "Fin de cycle", "", "", "", "", ""]
+          ] },
+          { id: "q19_resume", title: "Quelles sont les 5 décisions ou règles les plus importantes à retenir ?", help: "Réponse libre pour résumer ce qui compte vraiment dans ton process.", type: "longtext" }
+        ]
+      }
+    ];
+
+    let state = loadState();
+    let saveTimer = null;
+
+    function defaultMeta() {
+      const today = new Date().toISOString().slice(0, 10);
+      return { cultivatorName: "", farmName: "", answeredAt: today, contact: "", generalNotes: "" };
+    }
+
+    function questionDefaults(q) {
+      const base = { title: q.title, status: "todo", answer: "", notes: "", selected: [], table: null, updatedAt: null };
+      if (q.type === "table") base.table = buildDefaultRows(q);
+      return base;
+    }
+
+    function buildDefaultRows(q) {
+      if (q.rowsData) {
+        return q.rowsData.map(row => Object.fromEntries(q.columns.map((col, idx) => [col, row[idx] || ""])));
+      }
+      const count = q.rows || 2;
+      return Array.from({ length: count }, () => Object.fromEntries(q.columns.map(col => [col, ""])));
+    }
+
+    function allQuestions() {
+      return SECTIONS.flatMap(section => section.questions.map(q => ({ ...q, sectionId: section.id, sectionTitle: section.title })));
+    }
+
+    function ensureStateShape(raw) {
+      const next = {
+        schema: "champignon-manager.cultivator-process-response.v1",
+        formVersion: FORM_VERSION,
+        meta: { ...defaultMeta(), ...(raw && raw.meta ? raw.meta : {}) },
+        questions: raw && raw.questions ? raw.questions : {},
+        savedAt: raw && raw.savedAt ? raw.savedAt : null
+      };
+      allQuestions().forEach(q => {
+        next.questions[q.id] = { ...questionDefaults(q), ...(next.questions[q.id] || {}) };
+        if (q.type === "table" && !Array.isArray(next.questions[q.id].table)) {
+          next.questions[q.id].table = buildDefaultRows(q);
+        }
+      });
+      return next;
+    }
+
+    function loadState() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        return ensureStateShape(raw);
+      } catch (error) {
+        console.warn("Impossible de charger la sauvegarde locale", error);
+        return ensureStateShape(null);
+      }
+    }
+
+    function scheduleSave() {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveNow, 250);
+    }
+
+    function saveNow() {
+      state.savedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateSaveState();
+    }
+
+    function updateSaveState() {
+      const el = document.getElementById("saveState");
+      if (!state.savedAt) {
+        el.textContent = "Autosauvegarde prête.";
+        return;
+      }
+      el.textContent = "Autosauvegardé à " + new Date(state.savedAt).toLocaleString("fr-FR");
+    }
+
+    function render() {
+      renderMeta();
+      renderNav();
+      renderSections();
+      updateCounts();
+      updateSaveState();
+      applyFilters();
+    }
+
+    function renderMeta() {
+      document.querySelectorAll("[data-meta]").forEach(input => {
+        input.value = state.meta[input.dataset.meta] || "";
+      });
+    }
+
+    function renderNav() {
+      const nav = document.getElementById("sectionNav");
+      nav.innerHTML = SECTIONS.map(section => {
+        const count = section.questions.length;
+        return `<a class="nav-item" href="#${section.id}"><span>${escapeHtml(section.title)}</span><span class="count" id="nav-count-${section.id}">0/${count}</span></a>`;
+      }).join("");
+    }
+
+    function renderSections() {
+      const root = document.getElementById("sections");
+      root.innerHTML = SECTIONS.map(section => `
+        <section class="panel section" id="${section.id}" data-section="${section.id}">
+          <div class="section-head">
+            <div class="section-kicker">${section.questions.length} question${section.questions.length > 1 ? "s" : ""}</div>
+            <h2>${escapeHtml(section.title)}</h2>
+            <p class="section-desc">${escapeHtml(section.desc || "")}</p>
+          </div>
+          <div class="questions">
+            ${section.questions.map(q => renderQuestion(q)).join("")}
+          </div>
+        </section>
+      `).join("");
+    }
+
+    function renderQuestion(q) {
+      const qs = state.questions[q.id];
+      return `
+        <article class="question-card" data-qid="${q.id}" data-status="${qs.status}" data-section-card="${q.sectionId || ""}">
+          <div class="question-top">
+            <div>
+              <div class="q-code">${q.id}</div>
+              <textarea class="question-title" data-qid="${q.id}" data-field="title" aria-label="Question modifiable">${escapeHtml(qs.title)}</textarea>
+            </div>
+            <div class="field">
+              <label class="label">Statut</label>
+              <select class="status-select" data-qid="${q.id}" data-field="status">
+                ${Object.entries(STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${qs.status === value ? "selected" : ""}>${label}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <div class="question-body">
+            ${q.help ? `<div class="help">${formatHelp(q.help)}</div>` : ""}
+            ${renderAnswerControl(q, qs)}
+            <div class="field">
+              <label class="label">Notes / précisions / à revoir ensemble</label>
+              <textarea class="note-area" data-qid="${q.id}" data-field="notes" placeholder="Optionnel : précision, doute, contexte, exemple concret...">${escapeHtml(qs.notes || "")}</textarea>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderAnswerControl(q, qs) {
+      if (q.type === "checklist") {
+        const options = q.options || [];
+        return `
+          <div class="check-grid">
+            ${options.map(option => `
+              <label class="check-option">
+                <input type="checkbox" data-qid="${q.id}" data-field="selected" value="${escapeHtml(option)}" ${qs.selected && qs.selected.includes(option) ? "checked" : ""} />
+                <span>${escapeHtml(option)}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="field">
+            <label class="label">Réponse / précisions</label>
+            <textarea data-qid="${q.id}" data-field="answer" placeholder="Ajoute les détails, exceptions, priorités...">${escapeHtml(qs.answer || "")}</textarea>
+          </div>
+        `;
+      }
+      if (q.type === "table") {
+        return renderTable(q, qs);
+      }
+      return `
+        <div class="field">
+          <label class="label">Réponse</label>
+          <textarea data-qid="${q.id}" data-field="answer" placeholder="Réponds ici. Tu peux écrire court ou détaillé.">${escapeHtml(qs.answer || "")}</textarea>
+        </div>
+      `;
+    }
+
+    function renderTable(q, qs) {
+      const rows = Array.isArray(qs.table) ? qs.table : buildDefaultRows(q);
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>${q.columns.map(col => `<th>${escapeHtml(col)}</th>`).join("")}<th class="row-actions">Action</th></tr>
+            </thead>
+            <tbody>
+              ${rows.map((row, rowIndex) => `
+                <tr>
+                  ${q.columns.map(col => `
+                    <td><input class="table-input" data-qid="${q.id}" data-field="table" data-row="${rowIndex}" data-col="${escapeHtml(col)}" value="${escapeHtml(row[col] || "")}" /></td>
+                  `).join("")}
+                  <td class="row-actions"><button class="btn ghost small" data-action="delete-row" data-qid="${q.id}" data-row="${rowIndex}" type="button">✕</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+        <button class="btn ghost small" data-action="add-row" data-qid="${q.id}" type="button">+ Ajouter une ligne</button>
+      `;
+    }
+
+    function formatHelp(text) {
+      return escapeHtml(text).replace(/\n/g, "<br />");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function updateCounts() {
+      const questions = allQuestions();
+      const counts = { total: questions.length, answered: 0, na: 0, clarify: 0, todo: 0 };
+      questions.forEach(q => {
+        const status = state.questions[q.id].status || "todo";
+        counts[status] = (counts[status] || 0) + 1;
+      });
+      const done = counts.answered + counts.na;
+      const pct = counts.total ? Math.round(done / counts.total * 100) : 0;
+      document.getElementById("progressPct").textContent = pct + "%";
+      document.getElementById("progressRatio").textContent = `${done} / ${counts.total}`;
+      document.getElementById("progressFill").style.width = pct + "%";
+      document.getElementById("countAnswered").textContent = counts.answered;
+      document.getElementById("countNa").textContent = counts.na;
+      document.getElementById("countClarify").textContent = counts.clarify;
+      document.getElementById("countTodo").textContent = counts.todo;
+
+      SECTIONS.forEach(section => {
+        const sectionDone = section.questions.filter(q => ["answered", "na"].includes(state.questions[q.id].status)).length;
+        const el = document.getElementById(`nav-count-${section.id}`);
+        if (el) el.textContent = `${sectionDone}/${section.questions.length}`;
+      });
+    }
+
+    function maybeAutoAnswered(qid) {
+      const qs = state.questions[qid];
+      if (!qs || qs.status !== "todo") return;
+      const hasText = (qs.answer || "").trim().length > 0;
+      const hasNotes = (qs.notes || "").trim().length > 0;
+      const hasSelected = Array.isArray(qs.selected) && qs.selected.length > 0;
+      const hasTable = Array.isArray(qs.table) && qs.table.some(row => Object.values(row).some(v => String(v || "").trim()));
+      if (hasText || hasNotes || hasSelected || hasTable) {
+        qs.status = "answered";
+        const card = document.querySelector(`[data-qid="${qid}"].question-card`);
+        if (card) card.dataset.status = "answered";
+        const select = document.querySelector(`select[data-qid="${qid}"][data-field="status"]`);
+        if (select) select.value = "answered";
+      }
+    }
+
+    function onInput(event) {
+      const target = event.target;
+      if (target.dataset.meta) {
+        state.meta[target.dataset.meta] = target.value;
+        scheduleSave();
+        return;
+      }
+      const qid = target.dataset.qid;
+      const field = target.dataset.field;
+      if (!qid || !field) return;
+      const qs = state.questions[qid];
+      if (!qs) return;
+
+      if (field === "selected") {
+        const selected = new Set(qs.selected || []);
+        if (target.checked) selected.add(target.value);
+        else selected.delete(target.value);
+        qs.selected = Array.from(selected);
+      } else if (field === "table") {
+        const row = Number(target.dataset.row);
+        const col = target.dataset.col;
+        qs.table[row][col] = target.value;
+      } else {
+        qs[field] = target.value;
+      }
+      qs.updatedAt = new Date().toISOString();
+      if (["answer", "notes", "selected", "table"].includes(field)) maybeAutoAnswered(qid);
+      if (field === "status") {
+        const card = document.querySelector(`[data-qid="${qid}"].question-card`);
+        if (card) card.dataset.status = target.value;
+      }
+      updateCounts();
+      applyFilters();
+      scheduleSave();
+    }
+
+    function onClick(event) {
+      const btn = event.target.closest("button");
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const qid = btn.dataset.qid;
+      if (action === "add-row") {
+        const q = allQuestions().find(item => item.id === qid);
+        state.questions[qid].table.push(Object.fromEntries(q.columns.map(col => [col, ""])));
+        saveNow();
+        render();
+        return;
+      }
+      if (action === "delete-row") {
+        const row = Number(btn.dataset.row);
+        if (state.questions[qid].table.length <= 1) return toast("Il faut garder au moins une ligne.");
+        state.questions[qid].table.splice(row, 1);
+        saveNow();
+        render();
+      }
+    }
+
+    function applyFilters() {
+      const search = document.getElementById("searchInput").value.trim().toLowerCase();
+      const status = document.getElementById("statusFilter").value;
+      let visibleCards = 0;
+
+      document.querySelectorAll(".question-card").forEach(card => {
+        const qid = card.dataset.qid;
+        const qs = state.questions[qid];
+        const q = allQuestions().find(item => item.id === qid);
+        const haystack = [qs.title, q.title, q.help, qs.answer, qs.notes, (qs.selected || []).join(" "), JSON.stringify(qs.table || "")].join(" ").toLowerCase();
+        const matchesSearch = !search || haystack.includes(search);
+        const matchesStatus = status === "all" || qs.status === status;
+        const visible = matchesSearch && matchesStatus;
+        card.classList.toggle("hidden", !visible);
+        if (visible) visibleCards++;
+      });
+
+      document.querySelectorAll("[data-section]").forEach(section => {
+        const hasVisible = !!section.querySelector(".question-card:not(.hidden)");
+        section.classList.toggle("hidden", !hasVisible);
+      });
+
+      document.getElementById("emptyFilter").classList.toggle("hidden", visibleCards !== 0);
+    }
+
+    function collectPayload() {
+      const sections = SECTIONS.map(section => ({
+        id: section.id,
+        title: section.title,
+        description: section.desc || "",
+        questions: section.questions.map(q => {
+          const qs = state.questions[q.id];
+          return {
+            id: q.id,
+            type: q.type || "longtext",
+            originalTitle: q.title,
+            currentTitle: qs.title,
+            status: qs.status,
+            statusLabel: STATUS_LABELS[qs.status] || qs.status,
+            answer: qs.answer || "",
+            notes: qs.notes || "",
+            selectedOptions: qs.selected || [],
+            tableRows: qs.table || null,
+            updatedAt: qs.updatedAt || null
+          };
+        })
+      }));
+      const counts = getCounts();
+      return {
+        schema: "champignon-manager.cultivator-process-response.v1",
+        formVersion: FORM_VERSION,
+        exportedAt: new Date().toISOString(),
+        meta: state.meta,
+        summary: counts,
+        sections
+      };
+    }
+
+    function getCounts() {
+      const counts = { total: 0, answered: 0, na: 0, clarify: 0, todo: 0 };
+      allQuestions().forEach(q => {
+        counts.total++;
+        const status = state.questions[q.id].status || "todo";
+        counts[status] = (counts[status] || 0) + 1;
+      });
+      counts.done = counts.answered + counts.na;
+      counts.progressPercent = counts.total ? Math.round(counts.done / counts.total * 100) : 0;
+      return counts;
+    }
+
+    function exportJson() {
+      saveNow();
+      const payload = collectPayload();
+      const nameBits = ["champignon-reponses-cultivateur"];
+      if (state.meta.cultivatorName) nameBits.push(slugify(state.meta.cultivatorName));
+      nameBits.push(new Date().toISOString().slice(0, 10));
+      download(`${nameBits.join("-")}.json`, JSON.stringify(payload, null, 2), "application/json");
+      toast("Fichier JSON exporté. Tu peux l’envoyer au développeur.");
+    }
+
+    function exportMarkdown() {
+      saveNow();
+      const payload = collectPayload();
+      const md = [];
+      md.push("# Réponses cultivateur — Champignon Manager");
+      md.push("");
+      md.push(`- Exporté le : ${new Date(payload.exportedAt).toLocaleString("fr-FR")}`);
+      md.push(`- Cultivateur : ${payload.meta.cultivatorName || ""}`);
+      md.push(`- Exploitation : ${payload.meta.farmName || ""}`);
+      md.push(`- Contact : ${payload.meta.contact || ""}`);
+      md.push(`- Progression : ${payload.summary.progressPercent}% (${payload.summary.done}/${payload.summary.total})`);
+      if (payload.meta.generalNotes) md.push(`- Notes générales : ${payload.meta.generalNotes}`);
+      md.push("");
+      payload.sections.forEach(section => {
+        md.push(`## ${section.title}`);
+        md.push("");
+        section.questions.forEach(q => {
+          md.push(`### ${q.id} — ${q.currentTitle}`);
+          md.push("");
+          md.push(`Statut : **${q.statusLabel}**`);
+          if (q.selectedOptions.length) md.push(`\nCases cochées : ${q.selectedOptions.join(", ")}`);
+          if (q.answer) md.push(`\nRéponse :\n\n${q.answer}`);
+          if (q.tableRows) {
+            md.push("\nTableau :");
+            const cols = Object.keys(q.tableRows[0] || {});
+            md.push(`| ${cols.join(" | ")} |`);
+            md.push(`| ${cols.map(() => "---").join(" | ")} |`);
+            q.tableRows.forEach(row => md.push(`| ${cols.map(col => String(row[col] || "").replace(/\|/g, "\\|")).join(" | ")} |`));
+          }
+          if (q.notes) md.push(`\nNotes :\n\n${q.notes}`);
+          md.push("");
+        });
+      });
+      download(`champignon-reponses-cultivateur-${new Date().toISOString().slice(0, 10)}.md`, md.join("\n"), "text/markdown");
+      toast("Export Markdown créé.");
+    }
+
+    function download(filename, content, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    }
+
+    function slugify(value) {
+      return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+
+    function importJsonFile() {
+      document.getElementById("importFile").click();
+    }
+
+    function handleImportFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const payload = JSON.parse(reader.result);
+          applyImportedPayload(payload);
+          saveNow();
+          render();
+          toast("JSON importé. Les réponses sont chargées.");
+        } catch (error) {
+          console.error(error);
+          toast("Impossible d’importer ce JSON.");
+        } finally {
+          event.target.value = "";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function applyImportedPayload(payload) {
+      if (!payload || !Array.isArray(payload.sections)) throw new Error("Format invalide");
+      state.meta = { ...defaultMeta(), ...(payload.meta || {}) };
+      payload.sections.forEach(section => {
+        (section.questions || []).forEach(q => {
+          if (!state.questions[q.id]) return;
+          state.questions[q.id] = {
+            ...state.questions[q.id],
+            title: q.currentTitle || q.title || state.questions[q.id].title,
+            status: q.status || "todo",
+            answer: q.answer || "",
+            notes: q.notes || "",
+            selected: q.selectedOptions || [],
+            table: q.tableRows || state.questions[q.id].table,
+            updatedAt: q.updatedAt || new Date().toISOString()
+          };
+        });
+      });
+    }
+
+    function markVisibleAnswered() {
+      const cards = Array.from(document.querySelectorAll(".question-card:not(.hidden)"));
+      if (!cards.length) return toast("Aucune question visible à marquer.");
+      if (!confirm(`Marquer ${cards.length} question(s) visible(s) comme répondues ?`)) return;
+      cards.forEach(card => {
+        const qid = card.dataset.qid;
+        state.questions[qid].status = "answered";
+      });
+      saveNow();
+      render();
+      toast("Questions visibles marquées répondues.");
+    }
+
+    function clearLocal() {
+      if (!confirm("Effacer la sauvegarde locale de ce navigateur ? Pense à exporter le JSON avant.")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = ensureStateShape(null);
+      render();
+      toast("Sauvegarde locale effacée.");
+    }
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => el.classList.remove("show"), 3200);
+    }
+
+    document.addEventListener("input", onInput);
+    document.addEventListener("change", onInput);
+    document.addEventListener("click", onClick);
+
+    document.getElementById("searchInput").addEventListener("input", applyFilters);
+    document.getElementById("statusFilter").addEventListener("change", applyFilters);
+    document.getElementById("resetFilters").addEventListener("click", () => {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("statusFilter").value = "all";
+      applyFilters();
+    });
+
+    ["exportJsonTop", "exportJsonSide", "exportJsonBottom"].forEach(id => document.getElementById(id).addEventListener("click", exportJson));
+    ["exportMarkdownSide", "exportMarkdownBottom"].forEach(id => document.getElementById(id).addEventListener("click", exportMarkdown));
+    ["importJsonTop", "importJsonSide"].forEach(id => document.getElementById(id).addEventListener("click", importJsonFile));
+    document.getElementById("importFile").addEventListener("change", handleImportFile);
+    document.getElementById("printTop").addEventListener("click", () => window.print());
+    document.getElementById("markVisibleAnswered").addEventListener("click", markVisibleAnswered);
+    document.getElementById("clearLocal").addEventListener("click", clearLocal);
+
+    render();
+  </script>
+</body>
+</html>

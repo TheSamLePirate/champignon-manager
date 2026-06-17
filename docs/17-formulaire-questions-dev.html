@@ -1,0 +1,1935 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Questionnaire développeur — Champignon Manager</title>
+  <style>
+    :root {
+      --bg: #f6f7f2;
+      --paper: #fffef8;
+      --ink: #17211a;
+      --muted: #63705f;
+      --line: #dfe6d9;
+      --green: #2f6b3f;
+      --green-2: #3f8d55;
+      --green-soft: #e8f4e8;
+      --amber: #c67b1f;
+      --amber-soft: #fff3dc;
+      --red: #b54747;
+      --red-soft: #ffe8e8;
+      --blue: #356ea8;
+      --blue-soft: #e8f1fb;
+      --gray-soft: #eef0ec;
+      --shadow: 0 18px 45px rgba(23, 33, 26, .10);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(64, 141, 85, .20), transparent 34rem),
+        radial-gradient(circle at top right, rgba(198, 123, 31, .16), transparent 30rem),
+        linear-gradient(180deg, #fbfbf6 0%, var(--bg) 35%, #eff3ea 100%);
+    }
+
+    a { color: inherit; }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .hero {
+      padding: 32px 24px 22px;
+      border-bottom: 1px solid rgba(47, 107, 63, .15);
+      background:
+        linear-gradient(135deg, rgba(47, 107, 63, .95), rgba(26, 63, 38, .94)),
+        url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='2' fill='%23ffffff' fill-opacity='.16'/%3E%3Ccircle cx='80' cy='60' r='3' fill='%23ffffff' fill-opacity='.12'/%3E%3Cpath d='M20 90q18-30 36 0' stroke='%23ffffff' stroke-opacity='.09' fill='none'/%3E%3C/svg%3E");
+      color: #fff;
+    }
+
+    .hero-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 999px;
+      color: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.10);
+      backdrop-filter: blur(10px);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    h1 {
+      margin: 16px 0 10px;
+      font-size: clamp(32px, 5vw, 58px);
+      line-height: .95;
+      letter-spacing: -.055em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 850px;
+      color: rgba(255,255,255,.84);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 11px 15px;
+      border-radius: 999px;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 10px 25px rgba(0,0,0,.12);
+      font-weight: 800;
+      white-space: nowrap;
+      transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 14px 32px rgba(0,0,0,.16); }
+    .btn:active { transform: translateY(0); }
+    .btn.secondary { color: #fff; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); box-shadow: none; }
+    .btn.green { color: #fff; background: var(--green); }
+    .btn.amber { color: #fff; background: var(--amber); }
+    .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); box-shadow: none; }
+    .btn.small { min-height: 34px; padding: 8px 11px; font-size: 13px; }
+    .btn.danger { color: #fff; background: var(--red); }
+
+    .shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 22px 24px 48px;
+      display: grid;
+      grid-template-columns: 315px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      background: rgba(255, 254, 248, .84);
+      border: 1px solid rgba(47, 107, 63, .13);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+
+    .panel-pad { padding: 16px; }
+
+    .progress-wrap {
+      display: grid;
+      gap: 12px;
+    }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      font-weight: 900;
+    }
+
+    .progress-big { font-size: 28px; letter-spacing: -.04em; }
+    .progress-label { color: var(--muted); font-size: 13px; }
+
+    .progress-bar {
+      height: 12px;
+      background: #e6eadf;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(47,107,63,.12);
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--green-2), #9fbf5b);
+      transition: width .25s ease;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .stat {
+      padding: 10px;
+      border-radius: 14px;
+      background: var(--gray-soft);
+      display: grid;
+      gap: 2px;
+    }
+
+    .stat strong { font-size: 20px; }
+    .stat span { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .stat.ok { background: var(--green-soft); color: var(--green); }
+    .stat.na { background: #edf0ed; color: #59645a; }
+    .stat.warn { background: var(--amber-soft); color: var(--amber); }
+    .stat.todo { background: var(--red-soft); color: var(--red); }
+
+    .tools {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label.label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 900;
+    }
+
+    input[type="text"], input[type="date"], input[type="email"], textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.88);
+      color: var(--ink);
+      padding: 11px 12px;
+      outline: none;
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    textarea { resize: vertical; min-height: 94px; line-height: 1.45; }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(47,107,63,.65);
+      box-shadow: 0 0 0 4px rgba(47,107,63,.10);
+      background: #fff;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+    }
+
+    .nav-list {
+      max-height: calc(100vh - 420px);
+      overflow: auto;
+      padding: 8px;
+    }
+
+    .nav-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 14px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .nav-item:hover { background: var(--green-soft); color: var(--green); }
+    .nav-item .count { font-family: var(--mono); font-size: 12px; opacity: .8; }
+
+    .main { display: grid; gap: 18px; }
+
+    .notice {
+      padding: 16px;
+      border: 1px solid rgba(53,110,168,.18);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--blue-soft), rgba(255,255,255,.85));
+      color: #20486d;
+      display: grid;
+      gap: 8px;
+    }
+
+    .notice strong { font-size: 16px; }
+    .notice p { margin: 0; line-height: 1.5; }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .meta-grid .full { grid-column: 1 / -1; }
+
+    .section {
+      scroll-margin-top: 18px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .section-head {
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(255,254,248,.95), rgba(232,244,232,.92));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-kicker {
+      color: var(--green);
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: clamp(22px, 2.8vw, 34px);
+      letter-spacing: -.04em;
+    }
+
+    .section-desc {
+      margin: 9px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 850px;
+    }
+
+    .questions {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .question-card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255,255,255,.78);
+      overflow: hidden;
+      transition: opacity .18s ease, transform .18s ease, border-color .18s ease;
+    }
+
+    .question-card[data-status="answered"] { border-color: rgba(47,107,63,.28); }
+    .question-card[data-status="na"] { opacity: .76; background: rgba(238,240,236,.72); }
+    .question-card[data-status="clarify"] { border-color: rgba(198,123,31,.32); background: rgba(255,243,220,.48); }
+
+    .question-top {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 12px;
+      align-items: start;
+      border-bottom: 1px solid rgba(223,230,217,.72);
+      background: rgba(255,254,248,.62);
+    }
+
+    .q-code {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .question-title {
+      min-height: 52px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none !important;
+      background: transparent;
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+    }
+
+    .question-title:focus { background: #fff; padding: 8px; border: 1px solid var(--line); border-radius: 12px; }
+
+    .status-select {
+      font-weight: 850;
+      border-radius: 999px;
+    }
+
+    .question-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .help {
+      padding: 12px;
+      border-radius: 14px;
+      background: #f5f7f1;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .help ul { margin: 6px 0 0 18px; padding: 0; }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 8px;
+    }
+
+    .check-option {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 750;
+    }
+
+    .check-option input { width: 18px; height: 18px; accent-color: var(--green); }
+
+    .note-area {
+      min-height: 62px;
+      background: #fffdf6;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f4f7ef;
+      color: var(--green);
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 950;
+    }
+
+    td:last-child, th:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
+
+    .table-input {
+      min-height: 38px;
+      padding: 8px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .row-actions { width: 64px; text-align: center; }
+
+    .hidden { display: none !important; }
+
+    .empty-filter {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.55);
+    }
+
+    .footer-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+      margin-top: 16px;
+      padding: 12px;
+      border: 1px solid rgba(47,107,63,.16);
+      border-radius: var(--radius-lg);
+      background: rgba(255,254,248,.88);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 -12px 30px rgba(23,33,26,.08);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .save-state {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 50;
+      max-width: min(420px, calc(100vw - 36px));
+      padding: 13px 15px;
+      border-radius: 16px;
+      background: #142019;
+      color: #fff;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      font-weight: 800;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .file-input { display: none; }
+
+    @media (max-width: 1040px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-actions { justify-content: flex-start; }
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: relative; top: 0; }
+      .nav-list { max-height: 260px; }
+    }
+
+    @media (max-width: 720px) {
+      .hero { padding: 24px 16px; }
+      .shell { padding: 16px; }
+      .meta-grid { grid-template-columns: 1fr; }
+      .question-top { grid-template-columns: 1fr; }
+      .footer-actions { align-items: stretch; }
+      .footer-actions > div { width: 100%; display: grid; gap: 8px; }
+      .btn { width: 100%; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .hero-actions, .sidebar, .footer-actions, .btn, .status-select, .tools { display: none !important; }
+      .shell { display: block; max-width: none; padding: 0; }
+      .panel, .question-card { box-shadow: none; border-color: #ccc; break-inside: avoid; }
+      .hero { color: #111; background: #fff; border-bottom: 2px solid #111; }
+      .hero p, .eyebrow { color: #111; }
+      .question-title { border: 0; }
+      textarea, input { border: 0 !important; background: #fff !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow">🧑‍💻 Champignon Manager · questionnaire développeur</div>
+        <h1>Décisions techniques, architecture et MVP</h1>
+        <p>
+          Remplis ce formulaire pour figer les décisions techniques avant de coder. Chaque question peut être répondue, modifiée,
+          ou marquée comme non pertinente. À la fin, exporte le JSON pour l’utiliser comme base de spécification développeur.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn" id="exportJsonTop">⬇️ Export JSON</button>
+        <button class="btn secondary" id="importJsonTop">⬆️ Import JSON</button>
+        <button class="btn secondary" id="printTop">🖨️ Imprimer</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <section class="panel panel-pad progress-wrap">
+        <div class="progress-head">
+          <div>
+            <div class="progress-big" id="progressPct">0%</div>
+            <div class="progress-label">progression utile</div>
+          </div>
+          <div class="progress-label" id="progressRatio">0 / 0</div>
+        </div>
+        <div class="progress-bar" aria-label="Progression"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="stats-grid">
+          <div class="stat ok"><strong id="countAnswered">0</strong><span>répondues</span></div>
+          <div class="stat na"><strong id="countNa">0</strong><span>non pertinentes</span></div>
+          <div class="stat warn"><strong id="countClarify">0</strong><span>à clarifier</span></div>
+          <div class="stat todo"><strong id="countTodo">0</strong><span>à répondre</span></div>
+        </div>
+      </section>
+
+      <section class="panel panel-pad tools">
+        <div class="field">
+          <label class="label" for="searchInput">Rechercher</label>
+          <input id="searchInput" type="text" placeholder="ex: incubation, QR, humidité..." />
+        </div>
+        <div class="field">
+          <label class="label" for="statusFilter">Filtrer par statut</label>
+          <select id="statusFilter">
+            <option value="all">Tous les statuts</option>
+            <option value="todo">À répondre</option>
+            <option value="answered">Répondu</option>
+            <option value="na">Non pertinent</option>
+            <option value="clarify">À clarifier</option>
+          </select>
+        </div>
+        <button class="btn green small" id="exportJsonSide">⬇️ Exporter JSON</button>
+        <button class="btn ghost small" id="exportMarkdownSide">Exporter Markdown</button>
+        <button class="btn ghost small" id="importJsonSide">Importer JSON</button>
+        <button class="btn ghost small" id="resetFilters">Réinitialiser filtres</button>
+      </section>
+
+      <nav class="panel nav-list" id="sectionNav" aria-label="Sections du questionnaire"></nav>
+    </aside>
+
+    <main class="main">
+      <section class="notice">
+        <strong>Mode d’emploi rapide</strong>
+        <p>
+          Le navigateur sauvegarde automatiquement les réponses sur cet appareil. Pour conserver une trace exploitable, clique sur <b>Exporter JSON</b>.
+          Le fichier JSON contient les décisions, les questions modifiées, les statuts, les choix cochés et les tableaux de synthèse.
+        </p>
+      </section>
+
+      <section class="panel panel-pad">
+        <div class="section-kicker">Informations générales</div>
+        <h2 style="margin:0 0 12px; letter-spacing:-.04em;">Contexte développeur</h2>
+        <div class="meta-grid" id="metaForm">
+          <div class="field">
+            <label class="label">Nom du développeur</label>
+            <input data-meta="developerName" type="text" placeholder="Prénom / nom" />
+          </div>
+          <div class="field">
+            <label class="label">Projet / dépôt</label>
+            <input data-meta="projectName" type="text" placeholder="champignon-manager, chemin local, repo..." />
+          </div>
+          <div class="field">
+            <label class="label">Date de décision</label>
+            <input data-meta="answeredAt" type="date" />
+          </div>
+          <div class="field">
+            <label class="label">Contexte optionnel</label>
+            <input data-meta="contact" type="text" placeholder="Machine cible, OS, contraintes, lien repo..." />
+          </div>
+          <div class="field full">
+            <label class="label">Notes générales / contraintes techniques</label>
+            <textarea data-meta="generalNotes" placeholder="Ex: décisions provisoires, dépendances aux réponses cultivateur, contraintes matérielles, dette technique acceptée..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <div id="sections"></div>
+
+      <div class="empty-filter hidden" id="emptyFilter">
+        Aucun résultat avec les filtres actuels.
+      </div>
+
+      <div class="footer-actions">
+        <div class="save-state" id="saveState">Autosauvegarde prête.</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+          <button class="btn green" id="exportJsonBottom">⬇️ Exporter le fichier JSON</button>
+          <button class="btn ghost" id="exportMarkdownBottom">Exporter Markdown</button>
+          <button class="btn amber" id="markVisibleAnswered">Marquer visibles répondues</button>
+          <button class="btn danger" id="clearLocal">Effacer local</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <input class="file-input" id="importFile" type="file" accept="application/json,.json" />
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const FORM_VERSION = "2026-06-17.dev-v1";
+    const STORAGE_KEY = "champignon-manager:developer-questions-form:v1";
+
+    const STATUS_LABELS = {
+      todo: "À répondre",
+      answered: "Répondu",
+      na: "Non pertinent",
+      clarify: "À clarifier"
+    };
+
+    const SECTIONS = [
+      {
+            "id": "vision-mvp",
+            "title": "Vision technique et périmètre MVP",
+            "desc": "Clarifier ce qui doit être codé en premier et ce qui reste volontairement différé.",
+            "questions": [
+                  {
+                        "id": "dev_01_01",
+                        "title": "Quel est le périmètre exact du MVP développeur ?",
+                        "help": "Décris ce qui doit impérativement être utilisable dans la première version codée. Exemple : auth locale, création source/unité, QR, scan iPhone, fiche unité, timeline, changement d’étape, mesure/récolte simple.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_01_02",
+                        "title": "Quelles fonctionnalités doivent être explicitement repoussées après le MVP ?",
+                        "help": "Exemples : caméra Reolink, Inkbird, offline avancé, ventes, facturation, statistiques avancées, contrôle actif des appareils.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_01_03",
+                        "title": "Quel niveau de finition terrain est nécessaire dès la V1 ?",
+                        "help": "À décider : prototype interne, outil réellement utilisé en production, robustesse backup, UI mobile propre, impression stable, gestion d’erreurs complète.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_01_04",
+                        "title": "Quels livrables veux-tu avant d’écrire le code applicatif ?",
+                        "help": "Exemples : schéma Mongo final, diagramme de modules, contrats API, backlog découpé, seed data process pleurotes, convention de nommage.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_01_05",
+                        "title": "Quelles décisions dépendent des réponses du cultivateur ?",
+                        "help": "Liste ce qu’il ne faut pas figer avant son retour : vocabulaire, phases, actions, observations, produits finaux, étiquettes, chambres.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "stack-architecture",
+            "title": "Stack, monorepo et architecture de dépôt",
+            "desc": "Décisions structurantes pour Bun, TypeScript, Vite, React et l’organisation du code.",
+            "questions": [
+                  {
+                        "id": "dev_02_01",
+                        "title": "Confirme-tu la stack cible Bun + TypeScript + Vite + React + MongoDB ?",
+                        "help": "Indique si un élément doit changer ou si des contraintes existent : version Bun, version Node compatible, OS cible, MongoDB local, etc.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_02_02",
+                        "title": "Quelle structure de dépôt veux-tu ?",
+                        "help": "Proposition : apps/api, apps/web, packages/shared, packages/domain, packages/config-schemas, packages/ui, docs. À valider ou modifier.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_02_03",
+                        "title": "Veux-tu un monorepo avec workspaces Bun ?",
+                        "help": "Décider si tout est géré dans un seul workspace ou si backend/frontend sont séparés.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_02_04",
+                        "title": "Quelle stratégie TypeScript strict veux-tu appliquer ?",
+                        "help": "Exemples : strict true, noUncheckedIndexedAccess, exactOptionalPropertyTypes, type-only imports, interdiction any sauf exceptions.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_02_05",
+                        "title": "Quels outils de qualité de code veux-tu dès le départ ?",
+                        "help": "Coche ou complète.",
+                        "type": "checklist",
+                        "options": [
+                              "Biome",
+                              "ESLint",
+                              "Prettier",
+                              "Vitest",
+                              "Playwright",
+                              "Husky/lint-staged",
+                              "TypeScript project references",
+                              "commit convention",
+                              "autre"
+                        ]
+                  },
+                  {
+                        "id": "dev_02_06",
+                        "title": "Quelle stratégie de configuration environnementale ?",
+                        "help": "Exemples : .env local, validation env typée, profils dev/prod, secrets session, URL Mongo, URL locale publique.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "backend-framework",
+            "title": "Backend : framework, API et services",
+            "desc": "Choisir le style backend et les limites des modules métier.",
+            "questions": [
+                  {
+                        "id": "dev_03_01",
+                        "title": "Choix backend : Hono REST, tRPC, ou autre ?",
+                        "help": "Recommandation actuelle : Hono + schémas de validation + client API typé. tRPC reste possible si tu privilégies le typage direct frontend/backend.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_03_02",
+                        "title": "Quelle granularité pour les endpoints d’action métier ?",
+                        "help": "Exemples : POST /lots/:id/change-step, /move, /split, /harvest plutôt qu’un endpoint générique. Décider ce qui est explicite vs générique.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_03_03",
+                        "title": "Quel format standard de réponse API veux-tu ?",
+                        "help": "Proposition : { data, meta? } pour succès et { error: { code, message, details?, requestId? } } pour erreurs.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_03_04",
+                        "title": "Quels modules backend doivent exister dès le premier squelette ?",
+                        "help": "Coche les modules que tu veux créer dès le départ, même partiellement.",
+                        "type": "checklist",
+                        "options": [
+                              "auth",
+                              "users",
+                              "config",
+                              "sources",
+                              "lots",
+                              "events",
+                              "measurements",
+                              "harvests",
+                              "products",
+                              "qr",
+                              "printing",
+                              "files",
+                              "cameras",
+                              "devices",
+                              "alerts",
+                              "reports"
+                        ]
+                  },
+                  {
+                        "id": "dev_03_05",
+                        "title": "Comment veux-tu gérer les erreurs métier et conflits ?",
+                        "help": "Exemples : INVALID_TRANSITION, LOT_ALREADY_CLOSED, QR_REVOKED, PRINTER_UNAVAILABLE, CONFLICT, validation détaillée.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_03_06",
+                        "title": "Veux-tu générer une documentation OpenAPI ?",
+                        "help": "À décider : documentation automatique, client généré, ou client typé manuel.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "typage-validation",
+            "title": "Typage, validation et contrats partagés",
+            "desc": "Définir comment garantir le typage de bout en bout.",
+            "questions": [
+                  {
+                        "id": "dev_04_01",
+                        "title": "Quelle librairie de schémas choisis-tu ?",
+                        "help": "Options : Zod, Valibot, TypeBox. Recommandation actuelle : Zod pour lisibilité et écosystème.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_04_02",
+                        "title": "Où vivent les types partagés ?",
+                        "help": "Exemple : packages/shared pour DTO/API, packages/domain pour types métier, packages/config-schemas pour process/formulaires.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_04_03",
+                        "title": "Quelle séparation entre Domain Model, DTO API et documents MongoDB ?",
+                        "help": "Décider si on a trois couches de types ou un modèle plus simple au début.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_04_04",
+                        "title": "Comment valider les formulaires dynamiques du process ?",
+                        "help": "Les champs configurables devront produire/être liés à des validations : type, unité, obligatoire, choix, bornes, photo requise.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_04_05",
+                        "title": "Quelle convention pour les dates, unités et quantités ?",
+                        "help": "Exemples : ISO 8601 UTC en backend, timezone site en affichage, Quantité { value, unit }, unités configurables.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_04_06",
+                        "title": "Quelle convention pour les IDs exposés au frontend ?",
+                        "help": "ObjectId brut, string, publicCode, token opaque, ou combinaison. Important pour URLs, QR et logs.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "mongodb-modele",
+            "title": "MongoDB et modèle de données",
+            "desc": "Décisions sur collections, transactions, indexes, événements et migrations.",
+            "questions": [
+                  {
+                        "id": "dev_05_01",
+                        "title": "Choisis-tu MongoDB native driver + schémas applicatifs, ou Mongoose ?",
+                        "help": "Recommandation actuelle : native driver + Zod pour contrôle, flexibilité événementielle et typage applicatif.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_05_02",
+                        "title": "Veux-tu activer un replica set local pour utiliser les transactions MongoDB ?",
+                        "help": "Certaines actions devraient être atomiques : création source+lot+QR+event, division, récolte+stock, correction.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_05_03",
+                        "title": "Confirme-tu l’approche hybride état courant + événements immuables ?",
+                        "help": "Les collections principales stockent l’état courant rapide ; events garde l’historique complet. Alternative : event sourcing complet plus complexe.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_05_04",
+                        "title": "Quelle stratégie de migration de données veux-tu ?",
+                        "help": "Exemples : scripts versionnés, collection schemaMigrations, migrations manuelles au début, validation au démarrage.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_05_05",
+                        "title": "Quelle convention pour publicCode ?",
+                        "help": "Exemples : LOT-2026-0001, SRC-..., HRV-..., PRD-..., préfixe par entité, séquence par année/site.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_05_06",
+                        "title": "Quelles collections doivent être présentes au MVP ?",
+                        "help": "Coche les collections à créer dès la première phase codée.",
+                        "type": "checklist",
+                        "options": [
+                              "users",
+                              "sites",
+                              "species",
+                              "strains",
+                              "locations",
+                              "processTemplates",
+                              "processVersions",
+                              "sources",
+                              "lots",
+                              "events",
+                              "measurements",
+                              "observations",
+                              "harvests",
+                              "productBatches",
+                              "qrRegistry",
+                              "printJobs",
+                              "files",
+                              "alerts",
+                              "tasks",
+                              "devices",
+                              "cameras"
+                        ]
+                  },
+                  {
+                        "id": "dev_05_07",
+                        "title": "Quels indexes veux-tu créer dès le départ ?",
+                        "help": "Exemples : qrRegistry.token unique, lots.publicCode, lots.status/currentStep/currentLocation, events target+occurredAt, measurements target+date.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "workflow-process",
+            "title": "Moteur de process configurable",
+            "desc": "Concevoir phases, étapes, actions, observations, formulaires et transitions sans les coder en dur.",
+            "questions": [
+                  {
+                        "id": "dev_06_01",
+                        "title": "Quelle forme technique pour processVersions ?",
+                        "help": "Décrire la structure exacte : phases, steps, transitions, actions, observationTypes, measurementRequirements, forms, alerts.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_06_02",
+                        "title": "Comment représenter les actions configurables ?",
+                        "help": "Une action doit définir libellé, type métier, formulaire, rôle autorisé, event créé, effets d’état. Décrire le modèle souhaité.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_06_03",
+                        "title": "Comment représenter les observations configurables ?",
+                        "help": "Exemples : contamination, pousse visible, maturité, surface sèche. Champs : gravité, photo requise, alerte auto, phase/étape.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_06_04",
+                        "title": "Comment gérer les actions en masse ?",
+                        "help": "Exemples : sélectionner tous les enfants d’un parent, par date d’inoculation, par chambre, par étape. Besoin de transaction, preview, confirmation.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_06_05",
+                        "title": "Comment versionner et migrer un process déjà utilisé par des lots ?",
+                        "help": "Un lot doit référencer une version publiée. Décider si migration manuelle, jamais, ou assistant de migration.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_06_06",
+                        "title": "Quel niveau d’éditeur de process veux-tu au MVP ?",
+                        "help": "Options : seed JSON uniquement, écran admin simple, éditeur complet plus tard.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "frontend-ux",
+            "title": "Frontend React, UX terrain et PWA",
+            "desc": "Choisir l’architecture frontend et l’expérience mobile/desktop.",
+            "questions": [
+                  {
+                        "id": "dev_07_01",
+                        "title": "Quelle librairie de routing et data fetching veux-tu ?",
+                        "help": "Exemples : React Router, TanStack Router, TanStack Query, client fetch typé maison.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_07_02",
+                        "title": "Quelle stratégie UI/CSS ?",
+                        "help": "Exemples : CSS modules, Tailwind, Panda, shadcn/ui, design system maison. Décider selon rapidité et maintenabilité.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_07_03",
+                        "title": "Le frontend doit-il être PWA dès le MVP ?",
+                        "help": "Options : simple responsive local, PWA installable sans offline, PWA avec cache, offline différé.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_07_04",
+                        "title": "Comment construire les formulaires dynamiques côté React ?",
+                        "help": "Exemples : générateur depuis process forms, React Hook Form, validation Zod, composants par type de champ.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_07_05",
+                        "title": "Quels écrans frontend créer en premier ?",
+                        "help": "Coche les écrans prioritaires.",
+                        "type": "checklist",
+                        "options": [
+                              "login",
+                              "dashboard",
+                              "scan QR",
+                              "fiche lot mobile",
+                              "timeline lot",
+                              "actions rapides lot",
+                              "liste lots",
+                              "chambres",
+                              "mesures/observations",
+                              "récolte",
+                              "produits/stock",
+                              "configuration process",
+                              "settings imprimante",
+                              "rapports"
+                        ]
+                  },
+                  {
+                        "id": "dev_07_06",
+                        "title": "Quelle stratégie d’accessibilité terrain ?",
+                        "help": "Gros boutons, mode sombre, contraste, peu de champs, confirmation actions critiques, usage iPhone humide/gants.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "qr-impression-local",
+            "title": "QR, impression, scan iPhone et réseau local",
+            "desc": "Décisions matérielles et réseau indispensables pour le flux terrain.",
+            "questions": [
+                  {
+                        "id": "dev_08_01",
+                        "title": "Quel payload exact mettre dans le QR ?",
+                        "help": "Recommandation : URL locale /q/<token> avec token opaque non prédictible. Ne pas mettre toutes les données métier dans le QR.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_08_02",
+                        "title": "Quelle URL locale utiliser pour l’iPhone ?",
+                        "help": "Exemples : http://champignon.local, IP fixe, nom Bonjour/mDNS, reverse proxy local. HTTPS nécessaire si scan caméra web intégré.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_08_03",
+                        "title": "Quel est le modèle exact de l’imprimante QR et son protocole ?",
+                        "help": "À renseigner : marque/modèle, driver Node/Bun, USB/Bluetooth/Wi‑Fi, ESC/POS, ZPL, image raster, taille étiquette.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_08_04",
+                        "title": "Comment gérer les jobs d’impression ?",
+                        "help": "File printJobs, retry, statut, erreur, copies, réimpression, test imprimante, logs.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_08_05",
+                        "title": "Comment gérer QR perdu, abîmé ou compromis ?",
+                        "help": "Réimpression même token, remplacement avec nouveau token, révocation de l’ancien, audit.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_08_06",
+                        "title": "Scan iPhone : caméra iOS native ou scanner intégré dans la web app ?",
+                        "help": "Caméra iOS ouvre l’URL = simple. Scanner web intégré nécessite permissions/certificat et librairie JS.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "auth-securite",
+            "title": "Authentification, permissions, sécurité et audit",
+            "desc": "Même en local, les actions doivent être traçables et protégées.",
+            "questions": [
+                  {
+                        "id": "dev_09_01",
+                        "title": "Quelle stratégie d’auth locale pour le MVP ?",
+                        "help": "Options : login/mot de passe, session longue opérateur, PIN rapide, compte admin unique au début.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_09_02",
+                        "title": "Quels rôles implémenter dès le début ?",
+                        "help": "Coche les rôles nécessaires au MVP.",
+                        "type": "checklist",
+                        "options": [
+                              "admin",
+                              "production_manager",
+                              "culture_operator",
+                              "packaging_operator",
+                              "readonly",
+                              "mode poste partagé",
+                              "autre"
+                        ]
+                  },
+                  {
+                        "id": "dev_09_03",
+                        "title": "Quelles actions doivent être auditables obligatoirement ?",
+                        "help": "Exemples : changement étape, division, mouvement, récolte, correction, réimpression QR, configuration process, droits utilisateur.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_09_04",
+                        "title": "Comment gérer corrections et annulations ?",
+                        "help": "Ne pas supprimer physiquement : event de correction/annulation. Décider UI et permissions.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_09_05",
+                        "title": "Quelles protections HTTP prévoir ?",
+                        "help": "Sessions cookies, CSRF si cookies, CORS local, rate limit login, headers sécurité, secret session.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_09_06",
+                        "title": "Quel niveau de sécurité pour les QR ?",
+                        "help": "Token long, révocable, scan loggé, lecture possible sans login ou login obligatoire ? Modification toujours protégée.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "deploiement-infra",
+            "title": "Déploiement local, fichiers, sauvegardes et observabilité",
+            "desc": "Préparer l’installation sur site et la maintenance.",
+            "questions": [
+                  {
+                        "id": "dev_10_01",
+                        "title": "Sur quelle machine tournera le backend local ?",
+                        "help": "Mac mini, PC, NAS, Raspberry, laptop, serveur existant. Préciser OS, disponibilité, accès imprimante.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_10_02",
+                        "title": "Docker ou installation directe ?",
+                        "help": "Décider pour Bun, MongoDB, volumes fichiers, sauvegardes, redémarrage automatique.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_10_03",
+                        "title": "Où stocker photos, captures caméra et fichiers ?",
+                        "help": "Options : disque local + métadonnées Mongo, GridFS, MinIO plus tard. Décider structure de dossiers et backups.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_10_04",
+                        "title": "Quelle stratégie de sauvegarde ?",
+                        "help": "Mongo dump, fichiers photos, fréquence, destination, rétention, test de restauration.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_10_05",
+                        "title": "Comment gérer logs et observabilité ?",
+                        "help": "Logs backend, erreurs impression, erreurs caméra/appareils, requestId, fichiers logs, dashboard admin, rotation.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_10_06",
+                        "title": "Faut-il un accès distant hors site ?",
+                        "help": "Si oui : VPN, Tailscale, tunnel, cloud. Si non : local uniquement. Impacts sécurité.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "materiel-futur",
+            "title": "Matériel futur : Reolink, Inkbird et capteurs",
+            "desc": "Prévoir les modules sans bloquer le MVP métier.",
+            "questions": [
+                  {
+                        "id": "dev_11_01",
+                        "title": "Comment brancher le code Reolink existant plus tard ?",
+                        "help": "Librairie importable, script séparé, service HTTP interne, worker, cron capture. Décrire l’intégration idéale.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_11_02",
+                        "title": "Quelle stratégie de captures caméra ?",
+                        "help": "Capture manuelle, périodique, par chambre, stockage, liaison automatique aux lots présents, timelapse futur.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_11_03",
+                        "title": "Quel mode d’intégration possible pour Inkbird ITC-308-WIFI et IHC-200-WIFI ?",
+                        "help": "API locale, cloud, Home Assistant, MQTT, scraping, import manuel. À investiguer.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_11_04",
+                        "title": "Lecture seulement ou contrôle actif des appareils ?",
+                        "help": "Recommandation : lecture/historique d’abord ; contrôle consignes/relais plus tard avec garde-fous.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_11_05",
+                        "title": "Comment représenter les deviceReadings ?",
+                        "help": "Température, humidité, consigne, état relais, rawPayload, mapping vers measurements, fréquence de lecture.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_11_06",
+                        "title": "Quelles alertes matérielles prévoir ?",
+                        "help": "Caméra hors ligne, Inkbird hors ligne, température/humidité hors plage, absence de mesure, erreur capture.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "tests-qualite",
+            "title": "Tests, seed data et qualité",
+            "desc": "Préparer un socle fiable et testable.",
+            "questions": [
+                  {
+                        "id": "dev_12_01",
+                        "title": "Quelle stratégie de tests veux-tu ?",
+                        "help": "Unitaires services métier, intégration API+Mongo, e2e Playwright, tests de formulaires dynamiques, tests impression mockée.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_12_02",
+                        "title": "Quels scénarios métier doivent être couverts par tests dès le MVP ?",
+                        "help": "Exemples : création source+lot+QR, scan, changement étape, division, mesure, récolte, produit final, correction.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_12_03",
+                        "title": "Veux-tu des seeds/dev fixtures ?",
+                        "help": "Process pleurotes exemple, chambres exemple, espèces, lots fictifs, QR fictifs, récoltes. Très utile pour UI.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_12_04",
+                        "title": "Quelle stratégie CI ou commandes de validation ?",
+                        "help": "Exemples : bun test, bun run typecheck, lint, build, e2e. Local only ou CI GitHub plus tard.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_12_05",
+                        "title": "Quels critères d’acceptation pour dire qu’une feature est terminée ?",
+                        "help": "Tests, validation terrain, capture écran, JSON docs, migrations, logs, rollback.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "roadmap-dev",
+            "title": "Roadmap développeur et risques",
+            "desc": "Découper le futur codage en phases maîtrisées.",
+            "questions": [
+                  {
+                        "id": "dev_13_01",
+                        "title": "Quel ordre d’implémentation veux-tu suivre ?",
+                        "help": "Proposition : socle auth/API/Mongo → sources/lots/QR → process minimal → chambres/mesures → division → récoltes/produits → dashboards → matériel.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_13_02",
+                        "title": "Quels sont les plus gros risques techniques ?",
+                        "help": "Exemples : imprimante QR, iPhone/HTTPS local, process trop flexible, transactions Mongo, Inkbird fermé, offline.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_13_03",
+                        "title": "Quels points faut-il prototyper avant de coder tout le reste ?",
+                        "help": "Exemples : impression réelle, scan iPhone URL locale, Mongo transactions, formulaire dynamique, capture photo iPhone.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_13_04",
+                        "title": "Quel backlog MVP en 10 tâches maximum ?",
+                        "help": "Liste courte, priorisée et actionnable.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_13_05",
+                        "title": "Quels sujets doivent attendre les réponses du cultivateur ?",
+                        "help": "Cela évite de coder un mauvais modèle métier.",
+                        "type": "longtext"
+                  }
+            ]
+      },
+      {
+            "id": "decisions-finales",
+            "title": "Décisions finales à figer avant codage",
+            "desc": "Tableau de synthèse pour transformer les réponses en plan d’implémentation.",
+            "questions": [
+                  {
+                        "id": "dev_14_01",
+                        "title": "Tableau des décisions techniques",
+                        "help": "Ajoute une ligne par décision importante. Statut conseillé : décidé, à valider, bloqué, dépend du cultivateur.",
+                        "type": "table",
+                        "columns": [
+                              "Domaine",
+                              "Décision",
+                              "Statut",
+                              "Raison",
+                              "Impact code"
+                        ],
+                        "rowsData": [
+                              [
+                                    "Backend",
+                                    "",
+                                    "",
+                                    "",
+                                    ""
+                              ],
+                              [
+                                    "Frontend",
+                                    "",
+                                    "",
+                                    "",
+                                    ""
+                              ],
+                              [
+                                    "MongoDB",
+                                    "",
+                                    "",
+                                    "",
+                                    ""
+                              ],
+                              [
+                                    "QR / impression",
+                                    "",
+                                    "",
+                                    "",
+                                    ""
+                              ],
+                              [
+                                    "Déploiement local",
+                                    "",
+                                    "",
+                                    "",
+                                    ""
+                              ]
+                        ]
+                  },
+                  {
+                        "id": "dev_14_02",
+                        "title": "Quels fichiers de documentation devront être mis à jour après tes réponses ?",
+                        "help": "Exemples : architecture technique, modèle MongoDB, contrats API, roadmap, questions ouvertes.",
+                        "type": "longtext"
+                  },
+                  {
+                        "id": "dev_14_03",
+                        "title": "Résumé personnel : quelles décisions prends-tu maintenant ?",
+                        "help": "Note les choix déjà actés pour éviter de les rediscuter pendant le codage.",
+                        "type": "longtext"
+                  }
+            ]
+      }
+];
+
+    let state = loadState();
+    let saveTimer = null;
+
+    function defaultMeta() {
+      const today = new Date().toISOString().slice(0, 10);
+      return { developerName: "", projectName: "champignon-manager", answeredAt: today, contact: "", generalNotes: "" };
+    }
+
+    function questionDefaults(q) {
+      const base = { title: q.title, status: "todo", answer: "", notes: "", selected: [], table: null, updatedAt: null };
+      if (q.type === "table") base.table = buildDefaultRows(q);
+      return base;
+    }
+
+    function buildDefaultRows(q) {
+      if (q.rowsData) {
+        return q.rowsData.map(row => Object.fromEntries(q.columns.map((col, idx) => [col, row[idx] || ""])));
+      }
+      const count = q.rows || 2;
+      return Array.from({ length: count }, () => Object.fromEntries(q.columns.map(col => [col, ""])));
+    }
+
+    function allQuestions() {
+      return SECTIONS.flatMap(section => section.questions.map(q => ({ ...q, sectionId: section.id, sectionTitle: section.title })));
+    }
+
+    function ensureStateShape(raw) {
+      const next = {
+        schema: "champignon-manager.developer-decisions-response.v1",
+        formVersion: FORM_VERSION,
+        meta: { ...defaultMeta(), ...(raw && raw.meta ? raw.meta : {}) },
+        questions: raw && raw.questions ? raw.questions : {},
+        savedAt: raw && raw.savedAt ? raw.savedAt : null
+      };
+      allQuestions().forEach(q => {
+        next.questions[q.id] = { ...questionDefaults(q), ...(next.questions[q.id] || {}) };
+        if (q.type === "table" && !Array.isArray(next.questions[q.id].table)) {
+          next.questions[q.id].table = buildDefaultRows(q);
+        }
+      });
+      return next;
+    }
+
+    function loadState() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        return ensureStateShape(raw);
+      } catch (error) {
+        console.warn("Impossible de charger la sauvegarde locale", error);
+        return ensureStateShape(null);
+      }
+    }
+
+    function scheduleSave() {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveNow, 250);
+    }
+
+    function saveNow() {
+      state.savedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateSaveState();
+    }
+
+    function updateSaveState() {
+      const el = document.getElementById("saveState");
+      if (!state.savedAt) {
+        el.textContent = "Autosauvegarde prête.";
+        return;
+      }
+      el.textContent = "Autosauvegardé à " + new Date(state.savedAt).toLocaleString("fr-FR");
+    }
+
+    function render() {
+      renderMeta();
+      renderNav();
+      renderSections();
+      updateCounts();
+      updateSaveState();
+      applyFilters();
+    }
+
+    function renderMeta() {
+      document.querySelectorAll("[data-meta]").forEach(input => {
+        input.value = state.meta[input.dataset.meta] || "";
+      });
+    }
+
+    function renderNav() {
+      const nav = document.getElementById("sectionNav");
+      nav.innerHTML = SECTIONS.map(section => {
+        const count = section.questions.length;
+        return `<a class="nav-item" href="#${section.id}"><span>${escapeHtml(section.title)}</span><span class="count" id="nav-count-${section.id}">0/${count}</span></a>`;
+      }).join("");
+    }
+
+    function renderSections() {
+      const root = document.getElementById("sections");
+      root.innerHTML = SECTIONS.map(section => `
+        <section class="panel section" id="${section.id}" data-section="${section.id}">
+          <div class="section-head">
+            <div class="section-kicker">${section.questions.length} question${section.questions.length > 1 ? "s" : ""}</div>
+            <h2>${escapeHtml(section.title)}</h2>
+            <p class="section-desc">${escapeHtml(section.desc || "")}</p>
+          </div>
+          <div class="questions">
+            ${section.questions.map(q => renderQuestion(q)).join("")}
+          </div>
+        </section>
+      `).join("");
+    }
+
+    function renderQuestion(q) {
+      const qs = state.questions[q.id];
+      return `
+        <article class="question-card" data-qid="${q.id}" data-status="${qs.status}" data-section-card="${q.sectionId || ""}">
+          <div class="question-top">
+            <div>
+              <div class="q-code">${q.id}</div>
+              <textarea class="question-title" data-qid="${q.id}" data-field="title" aria-label="Question modifiable">${escapeHtml(qs.title)}</textarea>
+            </div>
+            <div class="field">
+              <label class="label">Statut</label>
+              <select class="status-select" data-qid="${q.id}" data-field="status">
+                ${Object.entries(STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${qs.status === value ? "selected" : ""}>${label}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <div class="question-body">
+            ${q.help ? `<div class="help">${formatHelp(q.help)}</div>` : ""}
+            ${renderAnswerControl(q, qs)}
+            <div class="field">
+              <label class="label">Notes / précisions / à revoir ensemble</label>
+              <textarea class="note-area" data-qid="${q.id}" data-field="notes" placeholder="Optionnel : précision, doute, contexte, exemple concret...">${escapeHtml(qs.notes || "")}</textarea>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderAnswerControl(q, qs) {
+      if (q.type === "checklist") {
+        const options = q.options || [];
+        return `
+          <div class="check-grid">
+            ${options.map(option => `
+              <label class="check-option">
+                <input type="checkbox" data-qid="${q.id}" data-field="selected" value="${escapeHtml(option)}" ${qs.selected && qs.selected.includes(option) ? "checked" : ""} />
+                <span>${escapeHtml(option)}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="field">
+            <label class="label">Réponse / précisions</label>
+            <textarea data-qid="${q.id}" data-field="answer" placeholder="Ajoute les détails, exceptions, priorités...">${escapeHtml(qs.answer || "")}</textarea>
+          </div>
+        `;
+      }
+      if (q.type === "table") {
+        return renderTable(q, qs);
+      }
+      return `
+        <div class="field">
+          <label class="label">Réponse</label>
+          <textarea data-qid="${q.id}" data-field="answer" placeholder="Réponds ici. Tu peux écrire court ou détaillé.">${escapeHtml(qs.answer || "")}</textarea>
+        </div>
+      `;
+    }
+
+    function renderTable(q, qs) {
+      const rows = Array.isArray(qs.table) ? qs.table : buildDefaultRows(q);
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>${q.columns.map(col => `<th>${escapeHtml(col)}</th>`).join("")}<th class="row-actions">Action</th></tr>
+            </thead>
+            <tbody>
+              ${rows.map((row, rowIndex) => `
+                <tr>
+                  ${q.columns.map(col => `
+                    <td><input class="table-input" data-qid="${q.id}" data-field="table" data-row="${rowIndex}" data-col="${escapeHtml(col)}" value="${escapeHtml(row[col] || "")}" /></td>
+                  `).join("")}
+                  <td class="row-actions"><button class="btn ghost small" data-action="delete-row" data-qid="${q.id}" data-row="${rowIndex}" type="button">✕</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+        <button class="btn ghost small" data-action="add-row" data-qid="${q.id}" type="button">+ Ajouter une ligne</button>
+      `;
+    }
+
+    function formatHelp(text) {
+      return escapeHtml(text).replace(/\n/g, "<br />");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function updateCounts() {
+      const questions = allQuestions();
+      const counts = { total: questions.length, answered: 0, na: 0, clarify: 0, todo: 0 };
+      questions.forEach(q => {
+        const status = state.questions[q.id].status || "todo";
+        counts[status] = (counts[status] || 0) + 1;
+      });
+      const done = counts.answered + counts.na;
+      const pct = counts.total ? Math.round(done / counts.total * 100) : 0;
+      document.getElementById("progressPct").textContent = pct + "%";
+      document.getElementById("progressRatio").textContent = `${done} / ${counts.total}`;
+      document.getElementById("progressFill").style.width = pct + "%";
+      document.getElementById("countAnswered").textContent = counts.answered;
+      document.getElementById("countNa").textContent = counts.na;
+      document.getElementById("countClarify").textContent = counts.clarify;
+      document.getElementById("countTodo").textContent = counts.todo;
+
+      SECTIONS.forEach(section => {
+        const sectionDone = section.questions.filter(q => ["answered", "na"].includes(state.questions[q.id].status)).length;
+        const el = document.getElementById(`nav-count-${section.id}`);
+        if (el) el.textContent = `${sectionDone}/${section.questions.length}`;
+      });
+    }
+
+    function maybeAutoAnswered(qid) {
+      const qs = state.questions[qid];
+      if (!qs || qs.status !== "todo") return;
+      const hasText = (qs.answer || "").trim().length > 0;
+      const hasNotes = (qs.notes || "").trim().length > 0;
+      const hasSelected = Array.isArray(qs.selected) && qs.selected.length > 0;
+      const hasTable = Array.isArray(qs.table) && qs.table.some(row => Object.values(row).some(v => String(v || "").trim()));
+      if (hasText || hasNotes || hasSelected || hasTable) {
+        qs.status = "answered";
+        const card = document.querySelector(`[data-qid="${qid}"].question-card`);
+        if (card) card.dataset.status = "answered";
+        const select = document.querySelector(`select[data-qid="${qid}"][data-field="status"]`);
+        if (select) select.value = "answered";
+      }
+    }
+
+    function onInput(event) {
+      const target = event.target;
+      if (target.dataset.meta) {
+        state.meta[target.dataset.meta] = target.value;
+        scheduleSave();
+        return;
+      }
+      const qid = target.dataset.qid;
+      const field = target.dataset.field;
+      if (!qid || !field) return;
+      const qs = state.questions[qid];
+      if (!qs) return;
+
+      if (field === "selected") {
+        const selected = new Set(qs.selected || []);
+        if (target.checked) selected.add(target.value);
+        else selected.delete(target.value);
+        qs.selected = Array.from(selected);
+      } else if (field === "table") {
+        const row = Number(target.dataset.row);
+        const col = target.dataset.col;
+        qs.table[row][col] = target.value;
+      } else {
+        qs[field] = target.value;
+      }
+      qs.updatedAt = new Date().toISOString();
+      if (["answer", "notes", "selected", "table"].includes(field)) maybeAutoAnswered(qid);
+      if (field === "status") {
+        const card = document.querySelector(`[data-qid="${qid}"].question-card`);
+        if (card) card.dataset.status = target.value;
+      }
+      updateCounts();
+      applyFilters();
+      scheduleSave();
+    }
+
+    function onClick(event) {
+      const btn = event.target.closest("button");
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const qid = btn.dataset.qid;
+      if (action === "add-row") {
+        const q = allQuestions().find(item => item.id === qid);
+        state.questions[qid].table.push(Object.fromEntries(q.columns.map(col => [col, ""])));
+        saveNow();
+        render();
+        return;
+      }
+      if (action === "delete-row") {
+        const row = Number(btn.dataset.row);
+        if (state.questions[qid].table.length <= 1) return toast("Il faut garder au moins une ligne.");
+        state.questions[qid].table.splice(row, 1);
+        saveNow();
+        render();
+      }
+    }
+
+    function applyFilters() {
+      const search = document.getElementById("searchInput").value.trim().toLowerCase();
+      const status = document.getElementById("statusFilter").value;
+      let visibleCards = 0;
+
+      document.querySelectorAll(".question-card").forEach(card => {
+        const qid = card.dataset.qid;
+        const qs = state.questions[qid];
+        const q = allQuestions().find(item => item.id === qid);
+        const haystack = [qs.title, q.title, q.help, qs.answer, qs.notes, (qs.selected || []).join(" "), JSON.stringify(qs.table || "")].join(" ").toLowerCase();
+        const matchesSearch = !search || haystack.includes(search);
+        const matchesStatus = status === "all" || qs.status === status;
+        const visible = matchesSearch && matchesStatus;
+        card.classList.toggle("hidden", !visible);
+        if (visible) visibleCards++;
+      });
+
+      document.querySelectorAll("[data-section]").forEach(section => {
+        const hasVisible = !!section.querySelector(".question-card:not(.hidden)");
+        section.classList.toggle("hidden", !hasVisible);
+      });
+
+      document.getElementById("emptyFilter").classList.toggle("hidden", visibleCards !== 0);
+    }
+
+    function collectPayload() {
+      const sections = SECTIONS.map(section => ({
+        id: section.id,
+        title: section.title,
+        description: section.desc || "",
+        questions: section.questions.map(q => {
+          const qs = state.questions[q.id];
+          return {
+            id: q.id,
+            type: q.type || "longtext",
+            originalTitle: q.title,
+            currentTitle: qs.title,
+            status: qs.status,
+            statusLabel: STATUS_LABELS[qs.status] || qs.status,
+            answer: qs.answer || "",
+            notes: qs.notes || "",
+            selectedOptions: qs.selected || [],
+            tableRows: qs.table || null,
+            updatedAt: qs.updatedAt || null
+          };
+        })
+      }));
+      const counts = getCounts();
+      return {
+        schema: "champignon-manager.developer-decisions-response.v1",
+        formVersion: FORM_VERSION,
+        exportedAt: new Date().toISOString(),
+        meta: state.meta,
+        summary: counts,
+        sections
+      };
+    }
+
+    function getCounts() {
+      const counts = { total: 0, answered: 0, na: 0, clarify: 0, todo: 0 };
+      allQuestions().forEach(q => {
+        counts.total++;
+        const status = state.questions[q.id].status || "todo";
+        counts[status] = (counts[status] || 0) + 1;
+      });
+      counts.done = counts.answered + counts.na;
+      counts.progressPercent = counts.total ? Math.round(counts.done / counts.total * 100) : 0;
+      return counts;
+    }
+
+    function exportJson() {
+      saveNow();
+      const payload = collectPayload();
+      const nameBits = ["champignon-reponses-dev"];
+      if (state.meta.developerName) nameBits.push(slugify(state.meta.developerName));
+      nameBits.push(new Date().toISOString().slice(0, 10));
+      download(`${nameBits.join("-")}.json`, JSON.stringify(payload, null, 2), "application/json");
+      toast("Fichier JSON exporté. Tu peux l’utiliser comme base de décisions techniques.");
+    }
+
+    function exportMarkdown() {
+      saveNow();
+      const payload = collectPayload();
+      const md = [];
+      md.push("# Réponses développeur — Champignon Manager");
+      md.push("");
+      md.push(`- Exporté le : ${new Date(payload.exportedAt).toLocaleString("fr-FR")}`);
+      md.push(`- Développeur : ${payload.meta.developerName || ""}`);
+      md.push(`- Projet : ${payload.meta.projectName || ""}`);
+      md.push(`- Contact : ${payload.meta.contact || ""}`);
+      md.push(`- Progression : ${payload.summary.progressPercent}% (${payload.summary.done}/${payload.summary.total})`);
+      if (payload.meta.generalNotes) md.push(`- Notes générales : ${payload.meta.generalNotes}`);
+      md.push("");
+      payload.sections.forEach(section => {
+        md.push(`## ${section.title}`);
+        md.push("");
+        section.questions.forEach(q => {
+          md.push(`### ${q.id} — ${q.currentTitle}`);
+          md.push("");
+          md.push(`Statut : **${q.statusLabel}**`);
+          if (q.selectedOptions.length) md.push(`\nCases cochées : ${q.selectedOptions.join(", ")}`);
+          if (q.answer) md.push(`\nRéponse :\n\n${q.answer}`);
+          if (q.tableRows) {
+            md.push("\nTableau :");
+            const cols = Object.keys(q.tableRows[0] || {});
+            md.push(`| ${cols.join(" | ")} |`);
+            md.push(`| ${cols.map(() => "---").join(" | ")} |`);
+            q.tableRows.forEach(row => md.push(`| ${cols.map(col => String(row[col] || "").replace(/\|/g, "\\|")).join(" | ")} |`));
+          }
+          if (q.notes) md.push(`\nNotes :\n\n${q.notes}`);
+          md.push("");
+        });
+      });
+      download(`champignon-reponses-dev-${new Date().toISOString().slice(0, 10)}.md`, md.join("\n"), "text/markdown");
+      toast("Export Markdown créé.");
+    }
+
+    function download(filename, content, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    }
+
+    function slugify(value) {
+      return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+
+    function importJsonFile() {
+      document.getElementById("importFile").click();
+    }
+
+    function handleImportFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const payload = JSON.parse(reader.result);
+          applyImportedPayload(payload);
+          saveNow();
+          render();
+          toast("JSON importé. Les réponses sont chargées.");
+        } catch (error) {
+          console.error(error);
+          toast("Impossible d’importer ce JSON.");
+        } finally {
+          event.target.value = "";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function applyImportedPayload(payload) {
+      if (!payload || !Array.isArray(payload.sections)) throw new Error("Format invalide");
+      state.meta = { ...defaultMeta(), ...(payload.meta || {}) };
+      payload.sections.forEach(section => {
+        (section.questions || []).forEach(q => {
+          if (!state.questions[q.id]) return;
+          state.questions[q.id] = {
+            ...state.questions[q.id],
+            title: q.currentTitle || q.title || state.questions[q.id].title,
+            status: q.status || "todo",
+            answer: q.answer || "",
+            notes: q.notes || "",
+            selected: q.selectedOptions || [],
+            table: q.tableRows || state.questions[q.id].table,
+            updatedAt: q.updatedAt || new Date().toISOString()
+          };
+        });
+      });
+    }
+
+    function markVisibleAnswered() {
+      const cards = Array.from(document.querySelectorAll(".question-card:not(.hidden)"));
+      if (!cards.length) return toast("Aucune question visible à marquer.");
+      if (!confirm(`Marquer ${cards.length} question(s) visible(s) comme répondues ?`)) return;
+      cards.forEach(card => {
+        const qid = card.dataset.qid;
+        state.questions[qid].status = "answered";
+      });
+      saveNow();
+      render();
+      toast("Questions visibles marquées répondues.");
+    }
+
+    function clearLocal() {
+      if (!confirm("Effacer la sauvegarde locale de ce navigateur ? Pense à exporter le JSON avant.")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = ensureStateShape(null);
+      render();
+      toast("Sauvegarde locale effacée.");
+    }
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => el.classList.remove("show"), 3200);
+    }
+
+    document.addEventListener("input", onInput);
+    document.addEventListener("change", onInput);
+    document.addEventListener("click", onClick);
+
+    document.getElementById("searchInput").addEventListener("input", applyFilters);
+    document.getElementById("statusFilter").addEventListener("change", applyFilters);
+    document.getElementById("resetFilters").addEventListener("click", () => {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("statusFilter").value = "all";
+      applyFilters();
+    });
+
+    ["exportJsonTop", "exportJsonSide", "exportJsonBottom"].forEach(id => document.getElementById(id).addEventListener("click", exportJson));
+    ["exportMarkdownSide", "exportMarkdownBottom"].forEach(id => document.getElementById(id).addEventListener("click", exportMarkdown));
+    ["importJsonTop", "importJsonSide"].forEach(id => document.getElementById(id).addEventListener("click", importJsonFile));
+    document.getElementById("importFile").addEventListener("change", handleImportFile);
+    document.getElementById("printTop").addEventListener("click", () => window.print());
+    document.getElementById("markVisibleAnswered").addEventListener("click", markVisibleAnswered);
+    document.getElementById("clearLocal").addEventListener("click", clearLocal);
+
+    render();
+  </script>
+</body>
+</html>
