@@ -541,12 +541,41 @@ Certaines actions doivent être atomiques :
 - création produit final + mouvement stock + événement ;
 - correction administrative.
 
-MongoDB transactions sont recommandées si l’installation utilise un replica set, même local.
+Décision développeur : utiliser un **replica set MongoDB local** pour permettre les transactions, notamment via Docker Compose.
 
-## 11. Points à clarifier avant codage
+## 11. Décisions développeur intégrées
 
-- Utilisation de MongoDB replica set local pour transactions.
+Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+Décisions validées :
+
+- MongoDB native driver + Zod, sans Mongoose au MVP.
+- Approche hybride confirmée : état courant dans les collections principales + événements immuables.
+- Replica set local pour transactions.
+- Migrations par scripts versionnés, collection `schemaMigrations`, validation au démarrage.
+- Trois couches de types : Domain Model, DTO/API, documents MongoDB.
+- `publicCode` à définir après réponses cultivateur, mais prévoir une convention détaillée et stable.
+
+Collections MVP confirmées :
+
+- `users`, `sites`, `species`, `strains` ;
+- `locations` ;
+- `processTemplates`, `processVersions` ;
+- `sources`, `lots`, `events` ;
+- `measurements`, `observations` ;
+- `harvests`, `productBatches` ;
+- `qrRegistry`, `printJobs` ;
+- `files`, `alerts`, `tasks`.
+
+Collections après MVP :
+
+- `cameras`, `cameraCaptures` ;
+- `devices`, `deviceReadings`.
+
+## 12. Points à clarifier avant codage
+
 - Phases, actions et observations configurables du premier process pleurotes.
+- Versioning / migration d’un process déjà utilisé par des lots.
 - Niveau exact de détail des emplacements physiques.
 - Format final des `publicCode`.
 - Règles de mélange de récoltes dans un produit final.

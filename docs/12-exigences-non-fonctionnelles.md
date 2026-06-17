@@ -9,7 +9,7 @@ Exigences :
 - éviter les pertes de données ;
 - sauvegarder régulièrement MongoDB ;
 - historiser les actions importantes ;
-- permettre la correction sans suppression ;
+- permettre la correction et la suppression logique auditée ;
 - gérer les coupures réseau locales ;
 - signaler clairement les erreurs d’impression ou de matériel.
 
@@ -37,12 +37,13 @@ Même en local, l’application gère des données de production.
 
 Exigences :
 
-- authentification ;
-- permissions backend ;
-- sessions sécurisées ;
+- authentification simple login/mot de passe au MVP ;
+- rôle `admin` unique au départ ;
+- permissions backend extensibles ;
+- sessions sécurisées même en local ;
 - mots de passe hashés ;
 - tokens QR non prédictibles ;
-- audit des corrections ;
+- audit de toutes les actions importantes ;
 - accès imprimante et appareils réservé au backend ;
 - sauvegardes protégées.
 
@@ -54,10 +55,12 @@ Prévoir :
 
 - adresse locale stable ;
 - documentation de connexion iPhone ;
+- Tailscale comme option probable pour accès local étendu/distant ;
+- HTTPS via Tailscale si nécessaire ;
 - gestion des changements d’IP ;
 - mDNS/Bonjour si possible ;
 - fallback par IP ;
-- stratégie HTTPS locale si nécessaire.
+- stratégie HTTPS locale si Tailscale ne suffit pas.
 
 ## 5. Compatibilité iPhone
 
@@ -65,7 +68,8 @@ L’interface doit être testée sur Safari iOS.
 
 Points importants :
 
-- scan QR via appareil photo ;
+- scan QR via scanner web intégré au MVP ;
+- scan via appareil photo iOS en option future si QR URL ;
 - ajout à l’écran d’accueil ;
 - upload photo ;
 - permissions caméra si scan intégré ;
@@ -101,11 +105,12 @@ L’application doit pouvoir évoluer vers :
 
 Stratégie recommandée :
 
-- sauvegarde MongoDB quotidienne ;
+- sauvegarde MongoDB par `mongodump` ;
 - sauvegarde des fichiers/photos ;
+- définir fréquence, destination et rétention avant mise en production ;
 - export ponctuel CSV/JSON pour données critiques ;
 - procédure de restauration documentée ;
-- test de restauration régulier.
+- test de restauration régulier obligatoire.
 
 ## 9. Observabilité
 
@@ -115,7 +120,8 @@ Le backend doit produire :
 - logs d’erreurs ;
 - logs d’impression ;
 - logs d’intégration caméra/appareils ;
-- métriques simples : nombre de scans, événements, erreurs.
+- métriques simples : nombre de scans, événements, erreurs ;
+- dashboard admin de consultation des logs.
 
 ## 10. Audit
 
@@ -131,6 +137,7 @@ Actions auditables :
 - réimpression QR ;
 - changement configuration process ;
 - changement de droits ;
+- suppression logique / annulation ;
 - action matérielle future.
 
 ## 11. Robustesse face au matériel
@@ -173,4 +180,38 @@ Même sans objectif formel WCAG complet au MVP, prévoir :
 - boutons larges ;
 - feedback visuel clair ;
 - pas d’information uniquement par couleur ;
-- mode sombre éventuellement utile en chambre.
+- mode sombre utile en chambre.
+
+## 14. Tests et validation
+
+Décisions développeur :
+
+- objectif de couverture très élevé ;
+- services métier testables ;
+- tests unitaires et intégration avec Vitest ;
+- tests E2E avec Playwright ;
+- tests des formulaires dynamiques ;
+- seeds / fixtures de développement ;
+- validation locale au départ, CI distante non prioritaire.
+
+Critère de fin d’une fonctionnalité :
+
+- tests passants ;
+- validation terrain si concernée ;
+- capture écran pour UI ;
+- documentation JSON/Markdown mise à jour ;
+- migration prévue si nécessaire ;
+- logs utiles ;
+- rollback possible.
+
+## 15. Décisions développeur intégrées
+
+Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+Points clés :
+
+- MVP réellement utilisable en production.
+- Docker Compose pour déploiement local.
+- Dev macOS / Windows 11, production Raspberry Pi.
+- Tailscale pour accès local étendu/distant.
+- Reolink, Inkbird, offline avancé, ventes et facturation après MVP.

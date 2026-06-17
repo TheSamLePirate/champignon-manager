@@ -42,6 +42,7 @@ Permettre à un utilisateur sur site de suivre toute la chaîne de culture :
 | [15-questionnaire-cultivateur-process.md](./15-questionnaire-cultivateur-process.md) | Questionnaire vulgarisé à faire remplir au cultivateur sur le process réel. |
 | [16-formulaire-reponses-cultivateur.html](./16-formulaire-reponses-cultivateur.html) | Formulaire HTML autonome avec autosauvegarde, import/export JSON et export Markdown. |
 | [17-formulaire-questions-dev.html](./17-formulaire-questions-dev.html) | Formulaire HTML autonome pour les décisions développeur : architecture, API, DB, QR, déploiement. |
+| [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md) | Synthèse des réponses développeur et décisions techniques retenues. |
 
 ## Décisions initiales proposées
 

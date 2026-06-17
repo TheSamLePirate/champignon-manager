@@ -20,6 +20,8 @@ Le suivi repose sur :
 
 La priorité choisie est un **socle complet**, livré par étapes progressives.
 
+Décision développeur du 2026-06-17 : la première version doit être un outil réellement utilisable en production, avec UI mobile propre, impression stable, sauvegardes robustes et gestion d’erreurs complète.
+
 La première version réellement utilisable doit couvrir :
 
 1. création et suivi des sources/lots ;
@@ -29,17 +31,23 @@ La première version réellement utilisable doit couvrir :
 5. process configurable avec phases, étapes, actions, observations, formulaires et statuts ;
 6. gestion des divisions de lots et mouvements entre chambres ;
 7. mesures et observations manuelles ;
-8. récoltes et conversion en produits finaux ;
-9. stock simple de produits finaux ;
-10. architecture prête pour caméra et automatisations.
+8. récoltes complètes avec poids par unité/flush selon process validé ;
+9. conversion en produits finaux ;
+10. stock simple de produits finaux ;
+11. architecture prête pour caméra et automatisations, sans les intégrer au MVP.
 
 ## 3. Hors périmètre immédiat
 
 Ces sujets sont prévus mais ne doivent pas bloquer le socle :
 
 - e-commerce ou facturation complète ;
+- ventes détaillées ;
 - comptabilité ;
 - automatisation matérielle de chambres ;
+- contrôle actif des appareils ;
+- intégration Reolink ;
+- intégration Inkbird ;
+- offline avancé/PWA complète ;
 - prédiction de rendement par IA ;
 - intégration caméra avancée avec analyse d’image automatique ;
 - application mobile native ;

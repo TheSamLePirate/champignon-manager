@@ -108,7 +108,7 @@ Contraintes :
 
 Une caméra Reolink est prévue pour le suivi de pousse.
 
-L’utilisateur indique avoir déjà du code pour la contrôler. L’intégration sera branchée plus tard.
+Décision développeur : l’intégration Reolink est explicitement repoussée après le MVP. L’utilisateur indique avoir déjà du code pour la contrôler ; il sera branché plus tard.
 
 ### 7.1 Objectifs futurs
 
@@ -143,7 +143,7 @@ L’utilisateur indique avoir déjà du code pour la contrôler. L’intégratio
 
 ## 8. Inkbird ITC-308-WIFI et IHC-200-WIFI
 
-Les appareils Inkbird seront ajoutés plus tard.
+Décision développeur : les appareils Inkbird seront ajoutés après le MVP.
 
 ### 8.1 Appareils connus
 
@@ -174,9 +174,9 @@ Il faudra déterminer le mode d’accès :
 
 ### 8.4 Prudence sur le contrôle
 
-Pour le MVP, l’application doit d’abord lire et historiser.
+Après le MVP, l’application devra probablement d’abord lire et historiser.
 
-Le contrôle actif des appareils — modification de consignes, activation relais — doit être traité plus tard avec prudence :
+Le contrôle actif des appareils — modification de consignes, activation relais — est explicitement hors MVP et doit être traité plus tard avec prudence :
 
 - sécurité production ;
 - confirmation utilisateur ;
@@ -217,4 +217,4 @@ Pour commencer :
 - photos liées aux observations ;
 - association mesures/observations à lot ou chambre ;
 - historique dans timeline ;
-- architecture prête pour Reolink et Inkbird.
+- architecture prête pour Reolink et Inkbird, sans intégration active au MVP.

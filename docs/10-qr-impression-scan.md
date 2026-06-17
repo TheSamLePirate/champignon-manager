@@ -22,13 +22,17 @@ Chaque entité importante peut être scannée pour afficher sa fiche et proposer
 
 Le QR ne doit pas contenir toutes les données métier.
 
-Il doit contenir un lien ou token opaque permettant au backend de retrouver la cible.
+Décision développeur : le QR doit contenir **un token opaque seulement**, pas toutes les données métier.
+
+Le scanner web intégré lira ce token puis demandera au backend de retrouver la cible.
 
 Exemple conceptuel :
 
 ```text
-http://champignon.local/q/<token>
+<token>
 ```
+
+Option future si l’on veut utiliser l’appareil photo iOS natif hors web app : encapsuler ce token dans une URL locale/Tailscale.
 
 Le token doit être :
 
@@ -42,12 +46,13 @@ Le token doit être :
 
 Quand un QR est scanné :
 
-1. le navigateur ouvre l’URL locale ;
-2. le frontend ou backend résout le token ;
-3. le système identifie la cible ;
-4. le scan est historisé ;
-5. l’utilisateur voit la fiche correspondante ;
-6. les actions disponibles sont chargées selon le contexte.
+1. l’utilisateur ouvre l’interface web locale/Tailscale ;
+2. le scanner web intégré lit le token ;
+3. le frontend demande au backend de résoudre le token ;
+4. le système identifie la cible ;
+5. le scan est historisé ;
+6. l’utilisateur voit la fiche correspondante ;
+7. les actions disponibles sont chargées selon le contexte.
 
 ## 5. Scan depuis iPhone
 
@@ -57,26 +62,29 @@ Options :
 - scanner intégré dans l’interface web si autorisé par le navigateur ;
 - raccourci iPhone pointant vers la web app locale.
 
-Priorité MVP : compatibilité avec scan caméra iOS standard + URL locale.
+Priorité MVP : scanner intégré dans l’interface web, avec compatibilité iPhone. Le scan caméra iOS standard via URL locale devient une option de secours ou d’évolution.
 
 ## 6. Réseau local
 
 Conditions :
 
-- l’iPhone doit être sur le même réseau Wi‑Fi ;
+- l’iPhone doit être sur le même réseau Wi‑Fi ou connecté via Tailscale ;
 - le backend doit avoir une URL stable ;
-- idéalement un nom local facile : `champignon.local` ou équivalent ;
-- prévoir fallback par IP locale.
+- option probable : URL Tailscale ;
+- prévoir fallback par IP locale ou nom local si Tailscale n’est pas utilisé.
 
 Points à vérifier :
 
-- mDNS/Bonjour disponible ;
-- certificat HTTPS si nécessaire pour fonctionnalités caméra web ;
+- Tailscale et HTTPS local ;
+- mDNS/Bonjour si utilisé ;
+- certificat HTTPS si nécessaire pour scanner web/caméra navigateur ;
 - comportement iOS avec domaines locaux.
 
 ## 7. Impression
 
 L’imprimante QR compatible Node.js sera pilotée depuis le backend local.
+
+Décision matérielle actuelle : **Nimbot B21**.
 
 Le système doit gérer :
 
@@ -132,7 +140,8 @@ Règles :
 
 - enregistrer qui a demandé la réimpression ;
 - conserver le même token si l’étiquette est seulement abîmée ;
-- générer un nouveau token si l’ancien QR est compromis ou perdu ;
+- décision MVP : réimprimer le même token si l’étiquette est abîmée ou perdue dans un contexte maîtrisé ;
+- générer un nouveau token si l’ancien QR est compromis ;
 - révoquer l’ancien si nécessaire.
 
 ## 11. Sécurité
@@ -175,11 +184,24 @@ Scanner un produit final doit permettre :
 - remonter la traçabilité ;
 - enregistrer sortie ou perte selon permission.
 
-## 14. Questions techniques
+## 14. Décisions développeur intégrées
 
-- Modèle exact de l’imprimante QR.
-- Driver Node.js disponible.
-- Format d’étiquette supporté : image, ESC/POS, ZPL, autre.
+Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+Décisions :
+
+- payload QR = token opaque seulement ;
+- scan MVP = scanner web intégré ;
+- réseau = local/Tailscale, HTTPS via Tailscale si nécessaire ;
+- imprimante cible = Nimbot B21 ;
+- impression via `printJobs` avec statut, retry, erreur, copies, logs, test imprimante ;
+- réimpression par défaut = même token.
+
+## 15. Questions techniques restantes
+
+- Driver Node.js/Bun disponible pour Nimbot B21.
+- Protocole réel de la Nimbot B21 : Bluetooth, USB, image, commandes propriétaires, librairie existante.
+- Format d’étiquette supporté.
 - Taille physique des étiquettes.
 - Résistance des étiquettes à humidité/température.
 - Besoin de QR seulement ou QR + texte + logo.

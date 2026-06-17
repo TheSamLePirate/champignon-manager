@@ -242,10 +242,38 @@ Les listes doivent supporter :
 - filtre chambre ;
 - filtre espèce.
 
-## 18. Contrats à stabiliser avant codage
+## 18. Décisions développeur intégrées
 
-- Choix REST/Hono ou tRPC.
-- Format exact des erreurs.
-- Format des IDs exposés côté frontend.
-- Stratégie OpenAPI ou client généré.
-- Niveau de granularité des endpoints d’action métier.
+Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+Décisions validées :
+
+- API REST HTTP/JSON avec Hono.
+- Validation Zod des entrées.
+- Client API typé côté frontend.
+- Documentation OpenAPI automatique.
+- Erreurs métier typées et détaillées.
+- Endpoints métier explicites plutôt qu’un seul endpoint générique.
+- Actions importantes auditables via événements.
+
+Format standard à retenir :
+
+```text
+Succès : { data, meta? }
+Erreur : { error: { code, message, details?, requestId? } }
+```
+
+IDs exposés :
+
+- ID interne sous forme string quand nécessaire ;
+- `publicCode` pour affichage humain ;
+- token opaque pour QR ;
+- liens de parenté/généalogie exposés par ressources dédiées.
+
+## 19. Contrats restant à stabiliser avant codage
+
+- Liste exacte des actions par phase après réponses cultivateur.
+- Format final des `publicCode`.
+- Détail des DTO pour formulaires dynamiques.
+- Stratégie exacte OpenAPI/client généré ou client typé maison.
+- Règles de suppression logique / correction côté API.

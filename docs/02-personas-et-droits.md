@@ -103,7 +103,8 @@ Besoins :
 ## 5. Principes d’audit
 
 - Toute action métier doit être liée à un utilisateur.
-- Les corrections ne doivent pas effacer l’historique : elles doivent créer un événement de correction ou d’annulation.
+- Décision développeur : toutes les actions importantes doivent être auditables.
+- Les corrections, annulations et suppressions métier ne doivent pas effacer l’historique : elles doivent créer un événement de correction, d’annulation ou de suppression logique.
 - Les droits doivent être contrôlés côté backend, pas seulement dans l’interface.
 - Les scans QR doivent respecter les permissions : scanner ne suffit pas à modifier.
 
@@ -111,14 +112,16 @@ Besoins :
 
 Pour une première version locale :
 
-- compte utilisateur simple ;
-- mot de passe local ;
+- login / mot de passe simple ;
+- rôle `admin` unique au MVP ;
 - session web ;
-- possibilité de mode “poste opérateur” avec session longue si l’environnement est maîtrisé.
+- réseau local/Tailscale considéré comme environnement de confiance ;
+- possibilité future de mode “poste opérateur” avec session longue si l’environnement est maîtrisé.
 
 À clarifier plus tard :
 
 - besoin de connexion sans mot de passe sur réseau local ;
 - besoin de PIN rapide pour opérateurs ;
 - nombre d’utilisateurs ;
-- accès depuis l’extérieur ou uniquement local.
+- extension des rôles après le MVP ;
+- accès depuis l’extérieur via Tailscale uniquement ou autre stratégie.

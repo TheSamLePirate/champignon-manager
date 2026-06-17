@@ -284,7 +284,7 @@ Options :
 - PWA avec cache lecture seule ;
 - file d’attente locale pour saisies hors ligne.
 
-Décision proposée : commencer en ligne local, puis ajouter un mode PWA offline si le terrain le nécessite.
+Décision développeur : commencer en ligne local/Tailscale, sans PWA obligatoire au MVP, puis ajouter un mode PWA/offline si le terrain le nécessite.
 
 ## 15. États vides et erreurs
 
@@ -298,3 +298,35 @@ Prévoir des écrans clairs pour :
 - appareil indisponible ;
 - réseau backend inaccessible ;
 - conflit de modification.
+
+## 16. Décisions développeur intégrées
+
+Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+Décisions UX/frontend :
+
+- React + Vite avec TypeScript strict.
+- Tailwind + shadcn/ui recommandés.
+- TanStack Query recommandé pour les données serveur.
+- React Hook Form + Zod recommandés pour les formulaires.
+- Générateur de formulaires dynamiques pour les actions/process configurables.
+- UI mobile iPhone prioritaire.
+- Gros boutons, contraste fort, mode sombre, peu de champs.
+- Confirmation obligatoire pour actions critiques et actions en masse.
+
+Écrans prioritaires confirmés :
+
+- dashboard ;
+- scan QR ;
+- fiche lot mobile ;
+- liste lots ;
+- timeline lot ;
+- actions rapides lot ;
+- chambres ;
+- mesures / observations ;
+- récolte ;
+- produits / stock ;
+- configuration process ;
+- rapports ;
+- settings imprimante ;
+- login minimal.

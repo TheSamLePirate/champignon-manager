@@ -2,13 +2,17 @@
 
 ## 1. Stack cible
 
-- Runtime/backend : Bun + TypeScript.
-- Frontend : Vite + React + TypeScript.
+- Runtime/backend : Bun + TypeScript strict.
+- Frontend : Vite + React + TypeScript strict.
 - Base de données : MongoDB.
-- Interface mobile : web responsive/PWA, utilisée sur iPhone en réseau local.
-- Impression : service backend local compatible imprimante QR Node.js.
-- Caméra : intégration future Reolink via module dédié.
-- Capteurs/contrôleurs futurs : Inkbird ITC-308-WIFI et Inkbird IHC-200-WIFI.
+- API : Hono REST + schémas Zod + client frontend typé.
+- Interface mobile : web responsive iPhone, PWA non obligatoire au MVP.
+- UI : Tailwind + shadcn/ui recommandés pour une interface soignée et maintenable.
+- Impression : service backend local compatible imprimante QR Node.js, cible matérielle Nimbot B21.
+- Déploiement : Docker Compose, dev macOS/Windows 11, production locale Raspberry Pi.
+- Réseau : local/Tailscale, HTTPS via Tailscale si nécessaire.
+- Caméra : intégration future Reolink via module dédié après MVP.
+- Capteurs/contrôleurs futurs : Inkbird ITC-308-WIFI et Inkbird IHC-200-WIFI après MVP.
 
 ## 2. Objectif de typage
 
@@ -75,9 +79,9 @@ Inconvénient potentiel :
 
 - API moins standard si l’on veut plus tard intégrer d’autres clients.
 
-### Décision proposée
+### Décision validée
 
-Démarrer avec **Hono + validation de schémas + client frontend typé**. Garder tRPC comme alternative si la priorité absolue devient la vitesse de développement full TypeScript.
+Démarrer avec **Hono + validation de schémas Zod + client frontend typé**. Garder tRPC comme alternative future si la priorité absolue devient la vitesse de développement full TypeScript.
 
 ## 5. Validation de données
 
@@ -97,7 +101,7 @@ Options possibles :
 - Valibot ;
 - TypeBox.
 
-Décision proposée : **Zod** pour démarrer, car très courant et lisible.
+Décision validée : **Zod** pour démarrer, car très courant, lisible et adapté au partage de contrats TypeScript.
 
 ## 6. Accès MongoDB
 
@@ -120,7 +124,7 @@ Avantages :
 - validation côté modèle ;
 - écosystème connu.
 
-Décision proposée : **MongoDB native driver + schémas TypeScript/Zod**, pour garder un modèle événementiel flexible et fortement validé côté application.
+Décision validée : **MongoDB native driver + schémas TypeScript/Zod**, pour garder un modèle événementiel flexible et fortement validé côté application.
 
 ## 7. Modules backend prévus
 
@@ -179,13 +183,17 @@ Cela évite d’avoir à reconstruire tous les écrans depuis l’historique, to
 Déploiement local envisagé :
 
 - backend lancé sur une machine du réseau local ;
-- MongoDB local ou sur NAS/serveur local ;
+- développement sur Mac mini et Windows 11 ;
+- production locale cible sur Raspberry Pi ;
+- orchestration par Docker Compose ;
+- MongoDB local, idéalement en replica set local pour les transactions ;
 - frontend servi par le backend ou build statique ;
-- iPhone connecté au même Wi‑Fi ;
-- URL locale stable ou nom réseau ;
-- imprimante QR accessible depuis la machine backend ;
-- caméra Reolink accessible sur le réseau local ;
-- contrôleurs Inkbird Wi‑Fi accessibles via leur mode d’intégration futur, si API ou passerelle disponible.
+- iPhone connecté au même Wi‑Fi ou via Tailscale ;
+- URL locale stable à finaliser, probablement via Tailscale ;
+- HTTPS via Tailscale si nécessaire pour les fonctions navigateur ;
+- imprimante Nimbot B21 accessible depuis la machine backend ;
+- caméra Reolink accessible sur le réseau local plus tard ;
+- contrôleurs Inkbird Wi‑Fi intégrés plus tard, si API ou passerelle disponible.
 
 ## 11. Photos et fichiers
 
@@ -195,7 +203,7 @@ Options :
 - GridFS MongoDB ;
 - stockage objet local type MinIO si le volume devient important.
 
-Décision proposée pour MVP : stockage local organisé, avec métadonnées MongoDB.
+Décision validée pour MVP : stockage local organisé, avec métadonnées MongoDB.
 
 ## 12. Jobs et automatisations
 
@@ -230,11 +238,27 @@ apps/
   api/
   web/
 packages/
-  shared/
   domain/
+  shared/
   config-schemas/
+  database/
+  api-contracts/
   ui/
+  testing/
 docs/
 ```
 
-Cette structure n’est pas créée maintenant ; elle sert uniquement de direction.
+Cette structure n’est pas créée maintenant ; elle sert de direction validée pour un monorepo Bun workspaces maintenable.
+
+## 15. Décisions développeur intégrées
+
+Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+Décisions clés :
+
+- MVP orienté production réelle, pas démo.
+- Process complet attendu au MVP, alimenté par les réponses cultivateur.
+- Reolink, Inkbird, offline avancé, ventes, facturation et contrôle actif sont repoussés après MVP.
+- TypeScript strict, Zod, Hono, MongoDB native driver, OpenAPI automatique.
+- Tests élevés : Vitest, Playwright, formulaires dynamiques testés, validation locale au départ.
+- UI mobile iPhone prioritaire avec gros boutons, contraste, mode sombre et confirmations.

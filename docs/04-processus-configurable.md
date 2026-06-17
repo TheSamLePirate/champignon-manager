@@ -193,7 +193,12 @@ Principe recommandé :
 - le modèle de process est versionné ;
 - un lot référence la version utilisée à sa création ;
 - les modifications créent une nouvelle version ;
+- une version publiée doit être considérée comme immuable ;
 - un administrateur peut migrer un lot vers une version plus récente si nécessaire.
+
+Point développeur à clarifier : la stratégie exacte de migration d’un process déjà utilisé par des lots reste ouverte.
+
+Décision provisoire : migration manuelle assistée uniquement, jamais automatique sans validation.
 
 ## 12. Process expérimental
 
@@ -216,6 +221,8 @@ Pour cela, un lot ou sous-lot peut recevoir des tags :
 
 ## 13. Données minimales d’un process viable
 
+Décision développeur : viser un éditeur de process complet dès le MVP. Si cela devient trop complexe, garder le modèle complet en base mais livrer une interface admin simplifiée temporaire.
+
 Pour coder une première version, un process template doit au minimum contenir :
 
 - nom ;
@@ -228,4 +235,20 @@ Pour coder une première version, un process template doit au minimum contenir :
 - transitions autorisées ;
 - actions disponibles par phase/étape ;
 - observations configurables par phase/étape ;
-- mesures attendues par phase/étape.
+- mesures attendues par phase/étape ;
+- formulaires dynamiques associés aux actions ;
+- alertes configurables ;
+- règles d’actions en masse.
+
+## 14. Décisions développeur intégrées
+
+Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+Décisions :
+
+- process très détaillé ;
+- actions configurables full detail ;
+- observations configurables full detail ;
+- actions en masse avec options complètes ;
+- éditeur complet ciblé pour le MVP ;
+- dépendance forte aux réponses cultivateur.

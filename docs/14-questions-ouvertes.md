@@ -133,3 +133,49 @@ Pour démarrer le codage plus tard, il faudra surtout valider :
 6. informations d’étiquette QR ;
 7. produits finaux MVP ;
 8. stratégie d’authentification locale.
+
+## 15. Mise à jour après réponses développeur — 2026-06-17
+
+Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+### Décisions techniques closes
+
+- Stack : Bun + TypeScript strict + Vite + React + MongoDB.
+- Architecture : monorepo Bun workspaces.
+- Backend : Hono REST.
+- Validation : Zod.
+- API : client typé + OpenAPI automatique.
+- MongoDB : native driver + validation Zod.
+- Modèle de persistance : état courant + événements immuables.
+- Transactions : MongoDB replica set local via Docker Compose.
+- Déploiement : Docker Compose.
+- Environnements : dev macOS/Windows 11, production Raspberry Pi.
+- Accès : local/Tailscale, HTTPS via Tailscale si nécessaire.
+- QR : token opaque seulement.
+- Scan : scanner web intégré au MVP.
+- Imprimante : Nimbot B21.
+- Auth MVP : login/mot de passe simple, rôle `admin` au départ.
+- UI : Tailwind + shadcn/ui recommandés.
+- Tests : Vitest + Playwright + tests formulaires dynamiques.
+- PWA/offline : pas obligatoire au MVP.
+- Reolink/Inkbird/ventes/facturation/contrôle actif : après MVP.
+
+### Questions techniques restant ouvertes
+
+- Driver/protocole exact pour Nimbot B21.
+- URL finale Tailscale / locale.
+- Politique exacte de sauvegarde : fréquence, destination, rétention.
+- Versioning et migration d’un process déjà utilisé par des lots.
+- Format final des `publicCode`.
+- Niveau réaliste de couverture de tests au MVP.
+
+### Questions métier toujours dépendantes du cultivateur
+
+- Vocabulaire source / unité / lot / sous-lot.
+- Phases et étapes réelles pleurotes.
+- Actions par phase/étape.
+- Observations par phase/étape.
+- Mesures obligatoires ou optionnelles.
+- Niveau de détail chambres / emplacements.
+- Produits finaux MVP.
+- Contenu des étiquettes.

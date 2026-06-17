@@ -12,11 +12,12 @@ Objectifs :
 
 - relire les documents ;
 - répondre aux questions ouvertes ;
-- confirmer le vocabulaire métier ;
-- choisir REST/Hono ou tRPC ;
-- confirmer stratégie MongoDB ;
-- confirmer modèle de QR ;
-- identifier l’imprimante QR exacte.
+- confirmer le vocabulaire métier avec le cultivateur ;
+- Hono REST validé ;
+- MongoDB native driver + Zod validé ;
+- modèle QR token opaque validé ;
+- imprimante cible identifiée : Nimbot B21 ;
+- clarifier driver/protocole Nimbot B21.
 
 Livrables :
 
@@ -29,14 +30,17 @@ Livrables :
 
 Objectifs :
 
-- créer monorepo Bun/TypeScript ;
-- backend API ;
+- créer monorepo Bun workspaces + TypeScript strict ;
+- backend Hono ;
 - frontend Vite/React ;
-- connexion MongoDB ;
-- schémas partagés ;
-- authentification locale ;
-- layout frontend ;
-- système de permissions.
+- MongoDB en replica set local via Docker Compose ;
+- schémas Zod partagés ;
+- OpenAPI automatique ;
+- erreurs typées ;
+- authentification admin simple ;
+- audit events ;
+- layout frontend Tailwind/shadcn ;
+- outillage Vitest, Playwright, Husky/lint-staged.
 
 Critère de sortie :
 
@@ -58,7 +62,7 @@ Critère de sortie :
 
 - créer un ballot inoculé, imprimer son QR, le scanner depuis iPhone, voir sa fiche.
 
-## 5. Phase 3 — Process configurable minimum
+## 5. Phase 3 — Process configurable complet MVP
 
 Objectifs :
 
@@ -67,13 +71,18 @@ Objectifs :
 - phases ;
 - étapes ;
 - transitions ;
-- actions disponibles ;
+- actions configurables ;
 - observations configurables ;
-- changement d’étape.
+- mesures attendues ;
+- formulaires dynamiques ;
+- alertes ;
+- éditeur de process complet ;
+- changement d’étape ;
+- actions en masse.
 
 Critère de sortie :
 
-- un lot suit un process pleurotes configurable, avec actions adaptées à son étape.
+- un lot suit un process pleurotes configurable, avec actions, observations et formulaires adaptés à sa phase/étape.
 
 ## 6. Phase 4 — Chambres, mouvements, mesures
 
@@ -154,7 +163,7 @@ Critère de sortie :
 
 Objectifs :
 
-- PWA installable ;
+- PWA installable si besoin terrain confirmé ;
 - cache minimal ;
 - gestion réseau instable ;
 - file d’attente saisie si nécessaire ;
@@ -167,43 +176,42 @@ Critère de sortie :
 
 ## 12. Backlog priorisé MVP
 
-Priorité très haute :
+Backlog MVP proposé après réponses développeur :
 
-- lot/source ;
-- QR scan ;
-- fiche mobile ;
-- événements ;
-- process minimal ;
-- observations/mesures ;
-- chambres ;
-- impression.
+1. Socle monorepo Bun + TypeScript strict + tooling + Docker Compose.
+2. Backend Hono + MongoDB replica set local + Zod + OpenAPI + erreurs typées.
+3. Auth admin simple + audit events + migrations.
+4. Modèle source / unité / lot + QR registry + public codes.
+5. Impression Nimbot B21 + printJobs + réimpression.
+6. Frontend React + Tailwind/shadcn + layout mobile/desktop + login.
+7. Scan QR web intégré + fiche unité mobile + timeline.
+8. Moteur process configurable + éditeur complet + actions / observations / formulaires dynamiques.
+9. Mesures, observations, chambres, actions en masse et changements d’étape.
+10. Récoltes complètes, produits/stock simple, dashboard, rapports MVP, tests E2E.
 
-Priorité haute :
+Hors MVP :
 
-- division ;
-- récolte ;
-- produit final ;
-- stock simple ;
-- dashboard.
-
-Priorité moyenne :
-
-- photos ;
-- rapports avancés ;
-- caméra ;
+- caméra Reolink ;
 - Inkbird ;
-- PWA offline.
+- offline avancé ;
+- ventes ;
+- facturation ;
+- contrôle actif des appareils.
 
 ## 13. Risques de planning
 
-- intégration imprimante plus longue que prévu ;
+- intégration Nimbot B21 plus longue que prévu ;
+- scan web iPhone nécessitant HTTPS/Tailscale ;
+- compréhension incomplète du process cultivateur ;
+- modèle process configurable complet trop ambitieux ;
+- exécution fiable sur Raspberry Pi ;
 - accès Inkbird non documenté ou dépendant du cloud ;
-- HTTPS local requis pour certaines fonctions iPhone ;
-- modèle process trop flexible et donc complexe ;
 - généalogie multi-origine difficile si mélanges fréquents.
 
 ## 14. Recommandation de développement
 
-Commencer avec un process pleurotes simple mais configuré dans la base, pas codé en dur.
+Commencer avec un process pleurotes configuré dans la base, pas codé en dur.
 
-Même si l’interface de configuration complète arrive plus tard, les données doivent déjà utiliser le modèle configurable.
+Décision développeur : viser un éditeur de process complet dès le MVP. Si la complexité devient trop élevée, garder le modèle configurable complet mais livrer d’abord une interface admin simplifiée.
+
+Synthèse complète des réponses développeur : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
