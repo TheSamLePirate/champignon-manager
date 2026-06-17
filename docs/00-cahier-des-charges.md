@@ -2,9 +2,9 @@
 
 ## 1. Vision
 
-Champignon Manager est une application locale de gestion de flux pour la culture de champignons, en particulier des pleurotes.
+Champignon Manager est une application locale de gestion de flux pour la culture de champignons. Elle gère **plusieurs espèces configurables** (pleurote, shiitake, etc.) ; le pleurote est la première espèce de référence, pas la seule. Chaque espèce — voire variété/souche — peut avoir son propre process.
 
-Elle doit permettre de suivre chaque unité de production depuis une source de départ — par exemple un ballot déjà inoculé — jusqu’aux produits finaux prêts pour la vente.
+Elle doit permettre de suivre chaque unité de production sur toute la chaîne de propagation — « du spore à l’assiette » : gélose → culture liquide (LC) → grain → substrat → fructification → récoltes → produits finaux. Chaque stade peut être cloné (cultures secondaires de même type) et transféré au stade suivant. La traçabilité commence en amont (gélose, voire empreinte de spores), pas seulement au ballot de substrat.
 
 Le suivi repose sur :
 
@@ -59,13 +59,14 @@ Ces sujets sont prévus mais ne doivent pas bloquer le socle :
 
 L’utilisateur doit savoir à tout moment :
 
-- d’où vient un lot ;
-- où il se trouve ;
+- d’où vient une unité et toute sa lignée amont (substrat ← grain ← LC ← gélose ← origine) ;
+- où elle se trouve ;
 - dans quelle étape de culture il est ;
 - quelles mesures et observations ont été prises ;
 - s’il a été divisé ;
 - quelles récoltes il a produites ;
-- quels produits finaux en sont issus.
+- quels produits finaux en sont issus ;
+- par quels clones et transferts il est passé (généalogie multi-stade).
 
 ### 4.2 Saisie rapide sur site
 
@@ -84,8 +85,12 @@ L’interface doit donc :
 
 Les étapes de culture ne doivent pas être codées en dur.
 
-Exemples d’étapes possibles :
+Le process couvre désormais plusieurs **stades** (gélose, culture liquide, grain, substrat, fructification), chacun avec ses propres étapes. Exemples d’étapes possibles :
 
+- mise en gélose / clonage gélose ;
+- passage en culture liquide (LC) ;
+- inoculation du grain ;
+- inoculation du substrat ;
 - réception source ;
 - incubation ;
 - choc / déclenchement fructification ;
@@ -121,6 +126,9 @@ L’application doit permettre de configurer :
 - Définir l’espèce, la souche ou variété si connue.
 - Saisir fournisseur, date de réception, poids initial, notes.
 - Transformer la source en lot actif.
+- Créer une unité à n’importe quel stade : gélose, culture liquide (LC), grain, substrat.
+- Cloner une unité (cultures secondaires de même stade), avec lien de lignée.
+- Transférer/repiquer une unité vers le stade suivant (gélose→LC→grain→substrat), une unité pouvant en inoculer plusieurs.
 - Suivre les sous-lots issus d’une division.
 
 ### 5.2 QR code
@@ -164,7 +172,7 @@ L’application doit permettre de configurer :
 
 ### 5.7 Produits finaux
 
-- Configurer des types de produits : pleurotes frais, barquette, vrac, séché, transformé, rebut, compost.
+- Configurer des types de produits (par espèce) : frais, barquette, vrac, séché, transformé, rebut, compost.
 - Créer un lot de produit final.
 - Suivre le stock disponible.
 - Garder le lien avec les lots de culture d’origine.
@@ -227,4 +235,4 @@ L’application est considérée utile si l’utilisateur peut :
 6. déplacer ou diviser le lot ;
 7. enregistrer une récolte ;
 8. créer un produit final ;
-9. retrouver tout l’historique depuis le produit final jusqu’à la source.
+9. retrouver tout l’historique depuis le produit final jusqu’à la gélose/origine (traçabilité complète « du spore à l’assiette »).

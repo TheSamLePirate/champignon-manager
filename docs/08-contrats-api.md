@@ -101,7 +101,7 @@ Ce format est indicatif pour le cahier des charges ; il sera traduit en types lo
 
 | Méthode | Rôle |
 | --- | --- |
-| `GET /api/lots` | Liste filtrable par statut, étape, chambre, espèce. |
+| `GET /api/lots` | Liste filtrable par stade, statut, étape, chambre, espèce. |
 | `POST /api/lots` | Création directe si autorisée. |
 | `GET /api/lots/:id` | Fiche complète. |
 | `GET /api/lots/:id/timeline` | Historique chronologique. |
@@ -111,6 +111,8 @@ Ce format est indicatif pour le cahier des charges ; il sera traduit en types lo
 | `POST /api/lots/:id/change-step` | Changer d’étape. |
 | `POST /api/lots/:id/move` | Déplacer. |
 | `POST /api/lots/:id/split` | Diviser en sous-lots. |
+| `POST /api/lots/:id/clone` | Cloner en cultures secondaires (même stade). |
+| `POST /api/lots/:id/transfer` | Transférer/repiquer au stade suivant (créer N unités aval). |
 | `POST /api/lots/:id/close` | Terminer. |
 | `POST /api/lots/:id/mark-issue` | Déclarer problème ou contamination. |
 
@@ -224,6 +226,7 @@ Codes à prévoir :
 - `NOT_FOUND` ;
 - `CONFLICT` ;
 - `INVALID_TRANSITION` ;
+- `INVALID_STAGE_TRANSITION` ;
 - `LOT_ALREADY_CLOSED` ;
 - `QR_REVOKED` ;
 - `PRINTER_UNAVAILABLE` ;
@@ -237,6 +240,7 @@ Les listes doivent supporter :
 - tri ;
 - filtre texte ;
 - filtre date ;
+- filtre stade ;
 - filtre statut ;
 - filtre étape ;
 - filtre chambre ;
@@ -273,6 +277,7 @@ IDs exposés :
 ## 19. Contrats restant à stabiliser avant codage
 
 - Liste exacte des actions par phase après réponses cultivateur.
+- Règles clone/transfert et ratios de multiplication par stade.
 - Format final des `publicCode`.
 - Détail des DTO pour formulaires dynamiques.
 - Stratégie exacte OpenAPI/client généré ou client typé maison.

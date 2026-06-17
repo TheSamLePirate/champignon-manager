@@ -10,7 +10,7 @@
 - UI : Tailwind + shadcn/ui recommandés pour une interface soignée et maintenable.
 - Impression : service backend local compatible imprimante QR Node.js, cible matérielle Nimbot B21.
 - Déploiement : Docker Compose, dev macOS/Windows 11, production locale Raspberry Pi.
-- Réseau : local/Tailscale, HTTPS via Tailscale si nécessaire.
+- Réseau : **Tailscale confirmé** comme réseau d’accès (local étendu et distant). HTTPS fourni par Tailscale (`tailscale serve` + certificat TLS Let’s Encrypt sur le domaine `ts.net`).
 - Caméra : intégration future Reolink via module dédié après MVP.
 - Capteurs/contrôleurs futurs : Inkbird ITC-308-WIFI et Inkbird IHC-200-WIFI après MVP.
 
@@ -188,9 +188,9 @@ Déploiement local envisagé :
 - orchestration par Docker Compose ;
 - MongoDB local, idéalement en replica set local pour les transactions ;
 - frontend servi par le backend ou build statique ;
-- iPhone connecté au même Wi‑Fi ou via Tailscale ;
-- URL locale stable à finaliser, probablement via Tailscale ;
-- HTTPS via Tailscale si nécessaire pour les fonctions navigateur ;
+- iPhone connecté au backend via Tailscale (même tailnet) ;
+- URL d’accès = nom MagicDNS Tailscale stable (ex. `champignon.<tailnet>.ts.net`) ;
+- HTTPS fourni par Tailscale (`serve` + certificat TLS), ce qui satisfait le contexte sécurisé requis par le scanner web iOS (`getUserMedia`) ;
 - imprimante Nimbot B21 accessible depuis la machine backend ;
 - caméra Reolink accessible sur le réseau local plus tard ;
 - contrôleurs Inkbird Wi‑Fi intégrés plus tard, si API ou passerelle disponible.

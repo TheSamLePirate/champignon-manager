@@ -42,7 +42,8 @@ Point de départ d’un flux de culture.
 Attributs :
 
 - identifiant interne ;
-- type de source ;
+- type de source / origine : empreinte de spores, culture mère, gélose, LC, grain, substrat reçu, clone de tissu ;
+- stade d’entrée dans la traçabilité ;
 - espèce ;
 - souche/variété ;
 - fournisseur ;
@@ -52,20 +53,23 @@ Attributs :
 - notes ;
 - QR associé.
 
-### 2.4 Lot
+### 2.4 Unité de culture (généralise « lot »)
 
-Unité centrale de suivi.
+Objet physique traçable à n’importe quel stade. Au stade substrat/fructification, on l’appelle « lot ».
 
 Attributs :
 
 - code lisible ;
-- source d’origine ;
-- parent éventuel ;
+- **stade** : gélose, culture liquide (LC), grain, substrat, fructification ;
+- source/origine d’origine ;
+- parent éventuel + **type de relation de lignée** : clone, transfert, division ;
+- **génération** (rang de clone : G1, G2, …) ;
+- indicateur « culture mère conservée » ;
 - enfants éventuels ;
-- process/version ;
+- process/version (process propre au stade) ;
 - étape courante ;
 - statut ;
-- poids actuel estimé ;
+- quantité actuelle estimée (selon stade : nb de boîtes, volume LC, masse grain/substrat) ;
 - localisation courante ;
 - tags ;
 - QR associé ;
@@ -251,6 +255,8 @@ Attributs :
 | --- | --- |
 | Source → Lot | Une source peut créer un ou plusieurs lots. |
 | Lot → Lot | Un lot peut avoir des enfants issus de division. |
+| Unité → Unité (clone) | Une unité produit des cultures secondaires de même stade. |
+| Unité → Unité (transfert) | Une unité inocule une ou plusieurs unités du stade suivant. |
 | Lot → ProcessVersion | Un lot suit une version de process incluant phases, étapes, actions et observations. |
 | Lot → Chambre/Emplacement | Un lot a une localisation courante. |
 | Lot → Événement | Un lot possède un historique. |
@@ -299,6 +305,7 @@ Inclut :
 
 - L’historique est prioritaire sur la modification directe.
 - Le modèle doit permettre la généalogie des lots.
+- Le modèle doit gérer une lignée multi-stade (gélose→LC→grain→substrat) avec relations clone et transfert, en plus de la division.
 - Les données configurables doivent être séparées des données opérationnelles.
 - Les identifiants techniques ne doivent pas être les seuls identifiants visibles : prévoir des codes lisibles.
 - Les entités scannables doivent être résolues par un registre QR central.

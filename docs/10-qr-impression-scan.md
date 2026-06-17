@@ -8,8 +8,12 @@ Chaque entité importante peut être scannée pour afficher sa fiche et proposer
 
 ## 2. Entités pouvant avoir un QR
 
+- origine / culture mère ;
+- unité de gélose ;
+- unité de culture liquide (LC) ;
+- unité de grain ;
 - source ;
-- lot ;
+- lot (substrat) ;
 - sous-lot ;
 - chambre ;
 - emplacement ;
@@ -32,7 +36,7 @@ Exemple conceptuel :
 <token>
 ```
 
-Option future si l’on veut utiliser l’appareil photo iOS natif hors web app : encapsuler ce token dans une URL locale/Tailscale.
+Option de secours si l’on veut utiliser l’appareil photo iOS natif hors web app : encapsuler ce token dans une URL Tailscale (`https://champignon.<tailnet>.ts.net/q/<token>`). Le payload métier reste le token opaque ; l’URL n’est qu’une enveloppe d’ouverture.
 
 Le token doit être :
 
@@ -46,7 +50,7 @@ Le token doit être :
 
 Quand un QR est scanné :
 
-1. l’utilisateur ouvre l’interface web locale/Tailscale ;
+1. l’utilisateur ouvre l’interface web via Tailscale (HTTPS) ;
 2. le scanner web intégré lit le token ;
 3. le frontend demande au backend de résoudre le token ;
 4. le système identifie la cible ;
@@ -62,23 +66,22 @@ Options :
 - scanner intégré dans l’interface web si autorisé par le navigateur ;
 - raccourci iPhone pointant vers la web app locale.
 
-Priorité MVP : scanner intégré dans l’interface web, avec compatibilité iPhone. Le scan caméra iOS standard via URL locale devient une option de secours ou d’évolution.
+Priorité MVP : scanner intégré dans l’interface web, servi en HTTPS via Tailscale (contexte sécurisé requis par Safari iOS pour l’accès caméra). Le scan caméra iOS standard via URL Tailscale reste une option de secours ou d’évolution.
 
-## 6. Réseau local
+## 6. Réseau (Tailscale confirmé)
 
 Conditions :
 
-- l’iPhone doit être sur le même réseau Wi‑Fi ou connecté via Tailscale ;
-- le backend doit avoir une URL stable ;
-- option probable : URL Tailscale ;
-- prévoir fallback par IP locale ou nom local si Tailscale n’est pas utilisé.
+- l’iPhone et le backend sont sur le **même tailnet Tailscale** ;
+- URL d’accès stable = **nom MagicDNS Tailscale** (ex. `champignon.<tailnet>.ts.net`) ;
+- **HTTPS automatique** via Tailscale (`tailscale serve` + certificat TLS Let’s Encrypt sur `ts.net`) ;
+- fallback par IP locale / mDNS encore possible, mais Tailscale est désormais le chemin principal.
 
-Points à vérifier :
+Points à valider (spike Phase 0) :
 
-- Tailscale et HTTPS local ;
-- mDNS/Bonjour si utilisé ;
-- certificat HTTPS si nécessaire pour scanner web/caméra navigateur ;
-- comportement iOS avec domaines locaux.
+- certificat `tailscale serve` reconnu par Safari iOS (contexte sécurisé pour `getUserMedia`) ;
+- comportement du scanner caméra navigateur sous iOS via l’URL `ts.net` ;
+- accès des opérateurs au tailnet : appareils autorisés et ACL Tailscale.
 
 ## 7. Impression
 
@@ -112,7 +115,8 @@ Un modèle d’étiquette peut inclure :
 
 Différents modèles peuvent exister :
 
-- source/ballot ;
+- gélose / culture liquide / grain ;
+- source/ballot substrat ;
 - sous-lot ;
 - chambre ;
 - récolte ;
@@ -152,7 +156,7 @@ Risques :
 - accès sans permission ;
 - token deviné ;
 - QR obsolète ;
-- URL locale accessible à un invité Wi‑Fi.
+- backend accessible hors tailnet s’il est lié à l’interface LAN (le limiter au tailnet Tailscale).
 
 Mesures :
 
@@ -192,7 +196,7 @@ Décisions :
 
 - payload QR = token opaque seulement ;
 - scan MVP = scanner web intégré ;
-- réseau = local/Tailscale, HTTPS via Tailscale si nécessaire ;
+- réseau = **Tailscale** (confirmé), HTTPS fourni par Tailscale (`serve` + cert TLS) ;
 - imprimante cible = Nimbot B21 ;
 - impression via `printJobs` avec statut, retry, erreur, copies, logs, test imprimante ;
 - réimpression par défaut = même token.

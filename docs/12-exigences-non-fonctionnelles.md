@@ -47,20 +47,19 @@ Exigences :
 - accès imprimante et appareils réservé au backend ;
 - sauvegardes protégées.
 
-## 4. Réseau local
+## 4. Réseau (Tailscale confirmé)
 
-L’application doit fonctionner sur site.
+L’application doit fonctionner sur site, l’accès passant par Tailscale.
 
 Prévoir :
 
-- adresse locale stable ;
-- documentation de connexion iPhone ;
-- Tailscale comme option probable pour accès local étendu/distant ;
-- HTTPS via Tailscale si nécessaire ;
-- gestion des changements d’IP ;
-- mDNS/Bonjour si possible ;
-- fallback par IP ;
-- stratégie HTTPS locale si Tailscale ne suffit pas.
+- **Tailscale confirmé** pour l’accès local étendu et distant (tailnet privé) ;
+- URL stable = **nom MagicDNS Tailscale** (ex. `champignon.<tailnet>.ts.net`) ;
+- **HTTPS automatique** via Tailscale (`tailscale serve` + certificat TLS), prérequis du scanner web iOS ;
+- documentation de connexion iPhone (ajout au tailnet, autorisation de l’appareil) ;
+- gestion des ACL Tailscale : quels appareils/opérateurs accèdent au backend ;
+- fallback IP locale / mDNS possible mais secondaire ;
+- limiter l’exposition du backend au tailnet (ne pas servir en clair sur le LAN).
 
 ## 5. Compatibilité iPhone
 
@@ -213,5 +212,5 @@ Points clés :
 - MVP réellement utilisable en production.
 - Docker Compose pour déploiement local.
 - Dev macOS / Windows 11, production Raspberry Pi.
-- Tailscale pour accès local étendu/distant.
+- Tailscale confirmé pour l’accès local étendu/distant, HTTPS via Tailscale.
 - Reolink, Inkbird, offline avancé, ventes et facturation après MVP.

@@ -17,13 +17,14 @@ Objectifs :
 - MongoDB native driver + Zod validé ;
 - modèle QR token opaque validé ;
 - imprimante cible identifiée : Nimbot B21 ;
-- clarifier driver/protocole Nimbot B21.
+- clarifier driver/protocole Nimbot B21 ;
+- accès réseau : Tailscale confirmé — valider HTTPS iOS (`tailscale serve` + cert TLS).
 
 Livrables :
 
 - cahier des charges validé ;
 - modèle domaine validé ;
-- première version process pleurotes ;
+- première version process (pleurote, 1re espèce ; espèce configurable) ;
 - backlog initial.
 
 ## 3. Phase 1 — Socle technique
@@ -82,7 +83,7 @@ Objectifs :
 
 Critère de sortie :
 
-- un lot suit un process pleurotes configurable, avec actions, observations et formulaires adaptés à sa phase/étape.
+- un lot suit un process configurable (pleurote pour commencer, espèce configurable), avec actions, observations et formulaires adaptés à sa phase/étape.
 
 ## 6. Phase 4 — Chambres, mouvements, mesures
 
@@ -104,9 +105,11 @@ Critère de sortie :
 Objectifs :
 
 - diviser un lot ;
+- cloner une unité (culture secondaire, même stade) ;
+- transférer/repiquer au stade suivant (gélose→LC→grain→substrat) ;
 - créer sous-lots ;
 - imprimer QR enfants ;
-- afficher arbre parent/enfant ;
+- afficher arbre parent/enfant multi-stade « du spore à l’assiette » ;
 - filtrer par branche ;
 - suivre emplacements différents.
 
@@ -201,16 +204,17 @@ Hors MVP :
 ## 13. Risques de planning
 
 - intégration Nimbot B21 plus longue que prévu ;
-- scan web iPhone nécessitant HTTPS/Tailscale ;
+- scan web iPhone nécessitant HTTPS : adressé par Tailscale confirmé (`serve` + cert TLS), à valider sur Safari iOS ;
 - compréhension incomplète du process cultivateur ;
 - modèle process configurable complet trop ambitieux ;
 - exécution fiable sur Raspberry Pi ;
 - accès Inkbird non documenté ou dépendant du cloud ;
-- généalogie multi-origine difficile si mélanges fréquents.
+- généalogie multi-origine difficile si mélanges fréquents ;
+- chaîne amont (gélose, LC, grain) élargit fortement le périmètre vs le seul substrat.
 
 ## 14. Recommandation de développement
 
-Commencer avec un process pleurotes configuré dans la base, pas codé en dur.
+Commencer avec un process pleurote configuré dans la base (espèce configurable, autres espèces ajoutables sans recoder), pas codé en dur.
 
 Décision développeur : viser un éditeur de process complet dès le MVP. Si la complexité devient trop élevée, garder le modèle configurable complet mais livrer d’abord une interface admin simplifiée.
 

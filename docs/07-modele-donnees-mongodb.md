@@ -149,6 +149,7 @@ Champs :
 - `name` ;
 - `description` ;
 - `targetSpeciesIds` ;
+- `targetStage` : stade visé (`gelose`, `liquid_culture`, `grain`, `substrate`, `fruiting`) ou multi-stade ;
 - `currentVersionId` ;
 - `status`.
 
@@ -231,7 +232,8 @@ Sources de culture.
 Champs :
 
 - `publicCode` ;
-- `sourceType` ;
+- `sourceType` : `spore_print`, `mother_culture`, `gelose`, `liquid_culture`, `grain`, `received_substrate`, `tissue_clone` ;
+- `entryStage` : stade où débute la traçabilité ;
 - `speciesId` ;
 - `strainId` ;
 - `supplier` ;
@@ -242,13 +244,17 @@ Champs :
 - `qrId` ;
 - `createdLotIds`.
 
-### 5.2 `lots`
+### 5.2 `lots` (unités de culture, tous stades)
 
-Lots et sous-lots.
+Unités de culture à tous les stades : gélose, culture liquide, grain, substrat, fructification. « Lot » = unité au stade substrat/fructification.
 
 Champs :
 
 - `publicCode` ;
+- `stage` : `gelose`, `liquid_culture`, `grain`, `substrate`, `fruiting` ;
+- `lineageRelation` : `origin`, `clone`, `transfer`, `split` (relation avec le parent) ;
+- `generation` : rang de clone (entier) ;
+- `isMotherCulture` : culture mère conservée (booléen) ;
 - `sourceId` ;
 - `parentLotId` ;
 - `rootLotId` ;
@@ -520,7 +526,7 @@ Champs :
 
 | Collection | Index |
 | --- | --- |
-| `lots` | `publicCode`, `sourceId`, `parentLotId`, `rootLotId`, `status`, `currentPhaseId`, `currentStepId`, `currentLocationId`, `lastEventAt` |
+| `lots` | `publicCode`, `stage`, `sourceId`, `parentLotId`, `rootLotId`, `lineageRelation`, `status`, `currentPhaseId`, `currentStepId`, `currentLocationId`, `lastEventAt` |
 | `events` | `target.type + target.id + occurredAt`, `eventType + occurredAt`, `correlationId` |
 | `qrRegistry` | `token` unique, `targetType + targetId` |
 | `measurements` | `target.type + target.id + measuredAt`, `measurementType + measuredAt`, `deviceId + measuredAt` |
@@ -536,6 +542,8 @@ Champs :
 Certaines actions doivent être atomiques :
 
 - création source + lot + QR + événement ;
+- clone d’une unité + création des cultures secondaires + QR enfants + événement ;
+- transfert vers le stade suivant + création des unités aval + QR enfants + événement ;
 - division lot parent + création enfants + QR enfants + événement ;
 - récolte + événement + mise à jour lot ;
 - création produit final + mouvement stock + événement ;
@@ -574,7 +582,10 @@ Collections après MVP :
 
 ## 12. Points à clarifier avant codage
 
-- Phases, actions et observations configurables du premier process pleurotes.
+- Phases, actions et observations configurables du premier process (pleurote) ; l’espèce étant configurable, prévoir un process par espèce.
+- Process propre à chaque stade amont (gélose, LC, grain) vs un seul process multi-stade.
+- Jusqu’où remonter la traçabilité (spore, gélose, LC).
+- Suivi des ratios de multiplication clone/transfert.
 - Versioning / migration d’un process déjà utilisé par des lots.
 - Niveau exact de détail des emplacements physiques.
 - Format final des `publicCode`.

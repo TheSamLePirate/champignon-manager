@@ -28,6 +28,8 @@ Les observations doivent être configurables par phase/étape.
 
 Exemples :
 
+- contamination en gélose/LC (critique) ;
+- vitesse de colonisation (gélose, grain) ;
 - pousse visible ;
 - primordia visibles ;
 - maturité proche ;
@@ -54,6 +56,7 @@ Chaque observation peut créer :
 
 Une mesure ou observation peut être liée à :
 
+- une unité de gélose, de culture liquide ou de grain ;
 - un lot ;
 - un sous-lot ;
 - une source ;

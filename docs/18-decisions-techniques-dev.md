@@ -297,7 +297,7 @@ Décisions :
 
 - QR payload : token opaque seulement ;
 - scan : scanner web intégré ;
-- URL / accès : à finaliser, probablement Tailscale ;
+- URL / accès : **Tailscale confirmé** — URL = nom MagicDNS `ts.net`, HTTPS via `tailscale serve` ;
 - imprimante : Nimbot B21 ;
 - jobs d’impression : `printJobs` avec retry, statut, erreur, copies, réimpression, test imprimante, logs ;
 - QR abîmé/perdu : réimpression du même token par défaut.
@@ -314,9 +314,9 @@ Décisions :
 
 - login / mot de passe simple au MVP ;
 - rôle unique `admin` au départ ;
-- réseau local / Tailscale considéré comme environnement de confiance ;
+- tailnet Tailscale (confirmé) considéré comme environnement de confiance ;
 - CORS local ;
-- HTTPS via Tailscale si nécessaire ;
+- HTTPS fourni par Tailscale (`serve` + certificat TLS) ;
 - toutes les actions importantes doivent être auditables.
 
 Correction / suppression :
@@ -337,7 +337,7 @@ Décisions :
 - définir fréquence, destination, rétention ;
 - tester la restauration ;
 - logs visibles dans un dashboard admin ;
-- accès distant via Tailscale.
+- accès distant via Tailscale (confirmé).
 
 ## 13. Matériel futur
 
@@ -380,8 +380,8 @@ Critères “feature terminée” :
 
 Risques identifiés :
 
-- iPhone + HTTPS local ;
-- Tailscale / réseau ;
+- iPhone + HTTPS : adressé par Tailscale (`serve` + cert TLS) — reste à valider sur Safari iOS (spike) ;
+- configuration et ACL du tailnet Tailscale ;
 - compréhension exacte du process cultivateur ;
 - impression Nimbot B21 ;
 - complexité du process configurable complet ;
@@ -410,6 +410,6 @@ Le formulaire n’a pas rempli cette partie. Proposition cohérente avec les ré
 - Versioning / migration des process déjà utilisés.
 - Format final des `publicCode`.
 - Détails de l’imprimante Nimbot B21 côté protocole/driver.
-- Stratégie exacte Tailscale / URL locale / HTTPS.
+- Tailscale / URL / HTTPS : **stratégie close** (Tailscale confirmé, HTTPS via `serve`, URL MagicDNS `ts.net`) — reste à fixer le hostname exact au déploiement.
 - Politique concrète de sauvegarde : fréquence, destination, rétention.
 - Niveau réel de couverture de test atteignable au MVP.

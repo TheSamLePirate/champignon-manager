@@ -9,6 +9,7 @@ Le process de culture ne doit pas être figé dans le code. L’application doit
 | Concept | Description |
 | --- | --- |
 | Process template | Modèle de process réutilisable. Exemple : “Pleurotes — ballot inoculé”. |
+| Stade de culture | Niveau dans la chaîne de propagation : gélose, culture liquide, grain, substrat, fructification. Chaque stade peut avoir son propre process. |
 | Version de process | Snapshot du process utilisé par un lot. Important si le modèle change après création du lot. |
 | Phase | Grande période métier de culture : incubation, fructification, récolte, repos, fin de cycle. Une phase peut contenir plusieurs étapes. |
 | Étape | Moment opérationnel précis dans une phase. |
@@ -18,7 +19,9 @@ Le process de culture ne doit pas être figé dans le code. L’application doit
 | Action configurable | Action proposée à l’utilisateur selon la phase, l’étape, le statut du lot et son rôle. |
 | Observation configurable | Type d’observation attendu ou proposé : pousse visible, contamination, humidité de surface, odeur, couleur, maturité. |
 
-## 3. Exemple de process pleurotes
+## 3. Exemple de process (pleurote — première espèce de référence)
+
+L’espèce est **configurable** : chaque espèce (pleurote, shiitake, etc.), voire variété/souche, peut avoir son propre process. Le pleurote ci-dessous est l’exemple de départ, pas le seul process possible.
 
 Process indicatif à adapter :
 
@@ -34,6 +37,17 @@ Process indicatif à adapter :
 10. Récolte flush 3 optionnelle ;
 11. Fin de production ;
 12. Sortie / compost / rebut.
+
+## 3 bis. Chaîne multi-stade et process par stade
+
+Le process ne commence plus au substrat : il couvre toute la chaîne **gélose → culture liquide (LC) → grain → substrat → fructification**. Chaque stade a ses propres étapes, conditions, observations et durées. Cette chaîne est **configurable par espèce** : selon l’espèce (pleurote, shiitake, etc.), certains stades peuvent différer, être absents ou utiliser un autre substrat (ex. bûche/sciure).
+
+Recommandation : un `processTemplate` par stade (ou un template multi-stade avec sous-process), versionné. Les passages entre stades se font par deux actions configurables transverses :
+
+- **Cloner** : créer N unités secondaires du même stade (le parent survit) ;
+- **Transférer / repiquer** : créer N unités du stade suivant (inoculation).
+
+Ces deux actions, plus la **division** (substrat), sont les trois façons de créer des unités enfants.
 
 ## 4. Phases, étapes, actions et observations
 
@@ -110,6 +124,8 @@ Actions possibles selon la phase ou l’étape :
 - ajouter mesure ;
 - changer d’étape ;
 - déplacer vers une chambre ;
+- cloner (culture secondaire de même stade) ;
+- transférer / repiquer au stade suivant ;
 - diviser le lot ;
 - imprimer QR enfant ;
 - enregistrer récolte ;

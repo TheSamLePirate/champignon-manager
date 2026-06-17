@@ -115,7 +115,7 @@ Pour une première version locale :
 - login / mot de passe simple ;
 - rôle `admin` unique au MVP ;
 - session web ;
-- réseau local/Tailscale considéré comme environnement de confiance ;
+- tailnet Tailscale (confirmé) considéré comme environnement de confiance ;
 - possibilité future de mode “poste opérateur” avec session longue si l’environnement est maîtrisé.
 
 À clarifier plus tard :
@@ -124,4 +124,4 @@ Pour une première version locale :
 - besoin de PIN rapide pour opérateurs ;
 - nombre d’utilisateurs ;
 - extension des rôles après le MVP ;
-- accès depuis l’extérieur via Tailscale uniquement ou autre stratégie.
+- accès depuis l’extérieur : **via Tailscale (confirmé)**.

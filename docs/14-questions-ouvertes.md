@@ -7,12 +7,12 @@ Ce document centralise les décisions à prendre avant ou pendant le codage.
 1. Quel terme utiliser dans l’application : ballot, bloc, sac, substrat, pain, source ?
 2. Est-ce qu’une “source” et un “lot” doivent être deux objets différents pour toi ?
 3. Un sous-lot est-il toujours issu d’une division physique, ou peut-il être une simple séparation logique ?
-4. Quelles espèces seront gérées au début : pleurotes seulement ou autres dès le MVP ?
+4. Quelles espèces seront gérées au début ? → **Plusieurs espèces (configurable) ; pleurote en premier, mais pas uniquement (shiitake, etc.).**
 5. Les souches/variétés doivent-elles être suivies précisément ?
 
 ## 2. Process de culture
 
-1. Quelles sont les phases réelles de ton process pleurotes actuel ?
+1. Quelles sont les phases réelles de ton process pleurote actuel (et faut-il un process différent par espèce) ?
 2. Quelles étapes veux-tu voir dans la première version ?
 3. Quelles transitions doivent être autorisées ?
 4. Faut-il autoriser un retour arrière d’étape ?
@@ -108,8 +108,8 @@ Ce document centralise les décisions à prendre avant ou pendant le codage.
 2. MongoDB sera-t-il local sur la même machine ?
 3. Faut-il Docker ou installation directe ?
 4. Faut-il accès à distance hors site ?
-5. Quel nom local utiliser : `champignon.local`, IP fixe, autre ?
-6. Faut-il HTTPS local dès le début ?
+5. Quel nom local utiliser : `champignon.local`, IP fixe, autre ? → **Résolu : nom MagicDNS Tailscale (`champignon.<tailnet>.ts.net`).**
+6. Faut-il HTTPS local dès le début ? → **Résolu : oui, HTTPS fourni par Tailscale (`serve` + cert TLS).**
 7. Quelle stratégie de sauvegarde souhaites-tu ?
 
 ## 13. Droits et utilisateurs
@@ -126,7 +126,7 @@ Ce document centralise les décisions à prendre avant ou pendant le codage.
 Pour démarrer le codage plus tard, il faudra surtout valider :
 
 1. vocabulaire source/lot/sous-lot ;
-2. premier process pleurotes ;
+2. premier process (pleurote) + process par espèce ;
 3. actions par phase ;
 4. observations par phase ;
 5. niveau de localisation physique ;
@@ -150,7 +150,7 @@ Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques
 - Transactions : MongoDB replica set local via Docker Compose.
 - Déploiement : Docker Compose.
 - Environnements : dev macOS/Windows 11, production Raspberry Pi.
-- Accès : local/Tailscale, HTTPS via Tailscale si nécessaire.
+- Accès : **Tailscale confirmé** (tailnet privé), HTTPS fourni par Tailscale (`serve` + cert TLS), URL = nom MagicDNS `ts.net`.
 - QR : token opaque seulement.
 - Scan : scanner web intégré au MVP.
 - Imprimante : Nimbot B21.
@@ -163,7 +163,7 @@ Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques
 ### Questions techniques restant ouvertes
 
 - Driver/protocole exact pour Nimbot B21.
-- URL finale Tailscale / locale.
+- Hostname MagicDNS Tailscale exact + configuration `tailscale serve` (stratégie close, valeur à fixer au déploiement).
 - Politique exacte de sauvegarde : fréquence, destination, rétention.
 - Versioning et migration d’un process déjà utilisé par des lots.
 - Format final des `publicCode`.
@@ -172,10 +172,48 @@ Synthèse complète : [18-decisions-techniques-dev.md](./18-decisions-techniques
 ### Questions métier toujours dépendantes du cultivateur
 
 - Vocabulaire source / unité / lot / sous-lot.
-- Phases et étapes réelles pleurotes.
+- Phases et étapes réelles par espèce (pleurote en premier).
 - Actions par phase/étape.
 - Observations par phase/étape.
 - Mesures obligatoires ou optionnelles.
 - Niveau de détail chambres / emplacements.
 - Produits finaux MVP.
 - Contenu des étiquettes.
+
+## 16. Mise à jour cultivateur (Julien) — 2026-06-17 : chaîne de propagation
+
+Le process ne commence pas au substrat. La chaîne réelle est :
+
+**origine (spores / culture mère) → gélose → culture liquide (LC) → grain → substrat → fructification.**
+
+À chaque stade : possibilité de **clone** (cultures secondaires de même stade) et de **transfert/repiquage** vers le stade suivant. « Quasiment du spore à l’assiette. »
+
+Conséquences intégrées dans les docs 00, 01, 03, 05, 07 (+ formulaire 16) :
+
+- l’entité traçable devient « unité de culture » avec un champ `stade` ;
+- lignée typée : `clone`, `transfert`, `division` ;
+- traçabilité ascendante complète jusqu’à la gélose/origine.
+
+Nouvelles questions ouvertes (cultivateur) :
+
+- jusqu’où remonter : spore, gélose ou LC ?
+- conserve-t-on des cultures mères ? combien de générations de clone avant de repartir des spores ?
+- un process distinct par stade, ou un seul process multi-stade ?
+- ratios de multiplication à suivre (1 gélose → N LC → N grain → N substrat) ?
+- QR dès la gélose, ou seulement à partir du grain/substrat ?
+
+## 17. Mise à jour — espèces multiples configurables (2026-06-17)
+
+L’application n’est **pas limitée au pleurote**. L’**espèce est configurable** (pleurote, shiitake, etc.), chaque espèce — voire variété/souche — pouvant avoir son propre process, ses stades, durées, conditions, substrat et nombre de flushs.
+
+Conséquences (déjà prévues par le modèle) :
+
+- `species` / `strains` configurables ; `processTemplates.targetSpeciesIds` et `species.defaultProcessTemplateId` relient espèce ↔ process ;
+- prévoir un **process (template) par espèce**, le pleurote étant le premier ;
+- les stats doivent pouvoir comparer/segmenter **par espèce**.
+
+À préciser avec le cultivateur :
+
+- liste des espèces réellement cultivées au départ ;
+- la chaîne gélose→LC→grain→substrat est-elle identique pour toutes les espèces ?
+- différences de durées/conditions/substrat par espèce.

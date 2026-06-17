@@ -71,6 +71,8 @@ Actions rapides possibles :
 - changer d’étape ;
 - déplacer ;
 - diviser ;
+- cloner (culture secondaire) ;
+- transférer / repiquer au stade suivant ;
 - récolter ;
 - signaler problème ;
 - imprimer/réimprimer QR ;
@@ -159,10 +161,11 @@ Filtres utiles :
 
 ## 8. Généalogie
 
-Visualisation arbre :
+Visualisation arbre multi-stade « du spore à l’assiette » :
 
-- source à la racine ;
-- lots et sous-lots en branches ;
+- origine / gélose à la racine ;
+- clones (cultures secondaires) et transferts (gélose→LC→grain→substrat) en branches, avec le type de relation ;
+- lots substrat et sous-lots issus de division ;
 - récoltes rattachées ;
 - produits finaux en sortie.
 
@@ -284,7 +287,7 @@ Options :
 - PWA avec cache lecture seule ;
 - file d’attente locale pour saisies hors ligne.
 
-Décision développeur : commencer en ligne local/Tailscale, sans PWA obligatoire au MVP, puis ajouter un mode PWA/offline si le terrain le nécessite.
+Décision développeur : commencer en ligne via Tailscale (confirmé, HTTPS fourni), sans PWA obligatoire au MVP, puis ajouter un mode PWA/offline si le terrain le nécessite.
 
 ## 15. États vides et erreurs
 

@@ -1,4 +1,4 @@
-# 15 — Questionnaire cultivateur : process pleurotes, traçabilité et suivi
+# 15 — Questionnaire cultivateur : process multi-espèces (pleurote et autres), traçabilité et suivi
 
 ## 1. Objectif du document
 
@@ -12,8 +12,9 @@ L’application devra permettre de suivre chaque unité avec un QR code, depuis 
 
 À confirmer ou corriger :
 
-- Il y a plusieurs espèces ou variétés de pleurotes.
+- Il y a plusieurs espèces de champignons (pleurote, shiitake, etc.), configurables — pas seulement des pleurotes.
 - Chaque unité de culture doit avoir une traçabilité complète par QR code.
+- La chaîne va « du spore à l’assiette » : origine (spores / culture mère) → gélose → culture liquide (LC) → grain → substrat → fructification, avec clones (cultures secondaires) et transferts à chaque stade.
 - Les étapes évoquées sont :
   - inoculation ;
   - incubation 1 ;
@@ -102,15 +103,15 @@ Réponse :
 
 ```
 
-## 5. Espèces, variétés et souches de pleurotes
+## 5. Espèces, variétés et souches (multi-espèces, configurable)
 
 L’application doit pouvoir comparer les résultats selon le type cultivé.
 
 Questions :
 
-1. Quelles espèces ou variétés de pleurotes cultives-tu actuellement ?
+1. Quelles espèces (et variétés) de champignons cultives-tu actuellement ?
 
-Exemples possibles : pleurote gris, pleurote jaune, pleurote rose, pleurote du panicaut, autre.
+Exemples possibles : pleurote gris, pleurote jaune, pleurote rose, pleurote du panicaut, shiitake, et autres espèces (configurables dans l’app).
 
 Réponse :
 
@@ -128,7 +129,7 @@ Réponse :
 
 ```
 
-3. Est-ce que tu veux suivre la souche précise, le fournisseur, ou seulement le type de pleurote ?
+3. Est-ce que tu veux suivre la souche précise, le fournisseur, ou seulement le type de champignon ?
 
 Réponse :
 
@@ -281,20 +282,25 @@ Réponse :
 
 Merci de décrire le process réel, même approximatif.
 
-### 8.1 Liste des phases
+> Mise à jour 2026-06-17 : le process couvre toute la chaîne **« du spore à l’assiette »** — origine (spores / culture mère) → gélose → culture liquide (LC) → grain → substrat → fructification. À chaque stade : **clone** (cultures secondaires de même type) et **transfert/repiquage** vers le stade suivant. Les questions détaillées par stade amont (gélose, LC, grain) sont dans le formulaire `16-formulaire-reponses-cultivateur.html`.
+
+### 8.1 Liste des phases / stades
 
 Est-ce que cette liste est correcte ?
 
-1. Inoculation ;
-2. Incubation 1 ;
-3. Incubation 2 ;
-4. Incubation 3 ;
-5. Fructification 1 ;
-6. Fructification 2 ;
-7. Récolte flush 1 ;
-8. Récolte flush 2 ;
-9. Récolte flush 3 ;
-10. Fin de cycle.
+1. Gélose ;
+2. Culture liquide (LC) ;
+3. Grain (ballot de grain) ;
+4. Inoculation substrat ;
+5. Incubation 1 ;
+6. Incubation 2 ;
+7. Incubation 3 ;
+8. Fructification 1 ;
+9. Fructification 2 ;
+10. Récolte flush 1 ;
+11. Récolte flush 2 ;
+12. Récolte flush 3 ;
+13. Fin de cycle.
 
 Réponse / correction :
 
@@ -405,7 +411,7 @@ Explication : troisième période d’incubation ou fin de colonisation avant fr
 Questions :
 
 1. À quoi correspond incubation 3 ?
-2. Est-elle obligatoire pour tous les pleurotes ?
+2. Est-elle obligatoire pour toutes les espèces ?
 3. Durée habituelle ?
 4. Conditions cible ?
 5. Signes visuels à noter ?
@@ -997,15 +1003,18 @@ Après remplissage, on devra pouvoir extraire :
 
 Table de synthèse à remplir :
 
-| Ordre | Phase/étape | Durée typique | Température | Humidité | Observation clé | Action suivante |
+| Ordre | Stade / étape | Durée typique | Température | Humidité | Observation clé | Action suivante (clone / transfert) |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Inoculation | | | | | |
-| 2 | Incubation 1 | | | | | |
-| 3 | Incubation 2 | | | | | |
-| 4 | Incubation 3 | | | | | |
-| 5 | Fructification 1 | | | | | |
-| 6 | Fructification 2 | | | | | |
-| 7 | Récolte flush 1 | | | | poids par unité | |
-| 8 | Récolte flush 2 | | | | poids par unité | |
-| 9 | Récolte flush 3 | | | | poids par unité | |
-| 10 | Fin de cycle | | | | | |
+| 1 | Gélose | | | | contamination / colonisation | clone gélose ou transfert LC |
+| 2 | Culture liquide (LC) | | | | trouble / contamination | clone LC ou transfert grain |
+| 3 | Grain (ballot) | | | | colonisation / contamination | clone grain ou transfert substrat |
+| 4 | Inoculation substrat | | | | | incubation 1 |
+| 5 | Incubation 1 | | | | | |
+| 6 | Incubation 2 | | | | | |
+| 7 | Incubation 3 | | | | | |
+| 8 | Fructification 1 | | | | | |
+| 9 | Fructification 2 | | | | | |
+| 10 | Récolte flush 1 | | | | poids par unité | |
+| 11 | Récolte flush 2 | | | | poids par unité | |
+| 12 | Récolte flush 3 | | | | poids par unité | |
+| 13 | Fin de cycle | | | | | |

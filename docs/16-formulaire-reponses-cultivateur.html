@@ -579,10 +579,11 @@
     <div class="hero-inner">
       <div>
         <div class="eyebrow">🍄 Champignon Manager · questionnaire cultivateur</div>
-        <h1>Process pleurotes, QR, chambres et récoltes</h1>
+        <h1>Process champignons multi-espèces — du spore à l’assiette (gélose → LC → grain → substrat)</h1>
         <p>
           Remplis ce formulaire tranquillement. Chaque question peut être répondue, modifiée si elle est mal formulée,
           ou marquée comme non pertinente. À la fin, exporte le fichier JSON et transmets-le au développeur.
+          <br /><b>Nouveau :</b> le questionnaire couvre maintenant toute la chaîne amont (gélose, culture liquide, grain) avec clones et transferts — voir les sections « Chaîne de propagation » et « Détail stade ».
         </p>
       </div>
       <div class="hero-actions">
@@ -668,7 +669,7 @@
           </div>
           <div class="field full">
             <label class="label">Contexte général / commentaire libre</label>
-            <textarea data-meta="generalNotes" placeholder="Ex: process actuel en test, réponses valables surtout pour le pleurote gris, détails à revoir ensemble..."></textarea>
+            <textarea data-meta="generalNotes" placeholder="Ex: process en test, espèces cultivées (pleurote gris, shiitake...), réponses valables surtout pour telle espèce, détails à revoir ensemble..."></textarea>
           </div>
         </div>
       </section>
@@ -695,7 +696,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const FORM_VERSION = "2026-06-17.v1";
+    const FORM_VERSION = "2026-06-17.v2-chaine-propagation";
     const STORAGE_KEY = "champignon-manager:cultivator-process-form:v1";
 
     const STATUS_LABELS = {
@@ -711,7 +712,7 @@
         title: "Validation de ce que nous avons compris",
         desc: "Cette section sert à corriger la vision actuelle avant de détailler le process.",
         questions: [
-          { id: "q2_confirm", title: "Est-ce que le résumé actuel est correct ?", help: "Résumé : plusieurs espèces/variétés de pleurotes, QR par unité, étapes inoculation → incubations 1/2/3 → fructifications 1/2 → récoltes flush 1/2/3, poids par unité, suivi iPhone en Wi‑Fi local, chambres avec conditions différentes, stats détaillées.", type: "longtext" },
+          { id: "q2_confirm", title: "Est-ce que le résumé actuel est correct ?", help: "Résumé mis à jour : chaîne complète « du spore à l’assiette » = origine → gélose → culture liquide (LC) → grain → substrat → fructification, avec clones (cultures secondaires) et transferts à chaque stade ; plusieurs espèces configurables (pleurote, shiitake, etc.) ; QR par unité ; incubations 1/2/3 → fructifications 1/2 → récoltes flush 1/2/3 ; poids par unité ; suivi iPhone en Wi‑Fi/Tailscale ; chambres avec conditions différentes ; stats détaillées.", type: "longtext" },
           { id: "q2_missing", title: "Qu’est-ce qui manque ou est faux dans ce résumé ?", help: "Note ici les erreurs, oublis, mots pas adaptés, ou cas particuliers importants.", type: "longtext" }
         ]
       },
@@ -720,7 +721,7 @@
         title: "Vocabulaire et unité de suivi",
         desc: "Il faut choisir les mots qui seront utilisés dans l’application.",
         questions: [
-          { id: "q4_1_1", title: "Comment appelles-tu naturellement une unité ?", help: "Exemples : ballot, bloc, sac, pain, substrat, autre.", type: "longtext" },
+          { id: "q4_1_1", title: "Comment appelles-tu naturellement une unité, à chaque stade ?", help: "Le mot peut changer selon le stade : gélose/boîte de Pétri, culture liquide/LC, ballot de grain, ballot de substrat, bloc, sac, pain. Donne ton vocabulaire pour chacun.", type: "longtext" },
           { id: "q4_1_2", title: "Une unité correspond à quoi physiquement ?", help: "Exemples : sac de substrat, ballot inoculé, bac, caisse, autre.", type: "longtext" },
           { id: "q4_1_3", title: "Est-ce que l’unité peut être divisée physiquement en plusieurs enfants ?", help: "Exemple : un parent donne plusieurs sous-unités, chacune avec son QR code.", type: "longtext" },
           { id: "q4_1_4", title: "Si une unité est divisée, le parent continue-t-il à exister ou devient-il seulement un historique ?", help: "Important pour savoir si le parent reste manipulable dans l’app ou s’il sert juste à relier les enfants.", type: "longtext" }
@@ -728,13 +729,30 @@
       },
       {
         id: "especes",
-        title: "Espèces, variétés et souches de pleurotes",
+        title: "Espèces, variétés et souches (multi-espèces, configurable)",
         desc: "Ces réponses permettront de faire des statistiques par type cultivé.",
         questions: [
-          { id: "q5_1", title: "Quelles espèces ou variétés de pleurotes cultives-tu actuellement ?", help: "Exemples : pleurote gris, pleurote jaune, pleurote rose, pleurote du panicaut, autre.", type: "longtext" },
+          { id: "q5_1", title: "Quelles espèces (et variétés) de champignons cultives-tu actuellement ?", help: "Exemples : pleurote gris/jaune/rose/panicaut, shiitake, et autres. L’espèce est configurable dans l’app — pas seulement le pleurote.", type: "longtext" },
           { id: "q5_2", title: "Pour chaque espèce/variété, est-ce que le process change ?", help: "Exemples : durée d’incubation différente, température différente, humidité différente, nombre de flushs différent.", type: "longtext" },
-          { id: "q5_3", title: "Veux-tu suivre la souche précise, le fournisseur, ou seulement le type de pleurote ?", help: "Plus on trace précisément, plus les statistiques peuvent expliquer les différences de rendement.", type: "longtext" },
-          { id: "q5_4", title: "Quelles statistiques veux-tu comparer par espèce/variété ?", help: "Exemples : rendement total, rendement par flush, durée d’incubation, taux de contamination, poids moyen par unité.", type: "longtext" }
+          { id: "q5_3", title: "Veux-tu suivre la souche précise, le fournisseur, ou seulement le type de champignon ?", help: "Plus on trace précisément, plus les statistiques peuvent expliquer les différences de rendement.", type: "longtext" },
+          { id: "q5_4", title: "Quelles statistiques veux-tu comparer par espèce/variété ?", help: "Exemples : rendement total, rendement par flush, durée d’incubation, taux de contamination, poids moyen par unité.", type: "longtext" },
+          { id: "q5_5", title: "Le process et la chaîne (gélose → LC → grain → substrat) sont-ils les mêmes pour toutes les espèces ?", help: "Ex : le shiitake peut avoir des durées, un substrat (bûche/sciure) ou un nombre de flushs différents. Précise les différences par espèce.", type: "longtext" }
+        ]
+      },
+      {
+        id: "chaine-propagation",
+        title: "Chaîne de propagation : du spore à l’assiette",
+        desc: "Avant le substrat, il y a toute la chaîne amont : gélose → culture liquide (LC) → grain → substrat. À chaque stade on peut cloner (cultures secondaires) ou transférer au stade suivant.",
+        questions: [
+          { id: "qcp_1", title: "La chaîne « origine → gélose → culture liquide (LC) → grain → substrat → fructification » est-elle correcte ?", help: "Corrige l’ordre, les noms, ajoute ou retire un stade. Précise par où tu commences le plus souvent.", type: "longtext" },
+          { id: "qcp_2", title: "Jusqu’où veux-tu remonter la traçabilité ?", help: "Coche le point de départ le plus en amont que tu veux tracer.", type: "checklist", options: ["empreinte de spores", "gélose", "culture liquide (LC)", "grain", "substrat seulement", "autre"] },
+          { id: "qcp_3", title: "Comment nommes-tu chaque stade ?", help: "Donne ton mot pour chacun : gélose (boîte de Pétri ?), culture liquide/LC, grain (ballot de grain ?), substrat (ballot de substrat ?).", type: "longtext" },
+          { id: "qcp_4", title: "À quels stades fais-tu des clones (cultures secondaires de même type) ?", help: "Exemple : une gélose donne des géloses secondaires, une LC des LC secondaires, un grain des grains secondaires.", type: "checklist", options: ["gélose → gélose", "LC → LC", "grain → grain", "substrat → substrat (division)", "aucun", "autre"] },
+          { id: "qcp_5", title: "Conserves-tu des cultures mères ?", help: "Une unité (souvent gélose ou LC) gardée comme réserve génétique, pour cloner sans la consommer.", type: "longtext" },
+          { id: "qcp_6", title: "Limites-tu le nombre de générations de clone ?", help: "Exemple : après X repiquages, on repart des spores pour éviter la sénescence / perte de vigueur.", type: "longtext" },
+          { id: "qcp_7", title: "Quels ratios de multiplication veux-tu suivre ?", help: "Exemple : 1 gélose → combien de LC ? 1 LC → combien de ballots de grain ? 1 grain → combien de substrats ?", type: "longtext" },
+          { id: "qcp_8", title: "Chaque unité amont (gélose, LC, grain) doit-elle avoir son propre QR ?", help: "Ou seulement le grain et le substrat ? Précise selon ta pratique de labo.", type: "longtext" },
+          { id: "qcp_9", title: "Le process (étapes, conditions) est-il différent à chaque stade ?", help: "Exemple : gélose et LC en conditions stériles, durées et observations propres. Faut-il un process par stade ?", type: "longtext" }
         ]
       },
       {
@@ -742,7 +760,7 @@
         title: "Départ du process : inoculation ou réception",
         desc: "Il faut savoir où commence la traçabilité.",
         questions: [
-          { id: "q6_1", title: "Le process commence-t-il toujours à l’inoculation ?", help: "Ou parfois plus tard, par exemple si les unités arrivent déjà inoculées.", type: "longtext" },
+          { id: "q6_1", title: "Où commence le process le plus souvent ?", help: "Spores/gélose, culture liquide, grain, ou directement substrat ? Et reçois-tu parfois des unités déjà prêtes (grain ou substrat inoculé) ?", type: "longtext" },
           { id: "q6_2", title: "Est-ce que certaines unités arrivent déjà inoculées ?", help: "Si oui, noter comment elles sont reçues et quelles infos sont connues.", type: "longtext" },
           { id: "q6_3", title: "Quelles informations faut-il enregistrer à l’inoculation ?", help: "Exemples : date, heure, espèce, souche, poids substrat, poids spawn, taux d’inoculation, opérateur, lot de matière première, fournisseur.", type: "longtext" },
           { id: "q6_4", title: "Le QR code doit-il être imprimé au moment de l’inoculation ou plus tard ?", help: "Préciser le moment idéal sur le terrain.", type: "longtext" },
@@ -767,15 +785,57 @@
         title: "Process global à décrire",
         desc: "Ici on valide les grandes phases et la logique de passage d’une étape à l’autre.",
         questions: [
-          { id: "q8_1", title: "La liste des phases est-elle correcte ?", help: "Liste proposée : inoculation, incubation 1, incubation 2, incubation 3, fructification 1, fructification 2, récolte flush 1, récolte flush 2, récolte flush 3, fin de cycle. Corrige, renomme, ajoute ou supprime.", type: "longtext" },
+          { id: "q8_1", title: "La liste des phases/stades est-elle correcte ?", help: "Liste mise à jour : gélose, culture liquide (LC), grain, inoculation substrat, incubation 1/2/3, fructification 1/2, récolte flush 1/2/3, fin de cycle. Corrige, renomme, ajoute ou supprime, et précise quels stades te concernent.", type: "longtext" },
           { id: "q8_2", title: "La distinction phase / étape est-elle utile pour toi ?", help: "Dans l’app : une phase est une grande période, une étape est un moment plus précis. Exemple : phase incubation avec étapes incubation 1/2/3.", type: "longtext" },
           { id: "q8_3", title: "Le passage d’une étape à l’autre est-il basé sur durée, observation, mesure, décision humaine ou règle fixe ?", help: "Réponse générale. Le détail sera demandé étape par étape ensuite.", type: "longtext" }
         ]
       },
       {
+        id: "stade-gelose",
+        title: "Détail stade — Gélose (boîte de Pétri)",
+        desc: "Culture sur milieu gélosé (agar). Premier maillon, souvent culture mère.",
+        questions: [
+          { id: "qg_1", title: "D’où part une gélose chez toi ?", help: "Spores, clone de tissu, gélose reçue/achetée, autre.", type: "longtext" },
+          { id: "qg_2", title: "Combien de géloses secondaires (clones) tires-tu d’une gélose ?", help: "Quantité typique et fourchette.", type: "longtext" },
+          { id: "qg_3", title: "Quelles conditions et quelle durée pour la gélose ?", help: "Température, durée de colonisation, stérilité, lumière.", type: "longtext" },
+          { id: "qg_4", title: "Qu’observes-tu sur une gélose ?", help: "Colonisation, contamination (moisissure, bactérie), couleur, vitesse, anomalies.", type: "longtext" },
+          { id: "qg_5", title: "Quand une gélose est-elle prête à passer en culture liquide (ou à inoculer du grain) ?", help: "Critère visuel, durée, décision humaine.", type: "longtext" },
+          { id: "qg_6", title: "Quelles infos saisir pour une gélose ?", help: "Souche, espèce, origine, date, opérateur, génération, n° de boîte.", type: "longtext" },
+          { id: "qg_7", title: "Quelles actions veux-tu dans l’app au stade gélose ?", help: "Cloner, transférer en LC, observer contamination, marquer culture mère, imprimer QR, jeter.", type: "longtext" }
+        ]
+      },
+      {
+        id: "stade-lc",
+        title: "Détail stade — Culture liquide (LC)",
+        desc: "Mycélium en milieu liquide, pour inoculer rapidement le grain.",
+        questions: [
+          { id: "qlc_1", title: "Comment démarres-tu une culture liquide ?", help: "À partir d’une gélose, d’une autre LC (clone), d’une seringue, autre.", type: "longtext" },
+          { id: "qlc_2", title: "Une LC peut-elle être clonée en LC secondaires ?", help: "Si oui, combien et dans quelles limites.", type: "longtext" },
+          { id: "qlc_3", title: "Quelles conditions et quelle durée pour la LC ?", help: "Température, agitation, durée, stérilité, repos.", type: "longtext" },
+          { id: "qlc_4", title: "Qu’observes-tu sur une LC ?", help: "Croissance, trouble, contamination, odeur, vitesse.", type: "longtext" },
+          { id: "qlc_5", title: "Combien de ballots de grain une LC inocule-t-elle ?", help: "Ratio de multiplication LC → grain.", type: "longtext" },
+          { id: "qlc_6", title: "Quelles infos saisir pour une LC ?", help: "Volume, souche, origine (gélose mère), date, opérateur, génération.", type: "longtext" },
+          { id: "qlc_7", title: "Quelles actions veux-tu dans l’app au stade LC ?", help: "Cloner, transférer vers grain, observer contamination, imprimer QR, jeter.", type: "longtext" }
+        ]
+      },
+      {
+        id: "stade-grain",
+        title: "Détail stade — Grain (ballots de grain)",
+        desc: "Grain colonisé (spawn), issu d’une LC ou d’une gélose, pour inoculer le substrat.",
+        questions: [
+          { id: "qgr_1", title: "Avec quoi inocules-tu le grain ?", help: "LC, gélose, grain (clone grain → grain), autre.", type: "longtext" },
+          { id: "qgr_2", title: "Fais-tu du grain à grain (clone) ?", help: "Si oui, ratio (1 ballot de grain → combien) et limites.", type: "longtext" },
+          { id: "qgr_3", title: "Quelles conditions et quelle durée pour la colonisation du grain ?", help: "Température, durée, secouage, stérilité.", type: "longtext" },
+          { id: "qgr_4", title: "Qu’observes-tu sur un ballot de grain ?", help: "Taux de colonisation, contamination, uniformité, vitesse.", type: "longtext" },
+          { id: "qgr_5", title: "Combien de ballots de substrat un ballot de grain inocule-t-il ?", help: "Ratio de multiplication grain → substrat.", type: "longtext" },
+          { id: "qgr_6", title: "Quelles infos et quel poids saisir pour un ballot de grain ?", help: "Poids grain, souche, origine (LC/gélose), date, opérateur, génération.", type: "longtext" },
+          { id: "qgr_7", title: "Quelles actions veux-tu dans l’app au stade grain ?", help: "Cloner, transférer vers substrat, observer contamination, imprimer QR, jeter.", type: "longtext" }
+        ]
+      },
+      {
         id: "inoculation",
-        title: "Détail étape — Inoculation",
-        desc: "Création ou préparation de l’unité de culture avec le mycélium/spawn.",
+        title: "Détail étape — Inoculation du substrat (grain → substrat)",
+        desc: "Transfert du grain colonisé sur le substrat : création des ballots de substrat (le « lot »). C’est le maillon que tu avais déjà exploré.",
         questions: [
           { id: "q9_1_1", title: "Que fait-on exactement à l’inoculation ?", help: "Décris les gestes et décisions importantes.", type: "longtext" },
           { id: "q9_1_2", title: "Combien d’unités sont créées en général ?", help: "Donner une quantité typique ou une fourchette.", type: "longtext" },
@@ -821,7 +881,7 @@
         desc: "Troisième période d’incubation ou fin de colonisation avant fructification.",
         questions: [
           { id: "q9_4_1", title: "À quoi correspond incubation 3 ?", help: "Décris l’objectif de cette étape.", type: "longtext" },
-          { id: "q9_4_2", title: "Incubation 3 est-elle obligatoire pour tous les pleurotes ?", help: "Précise les exceptions selon variété ou méthode.", type: "longtext" },
+          { id: "q9_4_2", title: "Incubation 3 est-elle obligatoire pour toutes les espèces ?", help: "Précise les exceptions selon l’espèce, la variété ou la méthode.", type: "longtext" },
           { id: "q9_4_3", title: "Quelle est la durée habituelle d’incubation 3 ?", help: "Durée typique et fourchette.", type: "longtext" },
           { id: "q9_4_4", title: "Quelles sont les conditions cible en incubation 3 ?", help: "Température, humidité, lumière, aération/CO2.", type: "longtext" },
           { id: "q9_4_5", title: "Quels signes visuels faut-il noter en incubation 3 ?", help: "Colonisation complète, couleur, densité, anomalies.", type: "longtext" },
@@ -993,7 +1053,7 @@
         title: "QR code et étiquettes",
         desc: "Le QR relie l’unité physique à l’application.",
         questions: [
-          { id: "q17_1", title: "Quelles unités doivent avoir un QR ?", help: "Unité de culture, parent/session, chambre, récolte, produit final, caisse, autre.", type: "longtext" },
+          { id: "q17_1", title: "Quelles unités doivent avoir un QR ?", help: "Gélose, culture liquide, grain, substrat/lot, parent/session, chambre, récolte, produit final, caisse, autre. Précise à partir de quel stade tu veux un QR.", type: "longtext" },
           { id: "q17_2", title: "Que doit afficher l’étiquette en texte lisible ?", help: "Exemples : code unité, espèce, date inoculation, parent, chambre, phase.", type: "longtext" },
           { id: "q17_3", title: "Faut-il un QR pour les chambres ?", help: "Utile pour voir toutes les unités présentes et saisir des mesures de chambre.", type: "longtext" },
           { id: "q17_4", title: "Faut-il un QR pour les récoltes ou produits finaux ?", help: "Utile pour traçabilité jusqu’à la vente ou au stock.", type: "longtext" },
@@ -1017,17 +1077,20 @@
         title: "Synthèse finale du process",
         desc: "Tableau simple pour transformer les réponses en process configurable dans l’application.",
         questions: [
-          { id: "q20_table", title: "Version simplifiée du process à confirmer", help: "Remplis ou corrige les lignes. Tu peux ajouter une étape.", type: "table", columns: ["Ordre", "Phase/étape", "Durée typique", "Température", "Humidité", "Observation clé", "Action suivante"], rowsData: [
-            ["1", "Inoculation", "", "", "", "", ""],
-            ["2", "Incubation 1", "", "", "", "", ""],
-            ["3", "Incubation 2", "", "", "", "", ""],
-            ["4", "Incubation 3", "", "", "", "", ""],
-            ["5", "Fructification 1", "", "", "", "", ""],
-            ["6", "Fructification 2", "", "", "", "", ""],
-            ["7", "Récolte flush 1", "", "", "", "poids par unité", ""],
-            ["8", "Récolte flush 2", "", "", "", "poids par unité", ""],
-            ["9", "Récolte flush 3", "", "", "", "poids par unité", ""],
-            ["10", "Fin de cycle", "", "", "", "", ""]
+          { id: "q20_table", title: "Version simplifiée du process à confirmer", help: "Remplis ou corrige les lignes. Tu peux ajouter une étape. La colonne « Action suivante » sert à indiquer un clone ou un transfert vers le stade suivant.", type: "table", columns: ["Ordre", "Stade / étape", "Durée typique", "Température", "Humidité", "Observation clé", "Action suivante (clone / transfert)"], rowsData: [
+            ["1", "Gélose", "", "", "", "contamination / colonisation", "clone gélose ou transfert LC"],
+            ["2", "Culture liquide (LC)", "", "", "", "trouble / contamination", "clone LC ou transfert grain"],
+            ["3", "Grain (ballot)", "", "", "", "colonisation / contamination", "clone grain ou transfert substrat"],
+            ["4", "Inoculation substrat", "", "", "", "", "incubation 1"],
+            ["5", "Incubation 1", "", "", "", "", ""],
+            ["6", "Incubation 2", "", "", "", "", ""],
+            ["7", "Incubation 3", "", "", "", "", ""],
+            ["8", "Fructification 1", "", "", "", "", ""],
+            ["9", "Fructification 2", "", "", "", "", ""],
+            ["10", "Récolte flush 1", "", "", "", "poids par unité", ""],
+            ["11", "Récolte flush 2", "", "", "", "poids par unité", ""],
+            ["12", "Récolte flush 3", "", "", "", "poids par unité", ""],
+            ["13", "Fin de cycle", "", "", "", "", ""]
           ] },
           { id: "q19_resume", title: "Quelles sont les 5 décisions ou règles les plus importantes à retenir ?", help: "Réponse libre pour résumer ce qui compte vraiment dans ton process.", type: "longtext" }
         ]

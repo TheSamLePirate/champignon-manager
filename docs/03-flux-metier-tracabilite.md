@@ -4,12 +4,24 @@
 
 Le système doit suivre un flux réel de matière.
 
-Une source devient un lot, le lot peut être déplacé, divisé, mesuré, récolté, puis transformé en produits finaux. À tout moment, l’utilisateur doit pouvoir remonter ou descendre la chaîne.
+Une origine (empreinte de spores, culture mère) devient une gélose, qui est clonée et/ou transférée en culture liquide, puis en grain, puis en substrat ; le substrat devient un lot qui est déplacé, divisé, mesuré, récolté, puis transformé en produits finaux. À chaque stade, une unité peut être clonée (cultures secondaires) ou transférée au stade suivant. À tout moment, l’utilisateur doit pouvoir remonter ou descendre la chaîne.
 
 ## 2. Flux nominal proposé
 
-1. **Réception ou création de source**
-   - L’utilisateur crée une source : ballot inoculé, bloc, substrat colonisé.
+### 2.0 Chaîne de propagation amont (laboratoire) — « du spore à l’assiette »
+
+0. **Origine** : empreinte de spores, culture mère reçue/achetée, clone de tissu.
+1. **Gélose** : mise en boîte de Pétri ; peut être clonée en géloses secondaires ; une gélose peut être conservée comme culture mère.
+2. **Culture liquide (LC)** : une gélose est transférée en LC ; la LC peut être clonée en LC secondaires.
+3. **Grain** : la LC (ou une gélose) inocule des ballots de grain ; le grain peut être cloné (grain → grain).
+4. **Substrat** : le grain inocule des ballots de substrat. À partir d’ici commence le flux détaillé ci-dessous.
+
+À chaque stade : **clone** = multiplication au même stade (le parent survit) ; **transfert/repiquage** = passage au stade suivant (une unité amont peut en inoculer plusieurs). Chaque unité créée reçoit son QR et garde le lien vers son parent et le type de relation.
+
+### 2.1 Flux substrat → produit (suite)
+
+1. **Réception ou création de l’unité substrat (ou source reçue)**
+   - L’unité substrat est créée par transfert depuis le grain, ou reçue déjà inoculée.
    - Il saisit les informations initiales.
    - L’application génère un identifiant unique.
 
@@ -77,7 +89,24 @@ Depuis un produit final, l’utilisateur doit retrouver :
 - observations sanitaires ;
 - utilisateur ayant conditionné.
 
-## 5. Généalogie des lots
+## 5. Généalogie des lots et des cultures
+
+### 5.0 Lignée multi-stade : clone et transfert
+
+La généalogie ne se limite pas à la division d’un substrat. Elle relie tous les stades :
+
+- **Clone (même stade)** : 1 gélose → N géloses secondaires ; 1 LC → N LC ; 1 grain → N grains. Le parent (culture mère) reste actif.
+- **Transfert (stade suivant)** : gélose → LC → grain → substrat. Une unité amont peut inoculer plusieurs unités aval (ratio de multiplication à tracer).
+
+Exemple de lignée :
+
+- Gélose G-001 (origine : spores X)
+  - clone → Gélose G-001-c1 (culture mère conservée)
+  - transfert → LC L-014
+    - transfert → Grain GR-052, GR-053, GR-054
+      - GR-052 transfert → Substrat S-300 … S-309 (10 ballots)
+
+Chaque flèche est un événement horodaté (`culture_cloned` ou `culture_transferred`) avec quantités et étiquettes enfants.
 
 ### 5.1 Division simple
 
@@ -123,6 +152,8 @@ Dans le cas d’un mélange, le produit final doit stocker plusieurs origines av
 | Validation étape | `step_completed` |
 | Déplacement | `location_changed` |
 | Division | `lot_split` |
+| Clone (gélose/LC/grain) | `culture_cloned` |
+| Transfert / repiquage stade suivant | `culture_transferred` |
 | Mesure | `measurement_recorded` |
 | Observation | `observation_added` |
 | Problème | `issue_reported` |
@@ -140,6 +171,10 @@ Dans le cas d’un mélange, le produit final doit stocker plusieurs origines av
 - Une correction doit être un nouvel événement.
 - Les poids répartis lors d’une division doivent être contrôlés.
 - Une récolte ne peut pas être créée depuis un lot terminé ou rebuté, sauf correction admin.
+- Une unité doit connaître son stade (gélose, LC, grain, substrat, fructification).
+- Un clone garde le même stade que son parent ; un transfert passe au stade suivant.
+- Une culture mère conservée peut rester active après clonage/transfert.
+- Les quantités d’un transfert (nombre d’unités aval créées) doivent être enregistrées.
 
 ## 8. Cas particuliers à prévoir
 
@@ -150,3 +185,5 @@ Dans le cas d’un mélange, le produit final doit stocker plusieurs origines av
 - Produit final issu de plusieurs lots : traçabilité multi-origine.
 - Déplacement sans scan : saisie manuelle possible avec audit.
 - Lot sans poids initial : autoriser mais signaler l’information manquante.
+- Contamination en amont (gélose/LC) : isoler, jeter, repartir d’une culture mère saine.
+- Sénescence d’une souche après trop de générations de clone : tracer la génération pour décider de repartir des spores.
