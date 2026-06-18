@@ -43,6 +43,7 @@ Permettre à un utilisateur sur site de suivre toute la chaîne de culture :
 | [16-formulaire-reponses-cultivateur.html](./16-formulaire-reponses-cultivateur.html) | Formulaire HTML autonome avec autosauvegarde, import/export JSON et export Markdown. |
 | [17-formulaire-questions-dev.html](./17-formulaire-questions-dev.html) | Formulaire HTML autonome pour les décisions développeur : architecture, API, DB, QR, déploiement. |
 | [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md) | Synthèse des réponses développeur et décisions techniques retenues. |
+| [19-atlas-process-flux.html](./19-atlas-process-flux.html) | Atlas visuel **interactif** des process et flux métier (chaîne de propagation, substrat, lignée, traçabilité, états). Diagrammes data-driven (Mermaid), éditables. |
 
 ## Décisions initiales proposées
 

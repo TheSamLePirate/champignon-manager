@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Champignon Manager · Atlas des process & flux</title>
+<meta name="description" content="Visualisation interactive des process métier de culture de champignons : chaîne de propagation du spore à l'assiette, process substrat, lignée, traçabilité, états." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================= *
+ *  ATLAS DES PROCESS — Champignon Manager
+ *  Esthétique : « journal de terrain mycologique × instrument de labo »
+ *  Les process sont DATA-DRIVEN : voir l'objet PROCESSES dans le script.
+ *  Modifier un process = éditer son texte Mermaid + ses métadonnées.
+ * ============================================================= */
+:root{
+  --bg:#15140f; --bg2:#1b1913; --panel:#221f18; --panel2:#1c1a14;
+  --line:#383224; --line-soft:#2c281d;
+  --ink:#ece6d6; --ink-dim:#a99f88; --ink-faint:#7c735f;
+  --green:#9fcc6e; --green-deep:#84b45a;
+  --amber:#e6ad4d; --rust:#c8603f;
+  --shadow:0 24px 60px -28px rgba(0,0,0,.75), 0 4px 16px -8px rgba(0,0,0,.6);
+  /* étapes / stades */
+  --st-origine:#b07bb0; --st-gelose:#5fa89c; --st-lc:#5e9bc9; --st-grain:#c9a24b;
+  --st-substrat:#b27b46; --st-fruct:#8fc063; --st-recolte:#df9a3e; --st-produit:#cf6453;
+  --st-mother:#8a76c4; --st-danger:#cb5a3c; --st-process:#9a9279; --st-decision:#dcb45a;
+  --tint:0.17; --cluster:#1d1b14;
+  --grain-op:.05; --radius:16px;
+}
+[data-theme="light"]{
+  --bg:#efe9da; --bg2:#f4efe2; --panel:#fbf8ef; --panel2:#f2ecdd;
+  --line:#ddd3bd; --line-soft:#e7dfcc;
+  --ink:#2c281f; --ink-dim:#6d6555; --ink-faint:#9a8f78;
+  --green:#5d8a36; --green-deep:#4f7a2c;
+  --amber:#bb8420; --rust:#b24a2c;
+  --shadow:0 22px 50px -30px rgba(60,48,24,.42), 0 3px 12px -6px rgba(60,48,24,.18);
+  --st-origine:#9a5e9a; --st-gelose:#3f867a; --st-lc:#3f7cab; --st-grain:#a9842f;
+  --st-substrat:#945e30; --st-fruct:#5f933b; --st-recolte:#bf7a22; --st-produit:#b24a3c;
+  --st-mother:#6a55a6; --st-danger:#b04528; --st-process:#7d7660; --st-decision:#b58e2c;
+  --tint:0.14; --cluster:#f1ebdb; --grain-op:.04;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Spline Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:15px; line-height:1.5; overflow:hidden;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+/* atmosphère : nappe radiale vivante + canvas spores + grain */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(120% 90% at 84% -10%, color-mix(in srgb,var(--green) 16%, transparent), transparent 55%),
+    radial-gradient(90% 70% at -8% 110%, color-mix(in srgb,var(--amber) 13%, transparent), transparent 52%);
+}
+#spores{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.8}
+.grain{
+  position:fixed; inset:0; z-index:1; pointer-events:none; opacity:var(--grain-op); mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.app{position:relative; z-index:2; height:100vh; display:grid; grid-template-rows:auto 1fr;}
+
+/* ---------- header ---------- */
+header.top{
+  display:flex; align-items:center; gap:18px; padding:14px 22px;
+  border-bottom:1px solid var(--line); background:color-mix(in srgb,var(--bg) 78%, transparent);
+  backdrop-filter:blur(10px);
+}
+.brand{display:flex; align-items:center; gap:13px; min-width:0}
+.mark{
+  width:42px; height:42px; flex:none; border-radius:13px; display:grid; place-items:center;
+  background:radial-gradient(circle at 32% 28%, var(--green) 0%, var(--green-deep) 60%, color-mix(in srgb,var(--green-deep) 60%, #000) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 6px 18px -8px var(--green-deep); font-size:22px;
+}
+.brand h1{
+  margin:0; font-family:"Fraunces",serif; font-weight:600; font-size:21px; letter-spacing:-.02em; line-height:1;
+}
+.brand .sub{font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); margin-top:4px}
+.spacer{flex:1}
+.species{
+  display:flex; align-items:center; gap:9px; padding:7px 13px; border-radius:999px;
+  border:1px solid var(--line); background:var(--panel); font-size:13px; cursor:default;
+}
+.species .dot{width:9px;height:9px;border-radius:50%;background:var(--st-fruct);box-shadow:0 0 0 3px color-mix(in srgb,var(--st-fruct) 28%,transparent)}
+.species b{font-weight:600}
+.species small{color:var(--ink-faint)}
+.iconbtn{
+  width:40px; height:40px; display:grid; place-items:center; border-radius:11px;
+  border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer;
+  transition:transform .15s ease, border-color .2s, background .2s;
+}
+.iconbtn:hover{transform:translateY(-1px); border-color:var(--green); background:var(--panel2)}
+.iconbtn:active{transform:translateY(0)}
+.iconbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- layout ---------- */
+.layout{display:grid; grid-template-columns:300px 1fr 320px; min-height:0; height:100%}
+@media(max-width:1180px){.layout{grid-template-columns:264px 1fr}.detail{display:none}}
+@media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:none}}
+
+/* ---------- sidebar : atlas ---------- */
+.side{border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; background:color-mix(in srgb,var(--bg2) 60%,transparent)}
+.side .head{padding:18px 18px 10px}
+.kicker{font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-faint); font-weight:600}
+.side h2{margin:6px 0 0; font-family:"Fraunces",serif; font-weight:600; font-size:19px; letter-spacing:-.02em}
+.search{margin:12px 18px 6px; position:relative}
+.search input{
+  width:100%; padding:10px 12px 10px 36px; border-radius:11px; border:1px solid var(--line);
+  background:var(--panel); color:var(--ink); font:inherit; font-size:13.5px;
+}
+.search input:focus{outline:none; border-color:var(--green); box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 22%,transparent)}
+.search svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); width:16px;height:16px; stroke:var(--ink-faint); fill:none; stroke-width:2}
+.proclist{flex:1; overflow:auto; padding:8px 12px 12px; display:flex; flex-direction:column; gap:7px}
+.proc{
+  position:relative; text-align:left; width:100%; padding:13px 13px 13px 14px; border-radius:13px; cursor:pointer;
+  border:1px solid var(--line-soft); background:var(--panel); color:inherit; display:flex; gap:12px; align-items:flex-start;
+  transition:transform .14s ease, border-color .2s, background .2s; overflow:hidden;
+}
+.proc::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent,var(--green)); opacity:0; transition:opacity .2s}
+.proc:hover{transform:translateX(2px); border-color:color-mix(in srgb,var(--accent,var(--green)) 55%, var(--line))}
+.proc.active{background:var(--panel2); border-color:color-mix(in srgb,var(--accent,var(--green)) 60%, var(--line))}
+.proc.active::before{opacity:1}
+.proc .glyph{font-size:21px; line-height:1; margin-top:1px; filter:saturate(1.1)}
+.proc .pt{min-width:0; flex:1}
+.proc .pt h3{margin:0; font-size:14.5px; font-weight:600; letter-spacing:-.01em}
+.proc .pt p{margin:3px 0 0; font-size:12px; color:var(--ink-dim); line-height:1.4}
+.badge{display:inline-block; margin-top:8px; font-size:10.5px; letter-spacing:.04em; padding:3px 8px; border-radius:999px; font-weight:600; font-family:"JetBrains Mono",monospace}
+.badge.ok{background:color-mix(in srgb,var(--green) 18%,transparent); color:var(--green)}
+.badge.tbd{background:color-mix(in srgb,var(--amber) 18%,transparent); color:var(--amber)}
+.side .foot{padding:13px 18px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-faint)}
+.side .foot code{font-family:"JetBrains Mono",monospace; color:var(--green); font-size:11px}
+
+/* ---------- stage : diagramme ---------- */
+.stage{display:flex; flex-direction:column; min-width:0; min-height:0; position:relative}
+.stage .bar{padding:18px 24px 14px; border-bottom:1px solid var(--line); display:flex; align-items:flex-end; gap:18px}
+.stage .bar .t{min-width:0; flex:1}
+.stage .bar .num{font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--accent,var(--green)); letter-spacing:.08em}
+.stage .bar h2{margin:5px 0 0; font-family:"Fraunces",serif; font-weight:600; font-size:clamp(22px,2.6vw,30px); letter-spacing:-.025em; line-height:1.04}
+.stage .bar p{margin:6px 0 0; font-size:13.5px; color:var(--ink-dim); max-width:62ch}
+.viewport{flex:1; position:relative; overflow:hidden; cursor:grab; min-height:0; user-select:none; -webkit-user-select:none}
+.viewport.drag{cursor:grabbing}
+.viewport::after{content:""; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(140% 100% at 50% -20%, transparent 60%, color-mix(in srgb,var(--bg) 60%,transparent) 100%)}
+.canvasdoc{position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform}
+.diagram{padding:24px}
+.diagram svg{max-width:none!important; height:auto; display:block}
+/* mermaid : adaptation au thème */
+.diagram .node .label,.diagram .nodeLabel,.diagram .edgeLabel,.diagram text{font-family:"Spline Sans",sans-serif!important}
+.diagram .node.has-detail{cursor:pointer}
+.diagram .node.has-detail rect,.diagram .node.has-detail polygon,.diagram .node.has-detail circle,.diagram .node.has-detail path{
+  transition:filter .2s ease}
+.diagram .node.has-detail:hover{filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
+.diagram .node.active rect,.diagram .node.active polygon,.diagram .node.active path{
+  stroke-width:3px!important; filter:drop-shadow(0 0 10px color-mix(in srgb,var(--green) 60%,transparent))}
+.diagram .cluster rect{fill:var(--cluster)!important; stroke:var(--line)!important; rx:14; ry:14}
+.diagram .cluster .nodeLabel,.diagram .cluster-label .nodeLabel,.diagram .cluster text{fill:var(--ink-dim)!important; font-weight:600; font-family:"Fraunces",serif!important}
+.diagram .edgeLabel{color:var(--ink-dim)!important}
+.diagram .edgeLabel rect,.diagram .edgeLabel .labelBkg{fill:var(--panel)!important; opacity:.92!important}
+.diagram .edgeLabel foreignObject div{background:transparent!important; color:var(--ink-dim)!important; font-size:12px}
+/* reveal */
+/* NB : ne JAMAIS animer `transform` sur .node — cela écrase le transform
+   de positionnement de Mermaid et empile les nœuds en haut à gauche.
+   On anime uniquement l'opacité (le décalage par nœud crée la cascade). */
+.diagram.animate .node{animation:nodeIn .5s ease both}
+.diagram.animate .edgePaths,.diagram.animate .edgeLabels,.diagram.animate .cluster{animation:fadeIn .9s ease .2s both}
+@keyframes nodeIn{from{opacity:0} to{opacity:1}}
+@keyframes fadeIn{from{opacity:0} to{opacity:1}}
+.errcard{margin:24px; max-width:720px; padding:18px 20px; border:1px solid var(--line); border-radius:14px; background:var(--panel)}
+.errcard h4{margin:0 0 8px; font-family:"Fraunces",serif}
+.errcard pre{white-space:pre-wrap; font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--ink-dim); background:var(--panel2); padding:12px; border-radius:10px; border:1px solid var(--line-soft); overflow:auto}
+
+/* toolbar flottante */
+.toolbar{
+  position:absolute; right:18px; bottom:18px; z-index:5; display:flex; gap:6px; padding:6px;
+  border:1px solid var(--line); border-radius:14px; background:color-mix(in srgb,var(--panel) 86%, transparent);
+  backdrop-filter:blur(10px); box-shadow:var(--shadow);
+}
+.toolbar button{width:38px;height:38px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:background .15s,border-color .15s}
+.toolbar button:hover{background:var(--panel2); border-color:var(--line)}
+.toolbar button svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.toolbar .zlabel{min-width:46px; display:grid; place-items:center; font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--ink-dim)}
+.toolbar .sep{width:1px; background:var(--line); margin:5px 2px}
+
+/* ---------- detail / légende ---------- */
+.detail{border-left:1px solid var(--line); display:flex; flex-direction:column; min-height:0; background:color-mix(in srgb,var(--bg2) 60%,transparent)}
+.detail .scroll{overflow:auto; padding:20px 18px 26px; display:flex; flex-direction:column; gap:20px}
+.panelcard{border:1px solid var(--line); border-radius:14px; background:var(--panel); overflow:hidden}
+.panelcard .ph{padding:13px 15px; border-bottom:1px solid var(--line-soft); display:flex; align-items:center; gap:9px}
+.panelcard .ph .kicker{font-size:10.5px}
+.panelcard .pb{padding:14px 15px}
+#nodeChip{display:inline-flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px; font-family:"JetBrains Mono",monospace}
+#nodeTitle{font-family:"Fraunces",serif; font-weight:600; font-size:19px; letter-spacing:-.02em; margin:11px 0 4px; line-height:1.12}
+#nodeDesc{font-size:13px; color:var(--ink-dim); margin:0 0 6px}
+.dl{display:flex; flex-direction:column; gap:0; margin-top:10px}
+.dl .row{display:grid; grid-template-columns:104px 1fr; gap:10px; padding:9px 0; border-top:1px solid var(--line-soft)}
+.dl .row dt{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); font-weight:600; padding-top:2px}
+.dl .row dd{margin:0; font-size:13px}
+.tbd{color:var(--amber); border-bottom:1px dashed color-mix(in srgb,var(--amber) 55%,transparent)}
+.empty-detail{padding:6px 2px; color:var(--ink-dim); font-size:13px}
+.empty-detail b{color:var(--ink)}
+.hint{display:flex; gap:9px; align-items:flex-start; font-size:12.5px; color:var(--ink-dim); padding:11px 12px; border-radius:11px; background:var(--panel2); border:1px solid var(--line-soft)}
+.hint .i{flex:none; color:var(--green); margin-top:1px}
+
+/* légende */
+.legend{display:flex; flex-direction:column; gap:9px}
+.legend .lrow{display:flex; align-items:center; gap:10px; font-size:12.5px}
+.legend .sw{width:15px;height:15px;border-radius:5px;flex:none;border:1.5px solid}
+.legend .ed{width:30px;height:0;flex:none}
+.legend .ln{border-top:2px solid var(--ink-dim)}
+.legend .ln.dash{border-top:2px dashed var(--ink-dim)}
+.legend .ln.dot{border-top:2px dotted var(--ink-dim)}
+.legend .ln.dng{border-top:2px solid var(--rust)}
+
+/* toast */
+.toast{position:fixed; left:50%; bottom:26px; transform:translate(-50%,20px); z-index:50; opacity:0; pointer-events:none;
+  padding:11px 18px; border-radius:12px; background:var(--ink); color:var(--bg); font-size:13px; font-weight:500;
+  box-shadow:var(--shadow); transition:opacity .25s, transform .25s}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:99px; border:3px solid transparent; background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-faint); background-clip:content-box}
+@media(prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+.offline{margin:24px; padding:16px 18px; border:1px dashed var(--amber); border-radius:14px; background:color-mix(in srgb,var(--amber) 8%,transparent); color:var(--ink-dim); font-size:13.5px; max-width:680px}
+.offline b{color:var(--ink)}
+</style>
+</head>
+<body>
+<canvas id="spores"></canvas>
+<div class="grain"></div>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark">🍄</div>
+      <div>
+        <h1>Atlas des process & flux</h1>
+        <div class="sub">Champignon Manager · du spore à l'assiette</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="species" title="L'espèce est configurable — pleurote est la première espèce de référence">
+      <span class="dot"></span><b>Pleurote</b><small>référence · espèce configurable</small>
+    </div>
+    <button class="iconbtn" id="themeBtn" title="Basculer clair / sombre" aria-label="Thème">
+      <svg id="themeIcon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <!-- ATLAS -->
+    <aside class="side">
+      <div class="head">
+        <div class="kicker">Atlas</div>
+        <h2>Process & schémas</h2>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="Rechercher un process…" />
+      </div>
+      <div class="proclist" id="proclist"></div>
+      <div class="foot">Process <b>modifiables</b> : éditez l'objet <code>PROCESSES</code> (texte Mermaid) dans ce fichier. Ils évolueront avec les réponses cultivateur.</div>
+    </aside>
+
+    <!-- DIAGRAMME -->
+    <main class="stage">
+      <div class="bar">
+        <div class="t">
+          <div class="num" id="procNum">01 / 06</div>
+          <h2 id="procTitle">—</h2>
+          <p id="procDesc">—</p>
+        </div>
+      </div>
+      <div class="viewport" id="viewport">
+        <div class="canvasdoc" id="canvasdoc">
+          <div class="diagram" id="diagram"></div>
+        </div>
+        <div class="toolbar">
+          <button id="zoomOut" title="Dézoomer (−)"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+          <div class="zlabel" id="zlabel">100%</div>
+          <button id="zoomIn" title="Zoomer (+)"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+          <div class="sep"></div>
+          <button id="fit" title="Ajuster (0)"><svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>
+          <button id="full" title="Plein écran"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+          <div class="sep"></div>
+          <button id="copySrc" title="Copier le code Mermaid"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+          <button id="exportSvg" title="Exporter en SVG"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></button>
+        </div>
+      </div>
+    </main>
+
+    <!-- DETAIL + LEGENDE -->
+    <aside class="detail">
+      <div class="scroll">
+        <div class="panelcard">
+          <div class="ph"><span class="kicker">Sélection</span></div>
+          <div class="pb" id="detailBody">
+            <div class="empty-detail">
+              <p><b>Clique sur une étape</b> du schéma pour voir son objectif, sa durée, ses conditions, observations et actions.</p>
+              <div class="hint" style="margin-top:12px">
+                <span class="i">✺</span>
+                <span>Glisse pour déplacer, molette pour zoomer. Beaucoup de durées/conditions restent <span class="tbd">à confirmer</span> avec le cultivateur.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panelcard">
+          <div class="ph"><span class="kicker">Légende</span></div>
+          <div class="pb">
+            <div class="legend" id="legendStages"></div>
+            <div style="height:14px"></div>
+            <div class="legend">
+              <div class="lrow"><span class="ed ln"></span> Transfert / repiquage (stade suivant)</div>
+              <div class="lrow"><span class="ed ln dash"></span> Clone (culture secondaire, même stade)</div>
+              <div class="lrow"><span class="ed ln dot"></span> Division (séparation physique)</div>
+              <div class="lrow"><span class="ed ln dng"></span> Contamination → rebut</div>
+              <div class="lrow"><span style="font-family:'JetBrains Mono',monospace;color:var(--st-decision)">◆</span> Décision / contrôle</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+/* =================================================================
+ *  DONNÉES — chaque process = { mermaid (éditable) + nodes (métadonnées) }
+ *  Pour modifier un process : changez le texte `mermaid` et/ou `nodes`.
+ *  Les classes :::stXxx colorent les nœuds selon leur stade (voir THEME).
+ * ================================================================= */
+const tbd = "à confirmer (cultivateur)";
+
+const PROCESSES = [
+  {
+    id:"overview", glyph:"🧭", accent:"--st-fruct", status:"ok",
+    title:"Chaîne de propagation",
+    short:"Du spore à l'assiette — vue d'ensemble",
+    desc:"La traçabilité couvre toute la chaîne : origine → gélose → culture liquide → grain → substrat → fructification → récolte → produit. À chaque stade : clone (même stade) ou transfert (stade suivant).",
+    mermaid:`flowchart LR
+  origine["🧬 Origine<br/><small>spores · culture mère · clone tissu</small>"]:::stOrigine
+  gelose["🧫 Gélose<br/><small>boîte de Pétri</small>"]:::stGelose
+  lc["💧 Culture liquide<br/><small>LC</small>"]:::stLC
+  grain["🌾 Grain<br/><small>ballot de grain</small>"]:::stGrain
+  substrat["🟫 Substrat<br/><small>ballot de substrat</small>"]:::stSubstrat
+  fruct["🍄 Fructification"]:::stFruct
+  recolte["⚖️ Récolte<br/><small>flush 1 · 2 · 3</small>"]:::stRecolte
+  produit["📦 Produit final"]:::stProduit
+  origine -->|"inoculation"| gelose
+  gelose -->|"transfert"| lc
+  lc -->|"transfert"| grain
+  grain -->|"transfert"| substrat
+  substrat -->|"incubation → choc"| fruct
+  fruct -->|"récolte"| recolte
+  recolte -->|"conditionnement"| produit
+  gelose -. "clone ×N" .-> gelose
+  lc -. "clone ×N" .-> lc
+  grain -. "clone ×N" .-> grain
+  substrat -. "division" .-> substrat`,
+    nodes:{
+      origine:{stage:"Origine", tone:"stOrigine", desc:"Point de départ amont de la traçabilité.", f:{"Exemples":"Empreinte de spores, culture mère reçue/achetée, clone de tissu","Saisie":"Espèce, souche, fournisseur, date","Statut":"Début de lignée"}},
+      gelose:{stage:"Gélose", tone:"stGelose", desc:"Culture sur milieu gélosé stérile (agar). Premier maillon, souvent culture mère.", f:{"Objectif":"Obtenir un mycélium pur","Durée":tbd,"Conditions":"Stérile · "+tbd,"Observations":"Contamination, vitesse de colonisation","Actions app":"Cloner · transférer en LC · marquer culture mère","Contamination":"Risque élevé — isoler / jeter"}},
+      lc:{stage:"Culture liquide (LC)", tone:"stLC", desc:"Mycélium en milieu liquide, pour inoculer rapidement le grain.", f:{"Objectif":"Multiplier vite avant le grain","Durée":tbd,"Conditions":"Agitation · stérile · "+tbd,"Observations":"Trouble, contamination, croissance","Actions app":"Cloner · transférer vers grain","Ratio":"1 LC → N grains ("+tbd+")"}},
+      grain:{stage:"Grain", tone:"stGrain", desc:"Grain colonisé (spawn) issu d'une LC ou gélose, pour inoculer le substrat.", f:{"Objectif":"Produire le spawn d'inoculation","Durée":tbd,"Observations":"Taux de colonisation, contamination, uniformité","Actions app":"Cloner (grain→grain) · transférer vers substrat","Ratio":"1 grain → N substrats ("+tbd+")"}},
+      substrat:{stage:"Substrat", tone:"stSubstrat", desc:"Ballot de substrat inoculé — c'est le « lot » du process aval.", f:{"Objectif":"Colonisation puis fructification","Poids":"Poids substrat (rendement = récolte / substrat)","Actions app":"Diviser · déplacer · suivre le process substrat","Lien":"Voir le process « Substrat → récolte »"}},
+      fruct:{stage:"Fructification", tone:"stFruct", desc:"Apparition et croissance des champignons après déclenchement (choc).", f:{"Conditions":"Humidité, lumière, aération — "+tbd,"Observations":"Primordia, maturité, contamination","Chambre":"Chambre de fructification"}},
+      recolte:{stage:"Récolte", tone:"stRecolte", desc:"Vagues de récolte (flush) avec pesée par unité.", f:{"Mesure":"Poids brut / net / pertes par unité","Flushs":"1, 2, 3 (3 souvent optionnel)","Qualité":"Calibre, grade — "+tbd}},
+      produit:{stage:"Produit final", tone:"stProduit", desc:"Conditionnement issu d'une ou plusieurs récoltes.", f:{"Types":"Frais, barquette, vrac, séché… (par espèce)","Traçabilité":"Garde le lien vers récoltes → … → gélose","Stock":"Entrées / sorties"}}
+    }
+  },
+  {
+    id:"labo", glyph:"🧫", accent:"--st-gelose", status:"tbd",
+    title:"Process amont — labo",
+    short:"Gélose · culture liquide · grain",
+    desc:"Les trois stades stériles de laboratoire. À chaque contrôle : sain → clone ou transfert ; contaminé → rebut. Durées et conditions restent à confirmer.",
+    mermaid:`flowchart TB
+  subgraph SG["① Gélose — milieu gélosé stérile"]
+    direction LR
+    g_in["Réception<br/>spores / clone tissu"]:::stOrigine
+    g_inoc["Inoculation<br/>boîte de Pétri"]:::stGelose
+    g_incub["Incubation stérile"]:::stGelose
+    g_check{"Contrôle<br/>contamination ?"}:::stDecision
+    g_mother["Clone + culture mère"]:::stMother
+    g_in --> g_inoc --> g_incub --> g_check
+    g_check -->|"sain"| g_mother
+  end
+  subgraph SL["② Culture liquide (LC)"]
+    direction LR
+    l_inoc["Inoculation LC<br/>depuis gélose"]:::stLC
+    l_incub["Incubation agitée"]:::stLC
+    l_check{"Trouble /<br/>contamination ?"}:::stDecision
+    l_inoc --> l_incub --> l_check
+  end
+  subgraph SR["③ Grain (spawn)"]
+    direction LR
+    r_inoc["Inoculation grain<br/>depuis LC / gélose"]:::stGrain
+    r_col["Colonisation"]:::stGrain
+    r_check{"Colonisé,<br/>sain ?"}:::stDecision
+    r_inoc --> r_col --> r_check
+  end
+  g_mother -->|"transfert"| l_inoc
+  l_check -->|"sain"| r_inoc
+  r_check -->|"sain → transfert"| out["→ Substrat<br/>(process aval)"]:::stSubstrat
+  g_check -->|"contaminé"| rebut["♻️ Rebut"]:::stDanger
+  l_check -->|"contaminé"| rebut
+  r_check -->|"contaminé"| rebut`,
+    nodes:{
+      g_in:{stage:"Gélose", tone:"stGelose", desc:"Entrée de matière génétique.", f:{"Exemples":"Spores, clone de tissu, gélose reçue","Saisie":"Souche, espèce, origine, date, opérateur"}},
+      g_inoc:{stage:"Gélose", tone:"stGelose", desc:"Mise en boîte de Pétri sous flux stérile.", f:{"Conditions":"Stérile (hotte / SAB)","Sortie":"Boîte étiquetée + QR ("+tbd+")"}},
+      g_incub:{stage:"Gélose", tone:"stGelose", desc:"Colonisation du milieu gélosé.", f:{"Durée":tbd,"Température":tbd,"Observations":"Mycélium, contamination, vitesse"}},
+      g_check:{stage:"Contrôle", tone:"stDecision", desc:"Décision sanitaire avant de continuer.", f:{"Critère":"Aucune moisissure / bactérie","Sain":"→ clone / culture mère","Contaminé":"→ rebut"}},
+      g_mother:{stage:"Culture mère", tone:"stMother", desc:"Clones secondaires + réserve génétique conservée.", f:{"Rôle":"Cloner sans consommer la souche","Génération":"Suivre G1, G2… (sénescence)","Actions app":"Cloner · transférer vers LC"}},
+      l_inoc:{stage:"LC", tone:"stLC", desc:"Démarrage de la culture liquide depuis une gélose.", f:{"Entrée":"Fragment de gélose mère","Milieu":"Liquide nutritif stérile"}},
+      l_incub:{stage:"LC", tone:"stLC", desc:"Incubation, souvent sous agitation.", f:{"Durée":tbd,"Conditions":"Agitation / repos — "+tbd}},
+      l_check:{stage:"Contrôle", tone:"stDecision", desc:"Contrôle du trouble et de la pureté.", f:{"Sain":"→ inoculer le grain","Contaminé":"→ rebut"}},
+      r_inoc:{stage:"Grain", tone:"stGrain", desc:"Inoculation du grain depuis la LC (ou gélose).", f:{"Ratio":"1 LC → N ballots de grain ("+tbd+")"}},
+      r_col:{stage:"Grain", tone:"stGrain", desc:"Colonisation du grain (avec secouage éventuel).", f:{"Durée":tbd,"Observations":"Taux de colonisation, uniformité"}},
+      r_check:{stage:"Contrôle", tone:"stDecision", desc:"Validation avant transfert au substrat.", f:{"Sain":"→ inoculer le substrat","Contaminé":"→ rebut"}},
+      out:{stage:"Substrat", tone:"stSubstrat", desc:"Passage au process aval (substrat → récolte).", f:{"Ratio":"1 grain → N substrats ("+tbd+")"}},
+      rebut:{stage:"Rebut", tone:"stDanger", desc:"Élimination d'une unité contaminée.", f:{"Action":"Isoler, jeter, nettoyer","Repartir":"D'une culture mère saine"}}
+    }
+  },
+  {
+    id:"substrat", glyph:"🟫", accent:"--st-substrat", status:"tbd",
+    title:"Substrat → récolte",
+    short:"Incubation · fructification · flushs",
+    desc:"Le process déjà exploré : du ballot de substrat inoculé jusqu'aux flushs et au produit. Étapes confirmées, conditions à préciser par espèce.",
+    mermaid:`flowchart TB
+  start(["Transfert grain → substrat"]):::stGrain
+  inoc["Inoculation substrat"]:::stSubstrat
+  inc1["Incubation 1"]:::stSubstrat
+  inc2["Incubation 2"]:::stSubstrat
+  inc3["Incubation 3"]:::stSubstrat
+  colc{"Colonisation<br/>complète ?"}:::stDecision
+  choc["Choc / déclenchement"]:::stFruct
+  fr1["Fructification 1<br/><small>primordia</small>"]:::stFruct
+  fr2["Fructification 2<br/><small>maturation</small>"]:::stFruct
+  matc{"Maturité<br/>récolte ?"}:::stDecision
+  fl1["Récolte flush 1<br/><small>⚖️ poids / unité</small>"]:::stRecolte
+  rp1["Repos / relance"]:::stSubstrat
+  fl2["Récolte flush 2"]:::stRecolte
+  rp2["Repos / relance"]:::stSubstrat
+  fl3["Récolte flush 3<br/><small>optionnel</small>"]:::stRecolte
+  fin["Fin de cycle"]:::stProcess
+  compost["♻️ Compost / rebut"]:::stDanger
+  produit["📦 Produit final"]:::stProduit
+  start --> inoc --> inc1 --> inc2 --> inc3 --> colc
+  colc -->|"oui"| choc
+  colc -->|"contamination"| compost
+  choc --> fr1 --> fr2 --> matc
+  matc -->|"prêt"| fl1
+  fl1 --> rp1 --> fl2 --> rp2 --> fl3 --> fin
+  fl1 --> produit
+  fl2 --> produit
+  fl3 --> produit
+  fin --> compost`,
+    nodes:{
+      inoc:{stage:"Substrat", tone:"stSubstrat", desc:"Création des ballots de substrat à partir du grain.", f:{"Saisie":"Poids substrat, souche, parent grain, date","QR":"Étiquette par ballot ("+tbd+")"}},
+      inc1:{stage:"Incubation 1", tone:"stSubstrat", desc:"Première période de colonisation.", f:{"Durée":tbd,"Température":tbd,"Observations":"Colonisation, contamination"}},
+      inc2:{stage:"Incubation 2", tone:"stSubstrat", desc:"Deuxième période — séparation à confirmer.", f:{"Durée":tbd,"Différence inc.1":tbd}},
+      inc3:{stage:"Incubation 3", tone:"stSubstrat", desc:"Fin de colonisation avant fructification (parfois optionnelle).", f:{"Durée":tbd,"Obligatoire ?":tbd}},
+      colc:{stage:"Contrôle", tone:"stDecision", desc:"Le substrat est-il prêt à fructifier ?", f:{"Oui":"→ choc / déclenchement","Contamination":"→ compost / rebut"}},
+      choc:{stage:"Fructification", tone:"stFruct", desc:"Déclenchement de la fructification.", f:{"Leviers":"Température, humidité, lumière, aération, ouverture — "+tbd}},
+      fr1:{stage:"Fructification 1", tone:"stFruct", desc:"Apparition des primordia.", f:{"Durée":tbd,"Observations":"Primordia, humidité de surface"}},
+      fr2:{stage:"Fructification 2", tone:"stFruct", desc:"Maturation avant récolte.", f:{"Critère récolte":"Taille / forme du chapeau — "+tbd}},
+      matc:{stage:"Contrôle", tone:"stDecision", desc:"Maturité atteinte pour récolter ?", f:{"Prêt":"→ récolte flush 1"}},
+      fl1:{stage:"Récolte", tone:"stRecolte", desc:"Première vague de récolte.", f:{"Mesure":"Poids brut / net / pertes par unité","Qualité":"Grade, calibre — "+tbd,"Après":"Repos / relance"}},
+      fl2:{stage:"Récolte", tone:"stRecolte", desc:"Deuxième flush (pas systématique).", f:{"Délai flush 1→2":tbd}},
+      fl3:{stage:"Récolte", tone:"stRecolte", desc:"Troisième flush, souvent optionnel selon rendement.", f:{"Décision":"Vaut le coût / l'espace ? — "+tbd}},
+      fin:{stage:"Fin de cycle", tone:"stProcess", desc:"L'unité ne produit plus.", f:{"Statuts":"Terminé, compost, rebut, contaminé","Tâche":"Nettoyage chambre / rack"}},
+      produit:{stage:"Produit final", tone:"stProduit", desc:"Conditionnement des récoltes.", f:{"Origine":"Une ou plusieurs récoltes (proportions si mélange)"}},
+      compost:{stage:"Rebut", tone:"stDanger", desc:"Sortie du flux (compost / rebut).", f:{"Raison":"Fin normale, contamination, rendement faible"}}
+    }
+  },
+  {
+    id:"etats", glyph:"◑", accent:"--st-decision", status:"ok",
+    title:"Cycle de vie d'une unité",
+    short:"Machine à états",
+    desc:"Les états possibles d'une unité de culture et leurs transitions. Les états exacts restent configurables.",
+    mermaid:`stateDiagram-v2
+  state "Brouillon" as Brouillon
+  state "Actif" as Actif
+  state "En attente" as EnAttente
+  state "Divisé" as Divise
+  state "En production" as EnProd
+  state "Terminé" as Termine
+  state "Rebut" as Rebut
+  state "Transformé" as Transforme
+  [*] --> Brouillon
+  Brouillon --> Actif: activation
+  Actif --> EnAttente: pause / blocage
+  EnAttente --> Actif: reprise
+  Actif --> Divise: division
+  Actif --> EnProd: entrée fructification
+  EnProd --> Actif: repos / relance
+  EnProd --> Transforme: récolte → produit
+  Actif --> Termine: fin normale
+  EnProd --> Termine: fin de production
+  Actif --> Rebut: contamination
+  EnProd --> Rebut: contamination
+  Divise --> Termine: parent conteneur
+  Termine --> [*]
+  Rebut --> [*]
+  Transforme --> [*]`,
+    nodes:{}
+  },
+  {
+    id:"lignee", glyph:"🌿", accent:"--st-mother", status:"ok",
+    title:"Lignée & généalogie",
+    short:"Clone · transfert · division",
+    desc:"Exemple concret de lignée. Trois relations : clone (même stade), transfert (stade suivant), division (séparation physique du substrat).",
+    mermaid:`flowchart LR
+  o["🧬 Origine<br/><small>spores souche X</small>"]:::stOrigine
+  g1["Gélose G-001"]:::stGelose
+  gm["Gélose G-001-c1<br/><small>★ culture mère</small>"]:::stMother
+  l1["LC L-014"]:::stLC
+  r1["Grain GR-052"]:::stGrain
+  r2["Grain GR-053"]:::stGrain
+  s1["Substrat S-300…309<br/><small>10 ballots</small>"]:::stSubstrat
+  sub["Sous-lots<br/><small>division</small>"]:::stSubstrat
+  o -->|"inoculation"| g1
+  g1 -. "clone" .-> gm
+  g1 -->|"transfert"| l1
+  l1 -->|"transfert ×3"| r1
+  l1 -->|"transfert"| r2
+  r1 -->|"transfert ×10"| s1
+  s1 -. "division" .-> sub`,
+    nodes:{
+      o:{stage:"Origine", tone:"stOrigine", desc:"Racine de la lignée.", f:{"Souche":"X","Traçabilité":"Tout descend de ce point"}},
+      g1:{stage:"Gélose", tone:"stGelose", desc:"Première gélose issue de l'origine.", f:{"Relation":"transfert (origine → gélose)"}},
+      gm:{stage:"Culture mère", tone:"stMother", desc:"Clone conservé comme réserve génétique.", f:{"Relation":"clone (même stade)","Génération":"G-001-c1"}},
+      l1:{stage:"LC", tone:"stLC", desc:"Culture liquide issue de la gélose.", f:{"Relation":"transfert (gélose → LC)"}},
+      r1:{stage:"Grain", tone:"stGrain", desc:"Ballot de grain inoculé par la LC.", f:{"Relation":"transfert (LC → grain)","Multiplication":"×3"}},
+      s1:{stage:"Substrat", tone:"stSubstrat", desc:"10 ballots de substrat issus d'un grain.", f:{"Relation":"transfert (grain → substrat)","Multiplication":"×10"}},
+      sub:{stage:"Substrat", tone:"stSubstrat", desc:"Sous-lots issus de la division d'un ballot.", f:{"Relation":"division (même stade)"}}
+    }
+  },
+  {
+    id:"tracabilite", glyph:"⇅", accent:"--st-recolte", status:"ok",
+    title:"Traçabilité",
+    short:"Ascendante & descendante",
+    desc:"On peut descendre d'une origine vers tous ses produits, ou remonter d'un produit jusqu'à la gélose / origine.",
+    mermaid:`flowchart LR
+  subgraph DOWN["⬇ Descendante — d'une origine vers ses produits"]
+    direction LR
+    d_o["Origine"]:::stOrigine
+    d_g["Gélose"]:::stGelose
+    d_l["LC"]:::stLC
+    d_r["Grain"]:::stGrain
+    d_s["Substrat"]:::stSubstrat
+    d_h["Récoltes"]:::stRecolte
+    d_p["Produits"]:::stProduit
+    d_o --> d_g --> d_l --> d_r --> d_s --> d_h --> d_p
+  end
+  subgraph UP["⬆ Ascendante — d'un produit vers sa source"]
+    direction RL
+    u_p["Produit"]:::stProduit
+    u_h["Récolte"]:::stRecolte
+    u_s["Substrat"]:::stSubstrat
+    u_r["Grain"]:::stGrain
+    u_l["LC"]:::stLC
+    u_g["Gélose"]:::stGelose
+    u_o["Origine"]:::stOrigine
+    u_p --> u_h --> u_s --> u_r --> u_l --> u_g --> u_o
+  end`,
+    nodes:{}
+  }
+];
+
+/* stades → variables CSS (couleurs theme-aware) */
+const STAGE_CLASSES = {
+  stOrigine:"--st-origine", stGelose:"--st-gelose", stLC:"--st-lc", stGrain:"--st-grain",
+  stSubstrat:"--st-substrat", stFruct:"--st-fruct", stRecolte:"--st-recolte", stProduit:"--st-produit",
+  stMother:"--st-mother", stDanger:"--st-danger", stProcess:"--st-process", stDecision:"--st-decision"
+};
+const LEGEND_STAGES = [
+  ["stOrigine","Origine (spores / mère)"],["stGelose","Gélose"],["stLC","Culture liquide (LC)"],
+  ["stGrain","Grain"],["stSubstrat","Substrat"],["stFruct","Fructification"],
+  ["stRecolte","Récolte"],["stProduit","Produit final"],["stMother","Culture mère"],["stDanger","Contamination / rebut"]
+];
+
+/* ================= état & helpers ================= */
+const $ = s => document.querySelector(s);
+let mermaid = null, mermaidOK = false, RID = 0, current = PROCESSES[0];
+const view = { x:0, y:0, scale:1 };
+
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function hexToRgba(hex,a){
+  hex = hex.replace('#',''); if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const n=parseInt(hex,16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+/* 8-digit hex (#rrggbbaa) — Mermaid classDef refuse rgba(); on passe par l'alpha hex. */
+function hexA(hex,a){
+  hex = hex.replace('#',''); if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const ah = Math.round(Math.max(0,Math.min(1,a))*255).toString(16).padStart(2,'0');
+  return '#'+hex+ah;
+}
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1900); }
+
+/* ================= mermaid ================= */
+async function loadMermaid(){
+  try{
+    const m = await import("https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs");
+    mermaid = m.default; mermaidOK = true;
+  }catch(e){ mermaidOK = false; }
+}
+function mermaidConfig(){
+  const v = n => cssVar(n);
+  return {
+    startOnLoad:false, securityLevel:"loose", theme:"base",
+    fontFamily:"'Spline Sans', sans-serif",
+    flowchart:{ htmlLabels:true, curve:"basis", padding:16, nodeSpacing:54, rankSpacing:64, useMaxWidth:false },
+    state:{ useMaxWidth:false },
+    themeVariables:{
+      fontFamily:"'Spline Sans', sans-serif", fontSize:"14px",
+      background:v("--panel"), mainBkg:v("--panel"),
+      lineColor:v("--ink-faint"), textColor:v("--ink"),
+      primaryColor:v("--panel"), primaryTextColor:v("--ink"), primaryBorderColor:v("--line"),
+      secondaryColor:v("--panel2"), tertiaryColor:v("--panel2"),
+      clusterBkg:v("--cluster"), clusterBorder:v("--line"),
+      edgeLabelBackground:v("--panel"), labelBackgroundColor:v("--panel"),
+      // state diagram
+      transitionColor:v("--ink-faint"), transitionLabelColor:v("--ink-dim"),
+      stateBkg:v("--panel"), stateLabelColor:v("--ink"), altBackground:v("--panel2"),
+      compositeBackground:v("--panel2"), compositeBorder:v("--line"),
+      innerEndBackground:v("--ink"), specialStateColor:v("--ink"), nodeBorder:v("--line")
+    }
+  };
+}
+function buildSource(proc){
+  let src = proc.mermaid;
+  if(!src.trimStart().startsWith("stateDiagram")){
+    const tint = parseFloat(cssVar("--tint")) || .16;
+    const txt = cssVar("--ink");
+    const defs = Object.entries(STAGE_CLASSES).map(([cls,varname])=>{
+      const c = cssVar(varname);
+      return `classDef ${cls} fill:${hexA(c,tint)},stroke:${c},color:${txt},stroke-width:1.7px;`;
+    }).join("\n");
+    src += "\n" + defs;
+  }
+  return src;
+}
+
+async function renderCurrent(){
+  const host = $("#diagram");
+  if(!mermaidOK){
+    host.innerHTML = `<div class="offline"><b>Visualisation Mermaid indisponible</b> (CDN hors-ligne). Le code source du schéma reste lisible ci-dessous.<pre style="white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:12px;margin-top:12px;color:var(--ink-dim)">${current.mermaid.replace(/[<&]/g,c=>c==='<'?'&lt;':'&amp;')}</pre></div>`;
+    return;
+  }
+  try{
+    mermaid.initialize(mermaidConfig());
+    const { svg } = await mermaid.render("mmd"+(++RID), buildSource(current));
+    host.innerHTML = svg;
+    host.classList.remove("animate"); void host.offsetWidth; host.classList.add("animate");
+    const nodes = host.querySelectorAll(".node");
+    nodes.forEach((g,i)=>{ g.style.animationDelay = Math.min(i*28,520)+"ms"; });
+    wireNodes();
+    requestAnimationFrame(fit);
+  }catch(err){
+    host.innerHTML = `<div class="errcard"><h4>Schéma non rendu</h4><p style="color:var(--ink-dim);font-size:13px;margin:0 0 10px">Mermaid a refusé la syntaxe de ce process. Code source :</p><pre>${String(err && err.message||err)}\n\n${current.mermaid.replace(/[<&]/g,c=>c==='<'?'&lt;':'&amp;')}</pre></div>`;
+  }
+}
+
+/* ================= interactions nœuds ================= */
+function wireNodes(){
+  const svg = $("#diagram svg"); if(!svg) return;
+  svg.querySelectorAll("g.node").forEach(g=>{
+    const raw = g.id || "";
+    let key=null, m;
+    if((m=raw.match(/^flowchart-(.+)-\d+$/))) key=m[1];
+    else if((m=raw.match(/^state-(.+)-\d+$/))) key=m[1];
+    else if((m=raw.match(/^(.+)-\d+$/))) key=m[1];
+    if(key && current.nodes && current.nodes[key]){
+      g.classList.add("has-detail");
+      g.dataset.detailKey = key;           // sélection gérée au pointerup (cf. pan/zoom)
+    }
+  });
+}
+function selectNode(key,g){
+  $("#diagram").querySelectorAll(".node.active").forEach(n=>n.classList.remove("active"));
+  if(g) g.classList.add("active");
+  const meta = current.nodes[key];
+  const accent = cssVar(STAGE_CLASSES[meta.tone] || "--st-process");
+  const rows = Object.entries(meta.f||{}).map(([k,v])=>{
+    const val = String(v).includes("à confirmer") ? `<span class="tbd">${v}</span>` : v;
+    return `<div class="row"><dt>${k}</dt><dd>${val}</dd></div>`;
+  }).join("");
+  $("#detailBody").innerHTML = `
+    <span id="nodeChip" style="background:${hexToRgba(accent,.18)};color:${accent}">${meta.stage||""}</span>
+    <div id="nodeTitle">${(g?g.textContent.trim().split("\n")[0]:"")||meta.stage}</div>
+    <p id="nodeDesc">${meta.desc||""}</p>
+    <dl class="dl">${rows}</dl>`;
+}
+
+/* ================= pan / zoom ================= */
+const viewport = $("#viewport"), doc = $("#canvasdoc");
+function apply(){ doc.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.scale})`; $("#zlabel").textContent = Math.round(view.scale*100)+"%"; }
+function fit(){
+  const svg = $("#diagram svg"); if(!svg) return;
+  let W,H;
+  if(svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width){ W=svg.viewBox.baseVal.width; H=svg.viewBox.baseVal.height; }
+  else { const b=svg.getBBox(); W=b.width; H=b.height; }
+  svg.style.maxWidth="none"; svg.setAttribute("width",W); svg.setAttribute("height",H);
+  const pad=48, vw=viewport.clientWidth, vh=viewport.clientHeight;
+  const s=Math.min((vw-pad)/W,(vh-pad)/H, 1.4);
+  view.scale = s>0?s:1;
+  view.x = (vw - W*view.scale)/2; view.y = (vh - H*view.scale)/2;
+  apply();
+}
+function zoomAt(factor, cx, cy){
+  const r=viewport.getBoundingClientRect();
+  const px=(cx??r.width/2+r.left)-r.left, py=(cy??r.height/2+r.top)-r.top;
+  const gx=(px-view.x)/view.scale, gy=(py-view.y)/view.scale;
+  view.scale=Math.min(3,Math.max(.2,view.scale*factor));
+  view.x=px-gx*view.scale; view.y=py-gy*view.scale; apply();
+}
+viewport.addEventListener("wheel",e=>{ e.preventDefault(); zoomAt(e.deltaY<0?1.12:1/1.12, e.clientX, e.clientY); },{passive:false});
+/* Pas de setPointerCapture : il volerait le clic des nœuds. On suit le drag
+   sur window, et on détecte le clic d'un nœud au pointerup via elementFromPoint. */
+let drag=null;
+viewport.addEventListener("pointerdown",e=>{ if(e.button!==0)return; drag={x:e.clientX,y:e.clientY,ox:view.x,oy:view.y,moved:0}; });
+window.addEventListener("pointermove",e=>{ if(!drag)return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.moved+=Math.abs(dx)+Math.abs(dy); if(drag.moved>4) viewport.classList.add("drag"); view.x=drag.ox+dx; view.y=drag.oy+dy; apply(); });
+window.addEventListener("pointerup",e=>{
+  if(!drag) return;
+  const wasClick = drag.moved < 5; drag=null; viewport.classList.remove("drag");
+  if(wasClick){
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const node = el && el.closest ? el.closest("g.node") : null;
+    if(node && node.dataset.detailKey) selectNode(node.dataset.detailKey, node);
+  }
+});
+$("#zoomIn").onclick=()=>zoomAt(1.18); $("#zoomOut").onclick=()=>zoomAt(1/1.18); $("#fit").onclick=fit;
+$("#full").onclick=()=>{ const el=document.documentElement; if(!document.fullscreenElement) (viewport.closest(".stage")||el).requestFullscreen?.(); else document.exitFullscreen?.(); };
+window.addEventListener("keydown",e=>{ if(e.target.tagName==="INPUT")return; if(e.key==="+"||e.key==="=")zoomAt(1.18); else if(e.key==="-")zoomAt(1/1.18); else if(e.key==="0")fit(); });
+window.addEventListener("resize",()=>{ /* keep position */ });
+
+/* ================= export / copy ================= */
+$("#exportSvg").onclick=()=>{
+  const svg=$("#diagram svg"); if(!svg){toast("Rien à exporter");return;}
+  const clone=svg.cloneNode(true); clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  const blob=new Blob([clone.outerHTML],{type:"image/svg+xml"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`process-${current.id}.svg`; a.click(); URL.revokeObjectURL(a.href);
+  toast("SVG exporté");
+};
+$("#copySrc").onclick=async()=>{ try{ await navigator.clipboard.writeText(current.mermaid); toast("Code Mermaid copié"); }catch{ toast("Copie impossible"); } };
+
+/* ================= atlas (sidebar) ================= */
+function buildList(filter=""){
+  const list=$("#proclist"); list.innerHTML="";
+  PROCESSES.filter(p=>(p.title+p.short+p.desc).toLowerCase().includes(filter.toLowerCase())).forEach(p=>{
+    const idx=PROCESSES.indexOf(p);
+    const b=document.createElement("button");
+    b.className="proc"+(p===current?" active":""); b.style.setProperty("--accent",cssVar(p.accent));
+    b.innerHTML=`<span class="glyph">${p.glyph}</span><span class="pt">
+      <h3>${p.title}</h3><p>${p.short}</p>
+      <span class="badge ${p.status}">${p.status==="ok"?"structure confirmée":"détails à confirmer"}</span>
+    </span>`;
+    b.onclick=()=>select(p);
+    list.appendChild(b);
+  });
+}
+function select(p){
+  current=p;
+  $("#procTitle").textContent=p.title;
+  $("#procDesc").textContent=p.desc;
+  $("#procNum").textContent=String(PROCESSES.indexOf(p)+1).padStart(2,"0")+" / "+String(PROCESSES.length).padStart(2,"0");
+  $("#detailBody").innerHTML=`<div class="empty-detail"><p><b>Clique sur une étape</b> du schéma pour ses détails.</p>
+    <div class="hint" style="margin-top:12px"><span class="i">✺</span><span>${p.status==="tbd"?"Plusieurs durées / conditions sont <span class='tbd'>à confirmer</span> avec le cultivateur.":"Schéma de structure — les libellés exacts restent configurables."}</span></div></div>`;
+  document.querySelectorAll(".proc").forEach(el=>el.classList.remove("active"));
+  buildList($("#search").value);
+  renderCurrent();
+}
+$("#search").addEventListener("input",e=>buildList(e.target.value));
+
+/* ================= légende ================= */
+function buildLegend(){
+  $("#legendStages").innerHTML = LEGEND_STAGES.map(([cls,label])=>{
+    const c=cssVar(STAGE_CLASSES[cls]);
+    return `<div class="lrow"><span class="sw" style="background:${hexToRgba(c,.22)};border-color:${c}"></span>${label}</div>`;
+  }).join("");
+}
+
+/* ================= thème ================= */
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  localStorage.setItem("atlas-theme",t);
+  $("#themeIcon").innerHTML = t==="light"
+    ? '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/>'
+    : '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+  buildLegend();
+  if(mermaidOK) renderCurrent();
+}
+$("#themeBtn").onclick=()=>setTheme(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light");
+
+/* ================= spores (fond animé) ================= */
+(function spores(){
+  const c=$("#spores"), x=c.getContext("2d"); let W,H,ps=[],raf;
+  const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  function size(){ W=c.width=innerWidth; H=c.height=innerHeight; }
+  function seed(){ ps=Array.from({length: Math.min(56, Math.round(innerWidth/26))},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.8+.5,vy:-(Math.random()*.18+.05),sw:Math.random()*Math.PI*2,a:Math.random()*.4+.12})); }
+  function tick(){
+    x.clearRect(0,0,W,H);
+    const col=cssVar("--green");
+    for(const p of ps){
+      if(!reduce){ p.y+=p.vy; p.sw+=.01; p.x+=Math.sin(p.sw)*.18; if(p.y<-6){p.y=H+6;p.x=Math.random()*W;} }
+      x.beginPath(); x.arc(p.x,p.y,p.r,0,7); x.fillStyle=hexToRgba(col,p.a); x.fill();
+    }
+    if(!reduce) raf=requestAnimationFrame(tick);
+  }
+  size(); seed(); tick();
+  addEventListener("resize",()=>{ size(); seed(); if(reduce){x.clearRect(0,0,W,H);tick();} });
+  document.addEventListener("visibilitychange",()=>{ if(document.hidden) cancelAnimationFrame(raf); else if(!reduce) tick(); });
+})();
+
+/* ================= boot ================= */
+(async function init(){
+  setTheme(localStorage.getItem("atlas-theme") || "dark");
+  buildLegend();
+  buildList();
+  await loadMermaid();
+  select(PROCESSES[0]);
+})();
+</script>
+</body>
+</html>
