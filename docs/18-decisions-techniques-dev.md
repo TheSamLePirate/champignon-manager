@@ -443,4 +443,30 @@ La question « versioning et migration d’un process déjà utilisé par des lo
 
 ### Toujours bloquant
 
-Le seed du premier process reste **inexécutable** : aucune valeur de durée, température, humidité ou seuil n’a été fournie. La recommandation « seed data avant éditeur visuel » tient, mais le seed n’a rien à contenir aujourd’hui.
+~~Le seed du premier process reste inexécutable : aucune valeur n'a été fournie.~~ **Dépassé le 31/07/2026** — voir la section suivante : il n'y aura pas de seed de production, les valeurs sont saisies dans l'application.
+
+
+## Mise à jour 31/07/2026 — le paramétrage devient runtime
+
+**« Le tableau sera de toute façon configurable. »** Les durées, températures, humidité, ratios et seuils ne sont pas livrés avec l'application : le cultivateur les saisit.
+
+### Effet sur les décisions développeur
+
+| Décision | Effet |
+| --- | --- |
+| `dev_01_04` — livrable « seed data process pleurote » | **Sans objet.** Remplacé par un **jeu de démonstration** (valeurs arbitraires) pour le développement et les tests E2E. |
+| `dev_06_06` — « éditeur complet » au MVP | **Confirmé et désormais nécessaire.** Sans seed, l'application démarre vide : sans éditeur, elle est inutilisable. La réserve émise par `claude-critics.md` (P0-2) tombe sur le principe, pas sur le coût. |
+| `dev_12_03` — seeds / dev fixtures | **Maintenu**, mais explicitement comme fixtures de développement, pas comme process de production. |
+| `dev_09_04` — « suppression » | **Résolu.** Le cultivateur demande de pouvoir « annuler ou corriger » : événement de compensation, pas suppression physique. P1-3 est levé. |
+
+### Réponses développeur toujours ouvertes
+
+L'export `champignon-reponses-dev-sam-2026-06-17.json` compte **74 / 79** réponses. Restent vides :
+
+- `dev_06_05` — versioning / migration d'un process utilisé par des lots (marqué « à clarifier ») → **seul point encore structurant**, et désormais contredit par les réponses cultivateur : voir `04` §15.3 ;
+- `dev_13_04` — backlog MVP en 10 tâches ;
+- `dev_13_05` — sujets à faire attendre le cultivateur → **sans objet** depuis l'arbitrage du 31/07 ;
+- `dev_14_01` — tableau de synthèse des décisions techniques ;
+- `dev_14_03` — résumé personnel des décisions.
+
+Aucun de ces points ne bloque le démarrage, hormis `dev_06_05`.

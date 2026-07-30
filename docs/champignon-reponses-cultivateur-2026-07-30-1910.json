@@ -1,22 +1,22 @@
 {
   "schema": "champignon-manager.cultivator-process-response.v1",
-  "formVersion": "2026-07-30.v8-filtre-fige-saisie",
-  "exportedAt": "2026-07-30T22:02:35.607Z",
+  "formVersion": "2026-07-30.v4-cadrage-valide",
+  "exportedAt": "2026-07-30T19:10:14.798Z",
   "meta": {
     "cultivatorName": "",
     "farmName": "",
-    "answeredAt": "2026-07-30",
+    "answeredAt": "2026-06-17",
     "contact": "",
     "generalNotes": ""
   },
   "summary": {
     "total": 188,
-    "answered": 154,
+    "answered": 188,
     "na": 0,
-    "clarify": 33,
-    "todo": 1,
-    "done": 154,
-    "progressPercent": 82
+    "clarify": 0,
+    "todo": 0,
+    "done": 188,
+    "progressPercent": 100
   },
   "sections": [
     {
@@ -39,7 +39,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:57:09.692Z"
         },
         {
           "id": "q2_missing",
@@ -52,17 +52,17 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "rien de special",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:46:55.099Z"
+          "updatedAt": null
         },
         {
           "id": "q2_cadrage",
           "type": "checklist",
           "originalTitle": "Les 10 principes de cadrage sont-ils justes ?",
-          "currentTitle": "Les 10 principes de cadrage sont-ils justes ?",
+          "currentTitle": "Ces 10 principes de cadrage sont-ils justes ?",
           "validatedAnswer": "Les 10 principes sont validés en bloc, sans réserve ni objection.",
           "validatedSelectedOptions": [
             "chaque phase produit ses propres unités, toutes traçables",
@@ -78,8 +78,8 @@
           ],
           "followUp": "Rien à trancher ici : ces principes sont acquis et servent de base à l’architecture. Tout le travail restant porte sur les valeurs réelles (durées, conditions, ratios, vocabulaire) et sur ce qui serait trop lourd à saisir sur le terrain.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Les 10 principes sont validés en bloc, sans réserve ni objection.",
           "notes": "",
           "selectedOptions": [
@@ -95,7 +95,7 @@
             "on doit pouvoir sélectionner des unités selon n’importe quel paramètre"
           ],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:47:53.590Z"
         }
       ]
     },
@@ -108,7 +108,7 @@
           "id": "q4_1_1",
           "type": "longtext",
           "originalTitle": "Comment appelles-tu naturellement une unité, à chaque stade ?",
-          "currentTitle": "Comment appelles-tu naturellement une unité, à chaque stade ?",
+          "currentTitle": "Comment appelles-tu naturellement une unité ?",
           "validatedAnswer": "",
           "validatedSelectedOptions": [],
           "followUp": "",
@@ -119,7 +119,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:57:49.282Z"
         },
         {
           "id": "q4_1_2",
@@ -130,13 +130,13 @@
           "validatedSelectedOptions": [],
           "followUp": "les contenants réels que tu utilises et leurs tailles typiques.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Une unité = tout objet physique manipulé, à n’importe quelle phase : une souche, une gélose, une culture liquide, un ballot de grain, un sac de substrat, un ballot inoculé, un bac, une caisse. Basiquement, chaque phase produit ses propres unités, et chacune est traquée et monitorée.",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:57:53.880Z"
         },
         {
           "id": "q4_1_3",
@@ -147,8 +147,8 @@
           "validatedSelectedOptions": [],
           "followUp": "à quels stades tu divises réellement, en combien de morceaux, et si le poids/volume de chaque enfant doit être saisi.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Oui, à chaque fois : toute unité peut être divisée, à n’importe quel stade, et chaque enfant reçoit son propre QR code.",
           "notes": "",
           "selectedOptions": [],
@@ -164,8 +164,8 @@
           "validatedSelectedOptions": [],
           "followUp": "quel est le comportement attendu par défaut, stade par stade.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Les deux cas doivent exister, au choix au moment de l’opération : soit on garde le parent actif (il continue à vivre, à être scanné et suivi — cas d’une culture mère), soit on le bascule en historique (il ne bouge plus mais reste consultable et relié à ses enfants).",
           "notes": "",
           "selectedOptions": [],
@@ -181,8 +181,8 @@
           "validatedSelectedOptions": [],
           "followUp": "où ça devient trop lourd en pratique, et quelles saisies doivent rester facultatives.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Le principe retenu est la traçabilité totale : chaque unité est traquée et monitorée, à tous les stades.",
           "notes": "",
           "selectedOptions": [],
@@ -200,7 +200,7 @@
           "id": "q5_1",
           "type": "longtext",
           "originalTitle": "Quelles espèces (et variétés) de champignons cultives-tu actuellement ?",
-          "currentTitle": "Quelles espèces (et variétés) de champignons cultives-tu actuellement ?",
+          "currentTitle": "Quelles espèces ou variétés de pleurotes cultives-tu actuellement ?",
           "validatedAnswer": "",
           "validatedSelectedOptions": [],
           "followUp": "",
@@ -211,7 +211,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:58:25.232Z"
         },
         {
           "id": "q5_2",
@@ -222,25 +222,25 @@
           "validatedSelectedOptions": [],
           "followUp": "les valeurs réelles, variété par variété.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Ce qui change d’une variété à l’autre, c’est la configuration (durées, températures, humidité, nombre de flushs, seuils d’alarme), pas le moteur : le process de l’app doit pouvoir tout faire, pour n’importe quel champignon. Rien n’est codé en dur pour le pleurote.",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:58:26.168Z"
         },
         {
           "id": "q5_3",
           "type": "longtext",
           "originalTitle": "Veux-tu suivre la souche précise, le fournisseur, ou seulement le type de champignon ?",
-          "currentTitle": "Veux-tu suivre la souche précise, le fournisseur, ou seulement le type de champignon ?",
+          "currentTitle": "Veux-tu suivre la souche précise, le fournisseur, ou seulement le type de pleurote ?",
           "validatedAnswer": "Traçabilité totale : espèce, variété, souche précise et fournisseur/origine, avec la lignée complète (de quelle souche et de quelle génération descend chaque unité).",
           "validatedSelectedOptions": [],
           "followUp": "les identifiants que tu utilises pour nommer une souche.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Traçabilité totale : espèce, variété, souche précise et fournisseur/origine, avec la lignée complète (de quelle souche et de quelle génération descend chaque unité).",
           "notes": "",
           "selectedOptions": [],
@@ -256,8 +256,8 @@
           "validatedSelectedOptions": [],
           "followUp": "lesquelles tu veux voir en premier, tous les jours, sur l’écran d’accueil.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Toutes les statistiques possibles doivent être calculables : rendement total et par flush, poids moyen par unité, rendement par kg de substrat, durée réelle de chaque stade, taux de contamination, pertes, ratios de multiplication, comparaison par souche et par génération.",
           "notes": "",
           "selectedOptions": [],
@@ -273,8 +273,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les espèces où la chaîne diffère vraiment (ex. bûches de shiitake) et en quoi.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "La chaîne et le moteur sont les mêmes pour toutes les espèces ; seules les configurations changent, et on peut composer un process différent par espèce si besoin.",
           "notes": "",
           "selectedOptions": [],
@@ -303,7 +303,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:58:46.915Z"
         },
         {
           "id": "qcp_2",
@@ -317,8 +317,8 @@
           ],
           "followUp": "par où tu démarres réellement le plus souvent aujourd’hui.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Traçabilité totale : on remonte jusqu’à l’origine (empreinte de spores ou souche achetée), quel que soit le point d’entrée réel.",
           "notes": "",
           "selectedOptions": [
@@ -329,7 +329,7 @@
             "grain"
           ],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:58:55.090Z"
         },
         {
           "id": "qcp_3",
@@ -346,7 +346,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:59:26.314Z"
         },
         {
           "id": "qcp_4",
@@ -363,8 +363,8 @@
           ],
           "followUp": "ceux que tu pratiques vraiment, et à quelle fréquence.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Le clonage doit être possible à chaque stade — l’app ne doit interdire aucun stade.",
           "notes": "",
           "selectedOptions": [
@@ -381,13 +381,13 @@
           "id": "qcp_5",
           "type": "longtext",
           "originalTitle": "Conserves-tu des cultures mères, et à quels stades ?",
-          "currentTitle": "Conserves-tu des cultures mères, et à quels stades ?",
+          "currentTitle": "Conserves-tu des cultures mères ?",
           "validatedAnswer": "La conservation doit être possible pour chaque unité, à n’importe quel stade — pas seulement en gélose ou en LC.",
           "validatedSelectedOptions": [],
           "followUp": "ce que tu conserves réellement, où et combien de temps (voir la section conservation).",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "La conservation doit être possible pour chaque unité, à n’importe quel stade — pas seulement en gélose ou en LC.",
           "notes": "",
           "selectedOptions": [],
@@ -409,7 +409,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:59:36.020Z"
         },
         {
           "id": "qcp_7",
@@ -426,19 +426,19 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T18:59:48.005Z"
         },
         {
           "id": "qcp_8",
           "type": "longtext",
           "originalTitle": "Chaque unité amont (souche, gélose, LC, grain) doit-elle avoir son propre QR ?",
-          "currentTitle": "Chaque unité amont (souche, gélose, LC, grain) doit-elle avoir son propre QR ?",
+          "currentTitle": "Chaque unité amont (gélose, LC, grain) doit-elle avoir son propre QR ?",
           "validatedAnswer": "Oui : chaque unité a son propre QR code, dès le début de la chaîne et à tous les stades.",
           "validatedSelectedOptions": [],
           "followUp": "le support d’étiquette réaliste pour les petits objets (boîte de Pétri, bocal de LC) — taille, résistance à l’humidité et à la stérilisation.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Oui : chaque unité a son propre QR code, dès le début de la chaîne et à tous les stades.",
           "notes": "",
           "selectedOptions": [],
@@ -478,8 +478,8 @@
           "validatedSelectedOptions": [],
           "followUp": "ce que tu conserves réellement, et ce qui n’a aucun sens à conserver chez toi.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "En théorie toutes : la conservation doit être possible pour chaque unité, à chaque stade.",
           "notes": "",
           "selectedOptions": [],
@@ -501,7 +501,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:00:25.250Z"
         },
         {
           "id": "qcv_3",
@@ -512,8 +512,8 @@
           "validatedSelectedOptions": [],
           "followUp": "est-ce bien ce que tu veux ?",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Une unité conservée passe dans un état « en réserve » — elle sort des tâches et des alarmes de durée courantes, mais reste scannable, retrouvable et reliée à sa lignée.",
           "notes": "",
           "selectedOptions": [],
@@ -535,7 +535,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:00:39.737Z"
         },
         {
           "id": "qcv_5",
@@ -546,8 +546,8 @@
           "validatedSelectedOptions": [],
           "followUp": "le comportement par défaut souhaité, stade par stade, pour éviter une question à chaque manipulation.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Les deux doivent être possibles, au choix au moment de l’opération : parent conservé (il continue à vivre) ou parent mis en historique (il ne bouge plus mais reste consultable).",
           "notes": "",
           "selectedOptions": [],
@@ -563,8 +563,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les durées réelles par stade (gélose, LC, grain…).",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Oui, la conservation est une étape comme une autre, donc elle peut porter une durée cible et une alarme réglable.",
           "notes": "",
           "selectedOptions": [],
@@ -586,7 +586,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:00:49.017Z"
         }
       ]
     },
@@ -599,7 +599,7 @@
           "id": "q6_1",
           "type": "longtext",
           "originalTitle": "Où commence le process le plus souvent ?",
-          "currentTitle": "Où commence le process le plus souvent ?",
+          "currentTitle": "Le process commence-t-il toujours à l’inoculation ?",
           "validatedAnswer": "",
           "validatedSelectedOptions": [],
           "followUp": "",
@@ -610,7 +610,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:01:21.369Z"
         },
         {
           "id": "q6_2",
@@ -627,7 +627,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:01:29.744Z"
         },
         {
           "id": "q6_3",
@@ -644,7 +644,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:01:46.878Z"
         },
         {
           "id": "q6_4",
@@ -655,8 +655,8 @@
           "validatedSelectedOptions": [],
           "followUp": "quand l’étiquette est physiquement imprimée et collée (avant la manipulation ? juste après ? en série au retour du labo ?).",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Le QR existe dès le début : il est créé en même temps que l’unité, dès le premier stade de la chaîne, et non au moment du substrat.",
           "notes": "",
           "selectedOptions": [],
@@ -678,7 +678,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:01:56.146Z"
         },
         {
           "id": "q6_6",
@@ -695,7 +695,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:02:03.612Z"
         }
       ]
     },
@@ -719,7 +719,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:02:39.594Z"
         },
         {
           "id": "q7_2",
@@ -736,7 +736,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:02:45.401Z"
         },
         {
           "id": "q7_3",
@@ -753,7 +753,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:02:50.478Z"
         },
         {
           "id": "q7_4",
@@ -770,7 +770,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:02:58.466Z"
         },
         {
           "id": "q7_5",
@@ -798,8 +798,8 @@
           ],
           "followUp": "les 3 ou 4 sélections que tu fais tous les jours, pour les mettre en raccourci.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "On doit pouvoir sélectionner des unités selon n’importe quel paramètre — parenté, clone, inoculation, stade, chambre, espèce, dates… — et combiner plusieurs critères en même temps.",
           "notes": "",
           "selectedOptions": [
@@ -838,7 +838,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:03:19.250Z"
         }
       ]
     },
@@ -851,13 +851,13 @@
           "id": "q8_1",
           "type": "longtext",
           "originalTitle": "La liste des phases/stades est-elle correcte ?",
-          "currentTitle": "La liste des phases/stades est-elle correcte ?",
+          "currentTitle": "La liste des phases est-elle correcte ?",
           "validatedAnswer": "Cette liste n’est qu’un point de départ pleurote : le process est entièrement configurable dans l’app (phases, étapes, ordre, boucles de flush), donc rien n’est figé.",
           "validatedSelectedOptions": [],
           "followUp": "ce qui manque, ce qui ne colle pas, et les noms que tu utilises vraiment.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Cette liste n’est qu’un point de départ pleurote : le process est entièrement configurable dans l’app (phases, étapes, ordre, boucles de flush), donc rien n’est figé.",
           "notes": "",
           "selectedOptions": [],
@@ -879,7 +879,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:03:41.794Z"
         },
         {
           "id": "q8_3",
@@ -890,8 +890,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les étapes où la durée seule suffirait, et celles où c’est toujours l’œil qui décide.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Les deux à la fois : chaque phase/étape porte une durée cible qui déclenche des alarmes réglables, mais la décision humaine agit et prime — c’est l’opérateur qui valide le passage.",
           "notes": "",
           "selectedOptions": [],
@@ -914,8 +914,8 @@
           "validatedSelectedOptions": [],
           "followUp": "quels blocs se répètent réellement chez toi et méritent d’être nommés.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "L’app doit permettre de créer des process entiers ET des sous-process réutilisables, puis de les appliquer à des lots.",
           "notes": "",
           "selectedOptions": [],
@@ -954,7 +954,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:04:13.617Z"
         },
         {
           "id": "qpr_4",
@@ -965,8 +965,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les durées réelles par stade et par espèce (c’est le gros du travail restant).",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Oui, chaque phase/étape porte une durée, et les alarmes de durée sont réglables directement dans le process.",
           "notes": "",
           "selectedOptions": [],
@@ -987,8 +987,8 @@
           ],
           "followUp": "les délais concrets, et les étapes où tu ne veux surtout pas être dérangé.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Les alarmes doivent être réglables étape par étape dans le process : délai, seuil, répétition.",
           "notes": "",
           "selectedOptions": [
@@ -1009,8 +1009,8 @@
           "validatedSelectedOptions": [],
           "followUp": "qui doit être prévenu et par quel canal.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Prévenir et créer une tâche, marquer l’unité en retard — mais jamais bloquer : les décisions humaines priment.",
           "notes": "",
           "selectedOptions": [],
@@ -1026,8 +1026,8 @@
           "validatedSelectedOptions": [],
           "followUp": "existe-t-il des étapes purement mécaniques où l’avancement automatique serait acceptable ?",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Toujours validé par une personne : les décisions humaines agissent, l’app ne fait que proposer et alerter.",
           "notes": "",
           "selectedOptions": [],
@@ -1049,7 +1049,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:04:32.835Z"
         },
         {
           "id": "qpr_9",
@@ -1066,7 +1066,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:05:24.016Z"
         },
         {
           "id": "qpr_10",
@@ -1083,7 +1083,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:05:42.621Z"
         },
         {
           "id": "qpr_11",
@@ -1100,7 +1100,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:05:59.229Z"
         }
       ]
     },
@@ -1124,7 +1124,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:06:12.872Z"
         },
         {
           "id": "qg_2",
@@ -1141,7 +1141,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:06:29.784Z"
         },
         {
           "id": "qg_3",
@@ -1158,7 +1158,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:06:36.316Z"
         },
         {
           "id": "qg_4",
@@ -1175,7 +1175,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:06:56.300Z"
         },
         {
           "id": "qg_5",
@@ -1192,7 +1192,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:07:05.530Z"
         },
         {
           "id": "qg_6",
@@ -1205,11 +1205,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Souche, espèce, origine, date, opérateur, génération, n° de boîte.",
+          "answer": "Souche, espèce, origine, date, opérateur, génération, n° de boîte. ",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:07:19.887Z"
         },
         {
           "id": "qg_7",
@@ -1226,7 +1226,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:07:28.681Z"
         }
       ]
     },
@@ -1250,7 +1250,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:07:38.248Z"
         },
         {
           "id": "qlc_2",
@@ -1267,7 +1267,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:07:41.216Z"
         },
         {
           "id": "qlc_3",
@@ -1284,7 +1284,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:07:47.414Z"
         },
         {
           "id": "qlc_4",
@@ -1301,7 +1301,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:07:52.753Z"
         },
         {
           "id": "qlc_5",
@@ -1318,7 +1318,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:08:04.715Z"
         },
         {
           "id": "qlc_6",
@@ -1335,7 +1335,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:08:10.654Z"
         },
         {
           "id": "qlc_7",
@@ -1352,7 +1352,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:08:16.266Z"
         }
       ]
     },
@@ -1376,7 +1376,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:08:24.765Z"
         },
         {
           "id": "qgr_2",
@@ -1393,7 +1393,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:08:31.031Z"
         },
         {
           "id": "qgr_3",
@@ -1410,7 +1410,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:08:43.237Z"
         },
         {
           "id": "qgr_4",
@@ -1427,7 +1427,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:08:49.446Z"
         },
         {
           "id": "qgr_5",
@@ -1444,7 +1444,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:09:00.212Z"
         },
         {
           "id": "qgr_6",
@@ -1461,7 +1461,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:09:14.852Z"
         },
         {
           "id": "qgr_7",
@@ -1478,7 +1478,7 @@
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:09:22.230Z"
         }
       ]
     },
@@ -1498,11 +1498,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "verification grain, transfer du grain sur le substrat, scelle et mise en incubation",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:49:14.219Z"
+          "updatedAt": null
         },
         {
           "id": "q9_1_2",
@@ -1515,11 +1515,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "configurable",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:47:19.334Z"
+          "updatedAt": null
         },
         {
           "id": "q9_1_3",
@@ -1532,11 +1532,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Informations obligatoires ou utiles pour la traçabilité.",
+          "answer": "Informations obligatoires ou utiles pour la traçabilité.\n",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": null
+          "updatedAt": "2026-07-30T19:09:52.427Z"
         },
         {
           "id": "q9_1_4",
@@ -1549,11 +1549,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "QR par unité, Nom, Date",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:49:39.364Z"
+          "updatedAt": null
         },
         {
           "id": "q9_1_5",
@@ -1566,11 +1566,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Poids substrat (total)",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:50:15.246Z"
+          "updatedAt": null
         },
         {
           "id": "q9_1_6",
@@ -1583,11 +1583,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "aspect, odeur, propreté,temperature",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:50:31.913Z"
+          "updatedAt": null
         },
         {
           "id": "q9_1_7",
@@ -1600,11 +1600,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "controle, puis incubation, fructification,",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:51:13.699Z"
+          "updatedAt": null
         }
       ]
     },
@@ -1624,11 +1624,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "entre 2 et 3 semaines (configurable)",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:51:33.646Z"
+          "updatedAt": null
         },
         {
           "id": "q9_2_2",
@@ -1641,11 +1641,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "24 (configurable)",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:51:47.062Z"
+          "updatedAt": null
         },
         {
           "id": "q9_2_3",
@@ -1658,11 +1658,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de controle",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:02.295Z"
+          "updatedAt": null
         },
         {
           "id": "q9_2_4",
@@ -1675,11 +1675,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "obscurité",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:10.001Z"
+          "updatedAt": null
         },
         {
           "id": "q9_2_5",
@@ -1692,11 +1692,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "non",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:14.533Z"
+          "updatedAt": null
         },
         {
           "id": "q9_2_6",
@@ -1709,11 +1709,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "colonisation, contamination, couleur, odeur, humidité du sac (visuel).",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:26.145Z"
+          "updatedAt": null
         },
         {
           "id": "q9_2_7",
@@ -1726,7 +1726,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "À l'observation visuelle, validée par une personne. La durée cible n'est qu'indicative — l'alarme sert de rappel, c'est l'œil qui déclenche le passage.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -1743,7 +1743,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Les mêmes actions qu'ailleurs : la liste complète existe à tous les stades, l'app masque simplement ce qui n'a pas de sens au stade courant.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -1767,11 +1767,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:42.468Z"
+          "updatedAt": null
         },
         {
           "id": "q9_3_2",
@@ -1784,11 +1784,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:44.499Z"
+          "updatedAt": null
         },
         {
           "id": "q9_3_3",
@@ -1801,11 +1801,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:46.327Z"
+          "updatedAt": null
         },
         {
           "id": "q9_3_4",
@@ -1818,11 +1818,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:48.084Z"
+          "updatedAt": null
         },
         {
           "id": "q9_3_5",
@@ -1835,11 +1835,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:53.367Z"
+          "updatedAt": null
         },
         {
           "id": "q9_3_6",
@@ -1852,7 +1852,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -1869,7 +1869,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Les mêmes actions qu'ailleurs, filtrées par pertinence selon le stade.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -1893,24 +1893,24 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:52:59.781Z"
+          "updatedAt": null
         },
         {
           "id": "q9_4_2",
           "type": "longtext",
           "originalTitle": "Incubation 3 est-elle obligatoire pour toutes les espèces ?",
-          "currentTitle": "Incubation 3 est-elle obligatoire pour toutes les espèces ?",
+          "currentTitle": "Incubation 3 est-elle obligatoire pour tous les pleurotes ?",
           "validatedAnswer": "",
           "validatedSelectedOptions": [],
           "followUp": "",
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Non, incubation 3 est optionnelle — pas obligatoire pour toutes les espèces.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -1927,11 +1927,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:53:01.626Z"
+          "updatedAt": null
         },
         {
           "id": "q9_4_4",
@@ -1944,11 +1944,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:53:03.345Z"
+          "updatedAt": null
         },
         {
           "id": "q9_4_5",
@@ -1961,11 +1961,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:53:05.418Z"
+          "updatedAt": null
         },
         {
           "id": "q9_4_6",
@@ -1978,11 +1978,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "pas de difference",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:53:07.816Z"
+          "updatedAt": null
         },
         {
           "id": "q9_4_7",
@@ -1995,7 +1995,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2019,11 +2019,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Ouverture du sac/bloc, passage en lumiere, augmentation humidité (90%), temperature (18-24°) ",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:54:28.649Z"
+          "updatedAt": null
         },
         {
           "id": "q9_5_2",
@@ -2036,11 +2036,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "2-3 jours (configurable)",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:54:48.821Z"
+          "updatedAt": null
         },
         {
           "id": "q9_5_3",
@@ -2053,11 +2053,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "primordia, humidité surface, couleur, densité, contamination.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:54:54.090Z"
+          "updatedAt": null
         },
         {
           "id": "q9_5_4",
@@ -2070,11 +2070,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "dessèchement, excès d’eau, CO2, déformation, contamination",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:55:28.943Z"
+          "updatedAt": null
         },
         {
           "id": "q9_5_5",
@@ -2087,11 +2087,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "2 chambres (configurable)",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:55:44.713Z"
+          "updatedAt": null
         },
         {
           "id": "q9_5_6",
@@ -2104,7 +2104,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Les mêmes actions qu'ailleurs, filtrées par pertinence selon le stade.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2128,11 +2128,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Pas de differences",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:55:52.744Z"
+          "updatedAt": null
         },
         {
           "id": "q9_6_2",
@@ -2145,11 +2145,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Pas de differences",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:55:54.281Z"
+          "updatedAt": null
         },
         {
           "id": "q9_6_3",
@@ -2162,11 +2162,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Pas de differences",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:55:56.063Z"
+          "updatedAt": null
         },
         {
           "id": "q9_6_4",
@@ -2179,11 +2179,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Pas de differences",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:55:59.149Z"
+          "updatedAt": null
         },
         {
           "id": "q9_6_5",
@@ -2196,7 +2196,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2213,7 +2213,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, une observation « maturité récolte » dédiée est utile.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2230,7 +2230,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Les mêmes actions qu'ailleurs, filtrées par pertinence selon le stade.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2254,7 +2254,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2271,7 +2271,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, poids par unité à chaque flush.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2288,7 +2288,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Poids par unité, qualité, et pertes avec leur cause.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2305,7 +2305,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, la qualité est notée.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2322,7 +2322,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, la cause des pertes est notée.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2339,7 +2339,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Repos, fructification 2, ou directement flush 2 — les trois chemins existent.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2356,7 +2356,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Les trois sont possibles : repos, fructification 2, ou directement flush 2.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2380,7 +2380,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, toutes les unités font un flush 2.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2397,11 +2397,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Pas de differences",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:56:01.219Z"
+          "updatedAt": null
         },
         {
           "id": "q9_8_3",
@@ -2414,11 +2414,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Pas de differences",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:56:19.429Z"
+          "updatedAt": null
         },
         {
           "id": "q9_8_4",
@@ -2431,7 +2431,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, poids par unité au flush 2 également, même méthode.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2448,7 +2448,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, la qualité diffère du flush 1.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2465,7 +2465,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Repos, fructification suivante, ou directement flush 3 — les trois chemins existent.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2489,7 +2489,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Optionnel — le flush 3 n'est pas systématique.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2506,7 +2506,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2523,11 +2523,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "oui",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:56:52.132Z"
+          "updatedAt": null
         },
         {
           "id": "q9_9_4",
@@ -2540,7 +2540,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, poids par unité au flush 3 également.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2557,7 +2557,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Repos, fructification suivante, ou fin de cycle.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2581,7 +2581,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Terminé, compost, rebut, contaminé — ces quatre statuts suffisent.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2598,7 +2598,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, un poids final est mesuré.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2615,7 +2615,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, une raison de fin est notée.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2632,7 +2632,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, l'emplacement reste occupé jusqu'au nettoyage.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2649,7 +2649,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, une tâche de nettoyage est créée en fin de cycle.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2673,7 +2673,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Chambres, étagères, niveau et position.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2690,7 +2690,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Les deux : chambre, étagère, niveau et position.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2708,7 +2708,7 @@
           "status": "answered",
           "statusLabel": "Répondu",
           "answer": "",
-          "notes": "Tout est configurable",
+          "notes": "",
           "selectedOptions": [],
           "tableRows": [
             {
@@ -2736,7 +2736,7 @@
               "Usage": ""
             }
           ],
-          "updatedAt": "2026-07-30T21:57:13.350Z"
+          "updatedAt": null
         },
         {
           "id": "q10_4",
@@ -2749,7 +2749,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, une unité peut changer plusieurs fois de chambre.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2766,7 +2766,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, scanner le QR d'une chambre doit afficher toutes les unités présentes.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2790,7 +2790,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Tout est fait à la main aujourd'hui : température, humidité, poids, contrôle visuel. Des appareils connectés sont envisagés dans un futur proche.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2807,7 +2807,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Manuellement aujourd'hui ; la fréquence dépendra des appareils connectés à venir.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2824,7 +2824,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Aujourd'hui tout est saisi à la main — température, humidité, poids, visuel. Les appareils connectés prendront le relais sur les mesures d'ambiance (chambre), le poids restant lié à l'unité.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2841,7 +2841,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Les Inkbird doivent aussi déclencher des alertes, pas seulement servir d'historique.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2858,11 +2858,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "température moyenne par chambre, humidité au moment de fructification, écart aux consignes\nMais aussi tout les details possible (dashboard configurable)",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:57:36.410Z"
+          "updatedAt": null
         },
         {
           "id": "q11_6",
@@ -2873,8 +2873,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les mesures qui ont un sens à chaque stade, pour ne pas proposer des champs inutiles sur l’iPhone.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Oui — chaque unité est traquée et monitorée, quel que soit son stade.",
           "notes": "",
           "selectedOptions": [],
@@ -2899,11 +2899,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "contamination, odeur, couleur suspecte, humidité visuelle, la taille, la couleur",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:58:40.141Z"
+          "updatedAt": null
         },
         {
           "id": "q12_2",
@@ -2916,7 +2916,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Pas de liste d'observations propre à chaque étape : la liste complète est disponible partout, l'app masque ce qui n'a pas de sens au stade courant.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2933,7 +2933,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, une photo doit être possible sur toute observation.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2950,7 +2950,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Photo obligatoire en cas de contamination.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -2967,7 +2967,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, gravité à trois niveaux : faible, moyen, critique.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3006,8 +3006,8 @@
           ],
           "followUp": "les 3 ou 4 actions à mettre en gros boutons juste après le scan — le reste peut être dans un menu secondaire.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Toutes ces actions doivent exister, puisque cloner, diviser, conserver et archiver sont possibles à chaque stade.",
           "notes": "",
           "selectedOptions": [
@@ -3040,8 +3040,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les actions de masse que tu fais vraiment, et celles qui seraient dangereuses en masse.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Toute action doit pouvoir s’appliquer à une sélection d’unités, y compris l’application d’un process ou d’un sous-process entier à un lot.",
           "notes": "",
           "selectedOptions": [],
@@ -3059,7 +3059,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, une validation est requise avant toute action en masse.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3076,7 +3076,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, une action doit pouvoir être annulée ou corrigée.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3100,7 +3100,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, poids par unité à chaque flush.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3117,11 +3117,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Grammes",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:58:52.423Z"
+          "updatedAt": null
         },
         {
           "id": "q14_3",
@@ -3134,7 +3134,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Poids par unité, qualité et pertes avec leur cause.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3151,7 +3151,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, les récoltes de plusieurs unités peuvent être mélangées.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3168,7 +3168,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, les proportions exactes doivent être conservées en cas de mélange.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3185,11 +3185,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "poids total par unité, rendement par flush, rendement par kg de substrat, rendement par chambre, rendement par espèce.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:59:00.194Z"
+          "updatedAt": null
         }
       ]
     },
@@ -3207,8 +3207,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les 3 ou 4 chiffres que tu veux voir en ouvrant l’app le matin.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Toutes les statistiques possibles doivent être calculables, puisque la traçabilité est totale.",
           "notes": "",
           "selectedOptions": [],
@@ -3226,7 +3226,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, comparer les enfants d'un même parent entre eux.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3243,7 +3243,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, comparer les performances entre chambres.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3260,7 +3260,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, export CSV/Excel.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3275,8 +3275,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les questions concrètes auxquelles tu veux que ces chiffres répondent.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Oui — la traçabilité totale permet de comparer par souche, par génération et par type de lien (clone / transfert / division).",
           "notes": "",
           "selectedOptions": [],
@@ -3299,8 +3299,8 @@
           "validatedSelectedOptions": [],
           "followUp": "les seuils réels et ce qui te dérangerait pour rien.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Le dépassement de la durée cible d’une étape (alarme réglable dans le process), la contamination déclarée, la récolte prête, la chambre hors consigne, et la fin de durée de conservation.",
           "notes": "",
           "selectedOptions": [],
@@ -3318,11 +3318,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Pas de taches automatique mais des status et des alertes",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:59:24.995Z"
+          "updatedAt": null
         },
         {
           "id": "q16_3",
@@ -3335,11 +3335,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "app envoie notification téléphone + notifications dans le dashboard",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:59:47.268Z"
+          "updatedAt": null
         },
         {
           "id": "q16_4",
@@ -3374,8 +3374,8 @@
           "validatedSelectedOptions": [],
           "followUp": "le format et le support d’étiquette utilisables sur les petits objets et en milieu humide.",
           "answerDiffersFromValidated": false,
-          "status": "clarify",
-          "statusLabel": "À clarifier",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "Chaque unité a son propre QR code, à tous les stades et dès le début — plus les chambres, les récoltes et les produits finaux.",
           "notes": "",
           "selectedOptions": [],
@@ -3393,7 +3393,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Nom de l'unité, type, date, et le code QR.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3410,7 +3410,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, un QR pour les chambres.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3427,7 +3427,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Oui, un QR pour les récoltes et les produits finaux.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3444,11 +3444,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Réimprimer même QR",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T21:59:58.135Z"
+          "updatedAt": null
         }
       ]
     },
@@ -3468,11 +3468,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Quarantaine, rebut, observation, photo, nettoyage, poursuite, autre, configurable",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T22:00:11.930Z"
+          "updatedAt": null
         },
         {
           "id": "q18_2",
@@ -3485,7 +3485,7 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Non, une unité contaminée ne peut plus produire.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
@@ -3502,11 +3502,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Attente, changement conditions, rebut, alerte, observation.",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T22:00:22.137Z"
+          "updatedAt": null
         },
         {
           "id": "q18_4",
@@ -3519,11 +3519,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Correction manuelle, scan plus tard, inventaire, autre",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T22:00:38.890Z"
+          "updatedAt": null
         },
         {
           "id": "q18_5",
@@ -3536,11 +3536,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Non",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T22:01:18.779Z"
+          "updatedAt": null
         }
       ]
     },
@@ -3558,161 +3558,101 @@
           "validatedSelectedOptions": [],
           "followUp": "",
           "answerDiffersFromValidated": false,
-          "status": "todo",
-          "statusLabel": "À répondre",
+          "status": "answered",
+          "statusLabel": "Répondu",
           "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": [
             {
               "Ordre": "1",
-              "Stade / étape": "Origine (spores / souche reçue)",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Inoculation",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
-              "Observation clé": "viabilité",
-              "Action suivante (clone / transfert)": "transfert gélose"
+              "Observation clé": "",
+              "Action suivante": ""
             },
             {
               "Ordre": "2",
-              "Stade / étape": "Gélose",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Incubation 1",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
-              "Observation clé": "contamination / colonisation",
-              "Action suivante (clone / transfert)": "clone gélose ou transfert LC"
+              "Observation clé": "",
+              "Action suivante": ""
             },
             {
               "Ordre": "3",
-              "Stade / étape": "Culture liquide (LC)",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Incubation 2",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
-              "Observation clé": "trouble / contamination",
-              "Action suivante (clone / transfert)": "clone LC ou transfert grain"
+              "Observation clé": "",
+              "Action suivante": ""
             },
             {
               "Ordre": "4",
-              "Stade / étape": "Grain (ballot)",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Incubation 3",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
-              "Observation clé": "colonisation / contamination",
-              "Action suivante (clone / transfert)": "clone grain ou transfert substrat"
+              "Observation clé": "",
+              "Action suivante": ""
             },
             {
               "Ordre": "5",
-              "Stade / étape": "Inoculation substrat",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Fructification 1",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
               "Observation clé": "",
-              "Action suivante (clone / transfert)": "incubation 1"
+              "Action suivante": ""
             },
             {
               "Ordre": "6",
-              "Stade / étape": "Incubation 1",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Fructification 2",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
               "Observation clé": "",
-              "Action suivante (clone / transfert)": ""
+              "Action suivante": ""
             },
             {
               "Ordre": "7",
-              "Stade / étape": "Incubation 2",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Récolte flush 1",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
-              "Observation clé": "",
-              "Action suivante (clone / transfert)": ""
+              "Observation clé": "poids par unité",
+              "Action suivante": ""
             },
             {
               "Ordre": "8",
-              "Stade / étape": "Incubation 3",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Récolte flush 2",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
-              "Observation clé": "",
-              "Action suivante (clone / transfert)": ""
+              "Observation clé": "poids par unité",
+              "Action suivante": ""
             },
             {
               "Ordre": "9",
-              "Stade / étape": "Fructification 1",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Récolte flush 3",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
-              "Observation clé": "",
-              "Action suivante (clone / transfert)": ""
+              "Observation clé": "poids par unité",
+              "Action suivante": ""
             },
             {
               "Ordre": "10",
-              "Stade / étape": "Fructification 2",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
+              "Phase/étape": "Fin de cycle",
+              "Durée typique": "",
               "Température": "",
               "Humidité": "",
               "Observation clé": "",
-              "Action suivante (clone / transfert)": ""
-            },
-            {
-              "Ordre": "11",
-              "Stade / étape": "Récolte flush 1",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
-              "Température": "",
-              "Humidité": "",
-              "Observation clé": "poids par unité",
-              "Action suivante (clone / transfert)": ""
-            },
-            {
-              "Ordre": "12",
-              "Stade / étape": "Récolte flush 2",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
-              "Température": "",
-              "Humidité": "",
-              "Observation clé": "poids par unité",
-              "Action suivante (clone / transfert)": ""
-            },
-            {
-              "Ordre": "13",
-              "Stade / étape": "Récolte flush 3",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
-              "Température": "",
-              "Humidité": "",
-              "Observation clé": "poids par unité",
-              "Action suivante (clone / transfert)": ""
-            },
-            {
-              "Ordre": "14",
-              "Stade / étape": "Conservation (optionnel, à tout stade)",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
-              "Température": "",
-              "Humidité": "",
-              "Observation clé": "viabilité",
-              "Action suivante (clone / transfert)": "réactivation ou clone"
-            },
-            {
-              "Ordre": "15",
-              "Stade / étape": "Fin de cycle",
-              "Durée cible": "",
-              "Alarme si dépassement": "",
-              "Température": "",
-              "Humidité": "",
-              "Observation clé": "",
-              "Action suivante (clone / transfert)": ""
+              "Action suivante": ""
             }
           ],
           "updatedAt": null
@@ -3728,11 +3668,11 @@
           "answerDiffersFromValidated": false,
           "status": "answered",
           "statusLabel": "Répondu",
-          "answer": "Tout configurable, process configurable",
+          "answer": "",
           "notes": "",
           "selectedOptions": [],
           "tableRows": null,
-          "updatedAt": "2026-07-30T22:02:35.497Z"
+          "updatedAt": null
         }
       ]
     }

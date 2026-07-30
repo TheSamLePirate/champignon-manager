@@ -215,14 +215,14 @@ Cette découpe respecte l'intention « outil de production, pas démo » **tout 
 
 | ID | Sévérité | Sujet | Impact si ignoré |
 |----|----------|-------|------------------|
-| P0-1 | 🟠 En cours | Questionnaire cultivateur — **139/188 après 2 passes** ; structure entièrement close, **aucune valeur chiffrée** | Le process ne peut pas être amorcé en seed data |
-| P0-2 | 🔴 Bloquant | Éditeur de process complet au MVP | Le planning est absorbé par une brique non finalisable |
+| P0-1 | 🟢 Levé | Questionnaire cultivateur — 139/188 ; structure close. Les valeurs manquantes deviennent de la **configuration runtime** (31/07/2026) | — |
+| P0-2 | 🔴 Bloquant **et désormais incontournable** | Éditeur de process complet au MVP — plus de seed possible, l'app démarre vide | Sans éditeur, l'application est inutilisable au premier lancement |
 | P0-3 | 🟢 Levé | Unité multi-stade + lignée clone/transfert/division — **figé le 30/07/2026** | Modèle arrêté (voir §9) |
 | P0-4 | 🟢 Levé | Scan iOS / HTTPS — **Tailscale confirmé** (`serve` + cert TLS) | Reste un spike de validation iOS + ACL tailnet |
 | P0-5 | 🔴 Bloquant | Driver Nimbot B21 inconnu | Livrable « impression stable » irréalisable |
 | P1-1 | 🟠 Majeur | « MVP » sur-dimensionné, sans estimation | Dérive planning, pas de v1 livrable |
 | P1-2 | 🟠 Majeur | Contradiction sécurité | Choix utilisateur écrasé en silence |
-| P1-3 | 🟠 Majeur | « suppression » vs audit immuable | Modèle d'audit incohérent |
+| P1-3 | 🟢 Levé | « suppression » vs audit immuable — le cultivateur demande « annuler ou corriger » : événement de compensation | — |
 | P1-4 | 🟠 Majeur | RBAC spéculatif (1 seul rôle réel) | Complexité inutile au MVP |
 | P1-5 | 🟠 Majeur | Module auth oublié | Trou dans le périmètre |
 | P1-6 | 🟠 Majeur | Stats T°/humidité impossibles sans Inkbird | Dashboards vides/trompeurs |
@@ -267,7 +267,7 @@ Ce qui reste manquant n'est plus structurel — c'est **entièrement quantitatif
 
 À toutes les questions de valeur, la réponse donnée est **« configurable »**. C'est cohérent avec le cadrage, mais **ça ne fait pas un produit utilisable** : un moteur configurable a besoin d'un jeu de valeurs par défaut pour démarrer. Sans elles, la recommandation « premier process en *seed data* » (P0-2) **ne peut pas être exécutée** — il n'y a rien à mettre dans le seed.
 
-**Action :** ne pas relancer le questionnaire entier. Demander uniquement le **tableau §20** (15 lignes × durée / alarme / T° / humidité / observation) pour une seule espèce. C'est le plus petit livrable qui débloque le seed.
+~~**Action :** demander le tableau §20 pour une seule espèce, plus petit livrable débloquant le seed.~~ **Dépassé le 31/07/2026 — voir §10** : le tableau est de la configuration runtime, il n'y a pas de seed à débloquer.
 
 ### 9.4 P1-7 aggravé — contradiction à arbitrer
 
@@ -301,3 +301,68 @@ En regroupant les questions qui se répétaient d'un stade à l'autre, 55 répon
 C'est le premier allègement réel du périmètre depuis le début de la revue. **P0-2 reste néanmoins bloquant** : les libertés accordées (étapes sautables, réversibles, changement de process en cours, bascule de version) restent coûteuses, et surtout le seed n'a toujours rien à contenir.
 
 **P0-1 reste ouvert pour une seule raison** : le tableau §20. Les 49 questions restantes sont presque toutes des demandes de valeurs. Aucune ne rouvre une question de structure.
+
+---
+
+## 10. Mise à jour 31/07/2026 — « le tableau sera de toute façon configurable »
+
+Cette phrase change le diagnostic de cette revue. Elle mérite d'être prise au sérieux, y compris là où elle m'oblige à revenir sur une recommandation.
+
+### 10.1 P0-1 est levé
+
+J'ai répété pendant trois passes que l'absence de valeurs (durées, températures, ratios, seuils) bloquait le démarrage. **C'était faux si ces valeurs sont saisies dans l'application** plutôt que livrées avec elle. Elles deviennent de la donnée de configuration, comme les espèces ou les chambres.
+
+Il ne manque donc plus rien pour commencer. Les 49 questions restantes du questionnaire décrivent du paramétrage, pas de la structure.
+
+### 10.2 …mais P0-2 devient incontournable
+
+La recommandation centrale de cette revue — **« premier process en seed data, éditeur visuel plus tard »** — reposait sur une hypothèse qui vient de tomber : qu'un process de référence serait livré avec l'application.
+
+S'il n'y a pas de seed, **l'application démarre vide**. Le cultivateur doit pouvoir construire son process complet depuis l'interface au premier lancement. L'éditeur n'est plus une brique reportable : c'est la condition d'utilisabilité.
+
+Deux conséquences :
+
+1. La réponse développeur `dev_06_06` (« éditeur complet » au MVP), que je jugeais sur-dimensionnée, **devient cohérente**.
+2. Le re-scoping proposé au §7 de cette revue (tranche verticale fine sans éditeur) **n'est plus applicable en l'état**. Une tranche verticale reste souhaitable, mais elle doit inclure de quoi **créer un process**, même sommairement (formulaire, pas forcément éditeur graphique).
+
+### 10.3 P1-3 est levé
+
+`dev_09_04` répondait « suppression », en conflit avec l'audit immuable — et j'avais noté que la règle avait été tranchée à la place de l'utilisateur. Le cultivateur a depuis demandé de pouvoir **« annuler ou corriger une action »**, ce qui valide l'interprétation par **événement de compensation**. La contradiction est résolue par le métier, pas par un arbitrage unilatéral.
+
+### 10.4 Le risque se déplace
+
+Il ne porte plus sur le manque d'information, mais sur la **mise en service** : au premier démarrage, il faudra saisir un process entier, les chambres, les espèces, les seuils. C'est le moment où un outil de traçabilité se fait abandonner.
+
+**Action recommandée** : prévoir dès le MVP un **modèle de process pré-rempli et modifiable** (valeurs arbitraires, clairement présentées comme telles), plus un **jeu de démonstration** pour le développement et les tests E2E. Ce n'est pas un seed métier — c'est un point de départ éditable, qui évite l'écran vide.
+
+### 10.5 Ce qui reste ouvert côté développeur
+
+L'export `champignon-reponses-dev-sam-2026-06-17.json` compte **74 réponses sur 79**. Restent sans réponse :
+
+| Question | Sujet |
+| --- | --- |
+| `dev_06_05` | Versioning / migration d'un process utilisé par des lots — marqué « à clarifier », et depuis **contredit** par les réponses cultivateur (voir §9.4) |
+| `dev_13_04` | Backlog MVP en 10 tâches |
+| `dev_13_05` | Sujets à faire attendre le cultivateur — sans objet désormais |
+| `dev_14_01` | Tableau de synthèse des décisions techniques |
+| `dev_14_03` | Résumé personnel des décisions |
+
+Seul `dev_06_05` compte encore : c'est la contradiction bascule / comparaison de versions, toujours à trancher.
+
+### 10.6 Export v8 — le process est deux fois plus court que documenté
+
+Le second export (30/07, 22:02) porte le questionnaire à **186 / 188** et livre les premières valeurs réelles. Il révèle surtout une erreur de cadrage que cette revue n'avait pas vue.
+
+**Les subdivisions 1/2/3 n'existent pas sur le terrain.** Réponses littérales : « pas de différence » entre incubation 1, 2 et 3 ; « pas de différences » entre fructification 1 et 2 ; « pas de différences » entre flush 1 et flush 2.
+
+Or ces 13 étapes structurent **toute la documentation depuis le premier commit** — cahier des charges, flux, atlas, tableau de synthèse. Elles venaient de la formulation initiale du questionnaire, reprise ensuite comme si elle décrivait le métier. C'est un cas net de **spécification qui se valide elle-même** : la question suggérait la réponse, et personne n'a vérifié.
+
+Le process réel :
+
+```
+inoculation → incubation (2-3 sem., 24 °C, obscurité) → fructification (90 %, 18-24 °C) → flush 1 → flush 2 → flush 3 (opt.) → fin de cycle
+```
+
+**Effet sur P0-2** : le modèle par défaut à livrer passe de 13 à 6 étapes. L'éditeur reste nécessaire, mais ce qu'il doit produire au premier lancement est bien plus modeste que prévu. Combiné à l'absence de configuration d'actions par étape (§9.6) et à l'absence de transition temporelle, **P0-2 devient tenable** — pour la première fois depuis le début de cette revue.
+
+**Autre simplification** : `q18_5` répond **non** à la fusion d'unités. La traçabilité n'a donc pas à gérer de convergence de lignées, seulement des divergences (clone, transfert, division). Cela retire une des complexités les plus coûteuses d'un modèle généalogique. D5 du tableau des dérives peut être clos.

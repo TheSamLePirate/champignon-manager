@@ -241,3 +241,21 @@ Les **Inkbird doivent déclencher des alertes**, pas seulement alimenter un hist
 - Une observation dédiée **« maturité récolte »** est souhaitée.
 
 ⏳ Non renseigné : la liste précise des observations à proposer, et les valeurs à afficher dans les statistiques de mesure.
+
+## Complément 30/07/2026 (export v8)
+
+### Observations rapides à proposer
+
+Contamination, odeur, couleur suspecte, humidité visuelle, taille, couleur.
+
+### Statistiques de mesure attendues
+
+Température moyenne par chambre, humidité au moment de la fructification, **écart aux consignes** — le tout dans un **dashboard configurable**.
+
+### Notifications
+
+Les alertes ne restent pas dans l'application : elle doit envoyer une **notification sur le téléphone**, en plus de l'affichage dans le dashboard.
+
+### ⚠️ Tâches automatiques
+
+Réponse : **« pas de tâches automatiques, mais des statuts et des alertes »**. Cela nuance la création automatique d'une tâche de nettoyage en fin de cycle, acceptée par ailleurs. À trancher avant d'implémenter un module de tâches — voir `14-questions-ouvertes.md` §18.6.

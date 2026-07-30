@@ -243,3 +243,25 @@ Trois réponses élargissent le périmètre du moteur — à intégrer dans l'es
 3. **versioning avec bascule** des unités en cours + comparaison entre versions (contradiction à arbitrer, cf. `04` §15.3).
 
 Ces trois points renforcent la recommandation de `claude-critics.md` : **seed data d'abord, éditeur visuel plus tard**.
+
+## Mise à jour 31/07/2026 — plus de prérequis bloquant
+
+**Le tableau §20 du questionnaire ne conditionne plus le démarrage.** Les durées, températures, humidité et seuils sont de la **configuration saisie dans l'application**, pas des données à figer avant de coder.
+
+### Ce qui change dans la roadmap
+
+| Avant | Maintenant |
+| --- | --- |
+| Prérequis : obtenir les valeurs terrain | **Aucun prérequis métier** — le cadrage est complet |
+| Phase 1 : seed du premier process, éditeur plus tard | **L'éditeur de process entre dans le MVP** : sans seed, l'app démarre vide |
+| Livrable « seed data process pleurote » (`dev_01_04`) | Remplacé par un **jeu de démonstration** (valeurs arbitraires) pour dev et tests E2E |
+
+### Conséquence sur le découpage
+
+Une tranche verticale fine reste la bonne approche, mais elle doit désormais inclure **de quoi créer un process** — au minimum un formulaire de création de phases/étapes avec durées et alarmes. Pas nécessairement un éditeur graphique complet dès la première itération, mais l'application doit être **utilisable sans intervention dans le code**.
+
+### Nouveau risque à porter : la mise en service
+
+Au premier démarrage, tout est vide. Il faudra saisir un process complet, les chambres, les espèces et les seuils avant que l'outil ne serve à quoi que ce soit. C'est le moment classique d'abandon d'un outil de traçabilité.
+
+**À prévoir dans le MVP** : un modèle de process pré-rempli et **modifiable**, présenté explicitement comme un exemple à adapter. Ce n'est pas un seed métier — c'est un anti-écran-vide.

@@ -8,11 +8,11 @@ Stack cible envisagée : **Bun + TypeScript + Vite + React + MongoDB**, avec un 
 
 ## État du cadrage — 2026-07-30
 
-Le questionnaire cultivateur est renseigné à **139 / 188**. La **structure métier est figée** ; il manque **toutes les valeurs de terrain**.
+Le questionnaire cultivateur est renseigné à **186 / 188** (seuls les deux tableaux de synthèse restent vides). La **structure métier est figée** et les **premières valeurs réelles** sont connues.
 
 **Acquis** — une unité est tout objet physique manipulé, à tout stade, avec son QR dès sa création ; entrée possible à n'importe quel stade (donc sans ascendant) ; clone, division et conservation partout, sans limite de génération ; conservation et archivage réversibles, la sortie de conservation créant une **nouvelle** unité ; process et sous-process réutilisables ; **le passage d'étape se décide à l'observation visuelle**, la durée n'étant qu'un rappel ; emplacement suivi jusqu'à la position ; poids par unité + qualité + pertes avec cause à chaque flush.
 
-**Bloquant** — aucune durée, température, humidité, aucun ratio ni seuil d'alarme, aucune liste d'espèces. Le tableau §20 du questionnaire `15` reste vide : **aucun process ne peut être amorcé en seed data**, donc l'implémentation ne peut pas démarrer.
+**Arbitrage du 31/07/2026** — les valeurs manquantes (durées, températures, ratios, seuils, espèces) sont de la **configuration saisie dans l'application**, pas des données à figer avant de coder. **Plus aucun prérequis métier ne bloque le démarrage.** En contrepartie l'app démarre vide : l'**éditeur de process devient indispensable au MVP**, avec un modèle pré-rempli modifiable pour éviter l'écran vide.
 
 Synthèse détaillée : [14 §18](./14-questions-ouvertes.md) · revue critique : [claude-critics.md](../claude-critics.md) §9.
 
@@ -78,7 +78,7 @@ Permettre à un utilisateur sur site de suivre toute la chaîne de culture :
 
 ## Prochaine étape après ces documents
 
-1. **Obtenir le tableau §20** du questionnaire `15` — durée cible, alarme, température, humidité par stade — pour **une seule espèce**. C’est le plus petit livrable qui débloque tout le reste.
-2. Trancher la contradiction sur le versioning de process (bascule totale *vs* comparaison entre versions) — voir [04 §15.3](./04-processus-configurable.md).
-3. Dé-risquer par deux spikes : impression Nimbot B21 (BLE) et scanner QR iOS via Tailscale HTTPS.
-4. **Seulement ensuite**, créer le squelette de l’application : authentification locale, unités, QR, événements, consultation mobile.
+1. Trancher la contradiction sur le versioning de process (bascule totale *vs* comparaison entre versions) — voir [04 §15.3](./04-processus-configurable.md). C’est le dernier point de structure ouvert.
+2. Dé-risquer par deux spikes : impression Nimbot B21 (BLE) et scanner QR iOS via Tailscale HTTPS.
+3. Créer le squelette de l’application : authentification locale, unités, QR, événements, consultation mobile — **plus de quoi créer un process depuis l’interface**, puisque rien n’est livré en seed.
+4. Prévoir le **modèle de process pré-rempli et modifiable** et un **jeu de démonstration** pour les tests E2E.

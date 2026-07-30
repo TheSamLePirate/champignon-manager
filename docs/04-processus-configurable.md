@@ -333,3 +333,48 @@ Elle n’est **jamais** une condition de passage. Concrètement : pas de job d�
 Il n’y a **pas de liste d’actions ni d’observations propre à chaque étape**. La liste complète existe à tous les stades ; l’application **masque simplement ce qui n’a pas de sens** au stade courant (par exemple « récolter » sur une gélose).
 
 Conséquence : la configuration de process ne porte pas une liste d’actions par étape, mais au plus des **règles de pertinence par stade**. Cela simplifie nettement l’éditeur de process — un argument de plus pour le seed data avant l’éditeur visuel.
+
+## 17. Arbitrage du 31/07/2026 — le process est saisi, pas livré
+
+**« Le tableau sera de toute façon configurable. »**
+
+Les durées, températures, humidité, conditions et seuils d'alarme ne sont **pas des constantes du code ni des données de seed** : ce sont des valeurs que le cultivateur saisit dans l'application.
+
+Conséquences pour l'implémentation :
+
+- **aucun process de référence n'est livré** avec l'application ;
+- l'application doit permettre de **créer un process complet depuis l'interface**, dès le premier démarrage, sans intervention technique ;
+- le moteur doit donc être opérationnel **avec zéro donnée initiale** : aucun écran ne peut supposer qu'un process existe ;
+- un **jeu de démonstration** (process fictif, valeurs arbitraires) reste nécessaire pour le développement et les tests E2E — il ne prétend rien sur le métier réel.
+
+### Anti-écran-vide
+
+Un **modèle de process pré-rempli et modifiable** doit être proposé au premier lancement : phases et étapes types, durées d'exemple clairement signalées comme telles. L'objectif n'est pas de deviner le métier, mais d'éviter que la première utilisation commence par une page blanche et un formulaire de création vide.
+
+## 18. Le process réel (export v8 du 30/07/2026) — 6 étapes, pas 13
+
+Les réponses détaillées par étape révèlent que **les subdivisions 1/2/3 n'ont aucune réalité métier** :
+
+- incubation 1, 2 et 3 → « **pas de différence** » ;
+- fructification 1 et 2 → « **pas de différences** » ;
+- flush 1 → flush 2 : « **pas de différences** » de durée ni de conditions.
+
+Ces subdivisions venaient de la formulation du questionnaire, pas du terrain.
+
+### Modèle de process par défaut à livrer
+
+```
+inoculation → incubation → fructification → flush 1 → flush 2 → flush 3 (optionnel) → fin de cycle
+```
+
+| Étape | Durée | Température | Humidité | Lumière | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Inoculation | — | — | — | — | poids substrat total ; contrôle aspect/odeur/propreté/température |
+| Incubation | **2-3 semaines** | **24 °C** | **non contrôlée** | **obscurité** | CO2/aération sans importance |
+| Fructification | 2-3 j avant primordia | **18-24 °C** | **90 %** | **lumière** | déclenchée par ouverture du sac ; 2 chambres |
+| Flush 1 / 2 / 3 | — | idem fructification | idem | idem | flush 3 optionnel mais rentable |
+| Fin de cycle | — | — | — | — | terminé / compost / rebut / contaminé |
+
+Toutes ces valeurs sont **configurables** et signalées comme telles par le cultivateur. Elles constituent le **modèle pré-rempli modifiable** recommandé au §17, pas une contrainte codée.
+
+⚠️ **Ne pas livrer les étapes 1/2/3 par défaut.** Elles restent créables — le moteur est configurable — mais les proposer d'emblée reproduirait une complexité que le terrain n'a pas.

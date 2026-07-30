@@ -199,7 +199,7 @@ footer{margin-top:70px;padding:40px 0 56px;border-top:1px solid var(--line)}
       <span class="chip"><span class="pulse"></span> Phase : cadrage métier &amp; architecture</span>
       <span class="chip">🧪 Pas encore de code applicatif</span>
       <span class="chip">✅ Modèle de domaine figé — 30/07/2026</span>
-      <span class="chip">⏳ Questionnaire cultivateur : 139 / 188</span>
+      <span class="chip">✅ Cadrage complet — 186 / 188 réponses</span>
       <span class="chip"><code>Bun · TS · React · MongoDB · Tailscale</code></span>
     </div>
 
@@ -234,10 +234,10 @@ footer{margin-top:70px;padding:40px 0 56px;border-top:1px solid var(--line)}
         <span class="go">Ouvrir l'atlas <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
       <a class="tool" href="./16-formulaire-reponses-cultivateur.html" style="--c:var(--st-grain)">
-        <span class="tag">139 / 188</span>
+        <span class="tag">186 / 188</span>
         <div class="ic">🌾</div>
         <h3>Questionnaire cultivateur</h3>
-        <p>Le formulaire que remplit le cultivateur, stade par stade. Les réponses du 30/07/2026 y sont pré-chargées ; le filtre « ce qui reste à préciser » isole les 49 questions encore vides — presque uniquement des valeurs terrain.</p>
+        <p>Le formulaire que remplit le cultivateur, stade par stade. Les réponses du 30/07/2026 y sont pré-chargées ; 186 questions sur 188 sont renseignées ; seuls les deux tableaux de synthèse restent vides, et ils relèvent de la configuration.</p>
         <span class="go">Ouvrir le questionnaire <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
       <a class="tool" href="./17-formulaire-questions-dev.html" style="--c:var(--st-lc)">
@@ -276,7 +276,7 @@ footer{margin-top:70px;padding:40px 0 56px;border-top:1px solid var(--line)}
         </ul>
       </div>
       <div class="etat warn">
-        <h4><span class="dot"></span>Bloquant — aucune valeur chiffrée</h4>
+        <h4><span class="dot"></span>Devenu configurable — plus de blocage</h4>
         <ul>
           <li>Aucune <b>durée</b>, <b>température</b> ni <b>humidité</b>, pour aucun stade.</li>
           <li>Aucun <b>ratio de multiplication</b> réel, aucun <b>seuil d'alarme</b>.</li>
@@ -284,8 +284,8 @@ footer{margin-top:70px;padding:40px 0 56px;border-top:1px solid var(--line)}
           <li>Chambres, emplacements, mesures et observations terrain : <b>non renseignés</b>.</li>
           <li>Récoltes, étiquettes, conduite en cas de contamination : <b>non renseignés</b>.</li>
         </ul>
-        <p class="etatnote">À toutes les questions de valeur, la réponse est « configurable ». Cohérent avec le cadrage — mais <b>un moteur configurable a besoin de valeurs par défaut</b> pour démarrer. Sans elles, aucun premier process ne peut être amorcé.</p>
-        <p class="etatnote"><b>Prochain livrable utile :</b> le seul tableau §20 du questionnaire — durée, alarme, T°, humidité par stade — pour <b>une seule espèce</b>.</p>
+        <p class="etatnote"><b>Arbitrage du 31/07/2026 :</b> « le tableau sera de toute façon configurable ». Ces valeurs seront <b>saisies dans l’application</b>, pas livrées avec elle. <b>Plus aucun prérequis métier ne bloque le démarrage.</b></p>
+        <p class="etatnote"><b>En contrepartie :</b> l’app démarre vide, donc l’<b>éditeur de process devient indispensable au MVP</b>. Prévoir un modèle pré-rempli modifiable pour éviter l’écran vide à la mise en service.</p>
       </div>
     </div>
   </section>

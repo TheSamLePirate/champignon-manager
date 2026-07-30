@@ -706,7 +706,13 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+1. Vérification du grain, transfert du grain sur le substrat, scellage et mise en incubation.
+2. Nombre d'unités créées : configurable.
+3. Informations à saisir : obligatoires ou utiles pour la traçabilité.
+4. Étiquette QR : un QR par unité, avec nom et date.
+5. Poids enregistré : poids substrat (total).
+6. Contrôle qualité : aspect, odeur, propreté, température.
+7. Étape suivante : contrôle, puis incubation, puis fructification.
 ```
 
 ### 9.2 Incubation 1
@@ -727,9 +733,14 @@ Questions :
 Réponse :
 
 ```text
-Critère de passage : à l’observation visuelle, validée par une personne — la durée n’est qu’un rappel.
-Actions dans l’app : les mêmes que partout, filtrées par pertinence selon le stade.
-⏳ Durée, température, humidité, lumière/obscurité, CO2 et observations attendues : NON FOURNIS.
+1. Durée : entre 2 et 3 semaines (configurable).
+2. Température cible : 24 °C (configurable).
+3. Humidité : pas de contrôle.
+4. Obscurité.
+5. CO2 / aération : non important.
+6. Observations : colonisation, contamination, couleur, odeur, humidité du sac (visuel).
+7. Passage à l’étape suivante : à l’observation visuelle, validé par une personne — la durée n’est qu’un rappel.
+8. Actions dans l’app : les mêmes que partout, filtrées par pertinence.
 ```
 
 ### 9.3 Incubation 2
@@ -749,9 +760,9 @@ Questions :
 Réponse :
 
 ```text
-Critère de passage à incubation 3 : observation visuelle + validation humaine.
+**Pas de différence avec incubation 1** — mêmes conditions, même durée, mêmes observations.
+Critère de passage : observation visuelle + validation humaine.
 Actions dans l’app : les mêmes que partout, filtrées par pertinence.
-⏳ Raison de la séparation avec incubation 1, ce qui change, durée et conditions : NON FOURNIS.
 ```
 
 ### 9.4 Incubation 3
@@ -771,9 +782,8 @@ Questions :
 Réponse :
 
 ```text
-Incubation 3 est OPTIONNELLE — pas obligatoire pour toutes les espèces.
+**Pas de différence avec les incubations précédentes.** Incubation 3 est **optionnelle** — pas obligatoire pour toutes les espèces.
 Critère de passage en fructification : observation visuelle + validation humaine.
-⏳ Objectif de l’étape, durée, conditions, signes visuels et risques : NON FOURNIS.
 ```
 
 ### 9.5 Fructification 1
@@ -797,8 +807,12 @@ Questions :
 Réponse :
 
 ```text
-Actions dans l’app : les mêmes que partout, filtrées par pertinence.
-⏳ Leviers de déclenchement, délai avant les premiers signes, observations, problèmes et chambre utilisée : NON FOURNIS.
+1. Changements au passage : ouverture du sac/bloc, passage en lumière, humidité portée à 90 %, température 18-24 °C.
+2. Délai avant les premiers signes : 2-3 jours (configurable).
+3. Observations : primordia, humidité de surface, couleur, densité, contamination.
+4. Problèmes : dessèchement, excès d’eau, CO2, déformation, contamination.
+5. Chambres utilisées : 2 chambres (configurable).
+6. Actions dans l’app : les mêmes que partout, filtrées par pertinence.
 ```
 
 ### 9.6 Fructification 2
@@ -818,10 +832,9 @@ Questions :
 Réponse :
 
 ```text
+**Pas de différence avec fructification 1** — mêmes conditions, même durée.
 Une observation « maturité récolte » dédiée est souhaitée.
 Critère « flush 1 prêt » : observation visuelle + validation humaine.
-Actions dans l’app : les mêmes que partout, filtrées par pertinence.
-⏳ Raison de la séparation avec fructification 1, durée et conditions : NON FOURNIS.
 ```
 
 ### 9.7 Récolte flush 1
@@ -861,8 +874,8 @@ Réponse :
 
 ```text
 Toutes les unités font un flush 2. Poids par unité, même méthode qu’au flush 1. La qualité diffère du flush 1.
+**Pas de différence** de durée ni de conditions entre flush 1 et flush 2.
 Après flush 2 : repos, fructification suivante, ou directement flush 3.
-⏳ Durée entre flush 1 et 2, et conditions particulières entre les deux : NON FOURNIES.
 ```
 
 ### 9.9 Récolte flush 3
@@ -878,9 +891,9 @@ Questions :
 Réponse :
 
 ```text
-Le flush 3 est OPTIONNEL, pas systématique. Décision d’arrêt : observation visuelle + validation humaine. Poids mesuré par unité également.
+Le flush 3 est **optionnel**, pas systématique — mais son rendement **vaut encore le coût et l’espace**.
+Décision d’arrêt : observation visuelle + validation humaine. Poids mesuré par unité également.
 Après flush 3 : repos, fructification suivante, ou fin de cycle.
-⏳ Seuil de rentabilité (le flush 3 vaut-il le coût et l’espace) : NON FOURNI.
 ```
 
 ### 9.10 Fin de cycle
@@ -1003,7 +1016,8 @@ Les Inkbird doivent aussi déclencher des alertes, pas seulement servir d'histor
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+température moyenne par chambre, humidité au moment de fructification, écart aux consignes
+Mais aussi tout les details possible (dashboard configurable)
 ```
 
 6. Doit-on pouvoir suivre des mesures sur n’importe quelle unité, à n’importe quel stade ?
@@ -1031,7 +1045,7 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+contamination, odeur, couleur suspecte, humidité visuelle, la taille, la couleur
 ```
 
 2. Quelles observations doivent être proposées selon l’étape ?
@@ -1156,7 +1170,7 @@ Oui, poids par unité à chaque flush.
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Grammes
 ```
 
 3. Faut-il enregistrer :
@@ -1196,7 +1210,7 @@ Exemples : poids total par unité, rendement par flush, rendement par kg de subs
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+poids total par unité, rendement par flush, rendement par kg de substrat, rendement par chambre, rendement par espèce.
 ```
 
 ## 15. Statistiques souhaitées
@@ -1300,7 +1314,7 @@ Exemples : “vérifier incubation”, “récolter aujourd’hui”, “nettoye
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Pas de taches automatique mais des status et des alertes
 ```
 
 3. Les alertes doivent-elles être visibles seulement dans l’app ou aussi envoyées ailleurs ?
@@ -1308,7 +1322,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+app envoie notification téléphone + notifications dans le dashboard
 ```
 
 4. Une alerte doit-elle pouvoir être ignorée ou reportée ?
@@ -1370,7 +1384,7 @@ Oui, un QR pour les récoltes et les produits finaux.
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Réimprimer même QR
 ```
 
 ## 18. Cas particuliers et problèmes
@@ -1382,7 +1396,7 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Quarantaine, rebut, observation, photo, nettoyage, poursuite, autre, configurable
 ```
 
 2. Est-ce qu’une unité contaminée peut encore produire ?
@@ -1398,7 +1412,7 @@ Non, une unité contaminée ne peut plus produire.
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Attente, changement conditions, rebut, alerte, observation.
 ```
 
 4. Que fais-tu si une unité est déplacée sans scan ?
@@ -1406,7 +1420,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Correction manuelle, scan plus tard, inventaire, autre
 ```
 
 5. Y a-t-il des cas où il faut regrouper/fusionner des unités ?
@@ -1414,7 +1428,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Non
 ```
 
 ## 19. Résumé à produire après réponse

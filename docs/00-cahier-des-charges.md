@@ -263,6 +263,8 @@ Détail : `14-questions-ouvertes.md` §18. Le questionnaire est renseigné à **
 - **Aucun blocage** d’unité par une alarme.
 - **Aucune suppression** : une action annulée produit un événement de compensation.
 
-### Ce qui empêche encore de démarrer
+### Paramétrage (arbitrage 31/07/2026)
 
-**Aucune valeur n’a été fournie** : ni durée, ni température, ni humidité, ni ratio, ni seuil d’alarme, ni liste d’espèces. Le produit est spécifié, mais **non paramétrable en l’état** — voir `13-roadmap-implementation.md`.
+Les durées, températures, humidité, ratios, seuils d’alarme et espèces **ne sont pas livrés avec l’application** : ce sont des données que le cultivateur saisit lui-même. Le tableau §20 du questionnaire n’est donc pas un prérequis au développement.
+
+En contrepartie, l’application doit être **utilisable avec zéro donnée initiale** et permettre de **créer un process complet depuis l’interface** dès le premier démarrage. Un **modèle pré-rempli et modifiable** est à prévoir pour éviter l’écran vide — voir `13-roadmap-implementation.md`.

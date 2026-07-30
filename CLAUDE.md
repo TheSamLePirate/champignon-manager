@@ -77,7 +77,9 @@ Ce sont des fichiers **HTML autonomes**, **data-driven** (donc faciles à modifi
 
 **Mise à jour 2026-07-30** — réponses reçues (`docs/champignon-reponses-cultivateur-2026-07-30.json`). Détail : `docs/14` §18, `claude-critics.md` §9.
 
-⚠️ L'export annonçait « 100 % / 188 » à tort : 84 questions réellement renseignées en 1ʳᵉ passe (104 marquées répondues en masse, sans contenu), **139 après une 2ᵉ passe de questions groupées** le même jour. Il reste **49 questions**, presque toutes des demandes de valeurs.
+Trois passes : 84 réponses réelles au 1er export (l'export annonçait 100 % à tort — 104 questions vides marquées répondues en masse), 139 après une passe de questions groupées, **186 / 188 au second export v8 du 30/07 22:02**. Seuls les deux tableaux (`q10_3`, `q20_table`) restent vides, et ils relèvent de la configuration.
+
+**Le process réel fait 6 étapes, pas 13** : incubations 1/2/3 et fructifications 1/2 sont « sans différence ». Modèle par défaut à livrer : inoculation → incubation (2-3 sem., 24 °C, obscurité) → fructification (90 %, 18-24 °C) → flush 1/2/3 → fin de cycle. Voir `docs/04` §18.
 
 **Structure figée — ne plus rediscuter :**
 - traçabilité jusqu'aux spores / souche reçue ; QR sur **chaque unité dès le début** ;
@@ -96,15 +98,15 @@ Ce sont des fichiers **HTML autonomes**, **data-driven** (donc faciles à modifi
 - process créé/modifié par **une seule personne** (cohérent avec l'auth `admin` unique) ;
 - vocabulaire : gélose/boîte de Pétri, culture liquide/LC, ballot de grain, ballot de substrat, bloc, sac, pain.
 
-**Toujours manquant — bloque le seed du premier process :**
+**Devenu de la configuration runtime (arbitrage 31/07/2026 : « le tableau sera de toute façon configurable ») — ne bloque plus rien :**
 - **aucune valeur chiffrée** : durées, T°, humidité, ratios, seuils d'alarme, pour aucun stade ;
 - liste réelle des espèces (réponse actuelle : « tout type de champignon, configurable ») ;
 - chambres et emplacements réels, mesures et fréquences, observations terrain ;
 - récoltes (unité de poids, qualité, mélanges), contenu des étiquettes, conduite en cas de contamination.
 
-**Contradiction à arbitrer** : bascule totale des unités sur la nouvelle version de process **vs** comparaison entre deux versions — les deux ont été demandés (cf. `docs/04` §15.3).
+**Conséquence majeure** : sans seed, l'application démarre **vide**. L'éditeur de process passe de « plus tard » à **indispensable au MVP** — la recommandation « seed data d'abord » de `claude-critics.md` ne tient plus (voir sa §10). Prévoir un **modèle de process pré-rempli et modifiable** pour éviter l'écran vide à la mise en service.
 
-**Prochain livrable à demander** : le seul tableau §20 du questionnaire (durée / alarme / T° / humidité par stade) pour **une seule espèce**. C'est le minimum qui débloque une implémentation.
+**Seule contradiction encore à arbitrer** : bascule totale des unités sur la nouvelle version de process **vs** comparaison entre deux versions — les deux ont été demandés (cf. `docs/04` §15.3).
 
 Dans les docs, marquer ces points **« à confirmer »** plutôt que d'inventer des valeurs.
 

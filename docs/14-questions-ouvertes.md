@@ -299,4 +299,74 @@ La réponse « le passage se fait à **l’observation visuelle**, la durée n�
 
 #### Ce qui reste (49 questions)
 
-Presque uniquement des **valeurs et des gestes** : déroulé exact de l’inoculation, différences réelles entre incubations 1/2/3, leviers de déclenchement de la fructification, conduite en cas de contamination / retard / fusion, et surtout le **tableau §20** — durée, alarme, température, humidité par stade. Ce dernier reste le seul vrai blocage.
+Presque uniquement des **valeurs et des gestes** : déroulé exact de l’inoculation, différences réelles entre incubations 1/2/3, leviers de déclenchement de la fructification, conduite en cas de contamination / retard / fusion, et surtout le **tableau §20** — durée, alarme, température, humidité par stade. Ce dernier était présenté ici comme le seul vrai blocage — **c'est dépassé depuis l'arbitrage du 31/07/2026 : voir §18.5**, ces valeurs deviennent de la configuration saisie dans l'application.
+
+### 18.5 Arbitrage du 31/07/2026 — le tableau §20 n’est plus un prérequis
+
+**Décision : « le tableau sera de toute façon configurable ».**
+
+Les durées, températures, humidité et seuils d’alarme ne sont donc **pas des données à obtenir avant de coder** : ce sont des **données que le cultivateur saisira lui-même dans l’application**, au même titre que ses espèces ou ses chambres.
+
+#### Ce que ça ferme
+
+- Le tableau §20 sort du chemin critique. **P0-1 est levé** : il ne manque plus rien pour commencer.
+- Les 49 questions encore vides du questionnaire ne bloquent plus. Elles décrivent des valeurs qui seront saisies en configuration, pas des décisions de structure.
+- La demande de « seed data process pleurote » (`dev_01_04`) perd son objet : il n’y a pas de process de référence à figer dans le code.
+
+#### Ce que ça ouvre — et qui est plus lourd
+
+Sans valeurs par défaut, **l’application est vide au premier démarrage**. Le cultivateur doit pouvoir construire son process entier depuis l’interface, dès le premier jour.
+
+Conséquence directe : **l’éditeur de process passe de « plus tard » à « indispensable au MVP »**. La recommandation de `claude-critics.md` (« seed data d’abord, éditeur visuel ensuite ») **ne tient plus** — elle reposait sur l’existence d’un process de référence livré avec l’app. Ce n’est plus le cas.
+
+Cela rend cohérente la réponse développeur `dev_06_06` (« éditeur complet » au MVP), qui était jusqu’ici jugée sur-dimensionnée.
+
+#### Ce qu’il faut à la place
+
+Un **jeu de démonstration** (et non un seed de production) reste utile pour développer et tester : un process fictif complet, avec des valeurs arbitraires, pour faire tourner les écrans et les tests E2E. Il n’engage rien sur le métier réel.
+
+⚠️ **Risque à surveiller** : la première mise en service devient un exercice de saisie lourd (un process complet, des chambres, des espèces, des seuils). Prévoir un accompagnement, un import, ou un modèle de process pré-rempli **modifiable** — sinon l’outil sera abandonné avant d’avoir servi.
+
+### 18.6 Export v8 du 30/07/2026 (22:02) — 186/188 et les premières valeurs réelles
+
+Un second export a été fourni : **186 questions renseignées sur 188**. Seuls les deux tableaux restent vides (`q10_3` conditions par chambre, `q20_table` synthèse) — sans conséquence, ils relèvent de la configuration.
+
+#### Premières valeurs chiffrées obtenues
+
+| Étape | Valeurs |
+| --- | --- |
+| **Inoculation** | Vérification du grain → transfert sur substrat → scellage → incubation. Poids enregistré : **poids substrat total**. Contrôle qualité : aspect, odeur, propreté, température. Étiquette : QR par unité + nom + date. |
+| **Incubation** | **2 à 3 semaines**, **24 °C**, **obscurité**. Humidité : **pas de contrôle**. CO2 / aération : **sans importance**. Observations : colonisation, contamination, couleur, odeur, humidité du sac. |
+| **Fructification** | Déclenchement : **ouverture du sac**, passage **en lumière**, humidité portée à **90 %**, température **18-24 °C**. Premiers signes après **2-3 jours**. **2 chambres** utilisées. |
+| **Récolte** | Poids en **grammes**. Flush 3 : son rendement **vaut encore le coût et l'espace**. |
+
+#### ⚠️ Le process réel est bien plus court que celui décrit
+
+Réponses répétées : **« pas de différence »** entre incubation 1, 2 et 3 ; **« pas de différences »** entre fructification 1 et 2 ; **« pas de différences »** de durée ou de conditions entre flush 1 et flush 2.
+
+Autrement dit, la séquence à 13 étapes qui structure toute la documentation depuis le début **ne correspond pas au terrain**. Le process réel est :
+
+```
+inoculation → incubation (2-3 sem., 24 °C, obscurité) → fructification (90 %, 18-24 °C) → flush 1 → flush 2 → flush 3 (optionnel) → fin de cycle
+```
+
+Les subdivisions 1/2/3 n'ont **aucune réalité métier** : elles venaient de la formulation initiale du questionnaire, pas d'une pratique. Elles restent créables — le process étant configurable — mais **ne doivent pas être livrées comme modèle par défaut**.
+
+C'est une simplification importante : le modèle de process type passe de 13 étapes à **6**.
+
+#### Autres réponses
+
+- **Fusion d'unités : non** (`q18_5`). La traçabilité n'a pas à gérer de convergence de lignées — simplification notable.
+- **Contamination** : quarantaine, rebut, observation, photo, nettoyage ou poursuite — **configurable** (`q18_1`).
+- **Unité en retard** : attente, changement de conditions, rebut, alerte, observation (`q18_3`).
+- **Déplacement sans scan** : correction manuelle, scan plus tard, inventaire (`q18_4`).
+- **QR abîmé** : réimprimer **le même** QR (`q17_5`) — cohérent avec la décision développeur `dev_08_05`.
+- **Notifications** : l'app envoie une **notification téléphone** en plus du dashboard (`q16_3`).
+- **Observations rapides** : contamination, odeur, couleur suspecte, humidité visuelle, taille, couleur (`q12_1`).
+- **Statistiques** : température moyenne par chambre, humidité au moment de la fructification, écart aux consignes — et un **dashboard configurable** (`q11_5`).
+
+#### ⚠️ Tension à lever
+
+`q16_2` : **« pas de tâches automatiques, mais des statuts et des alertes »**. Cela contredit `q9_10_5`, où la création d'une **tâche de nettoyage** en fin de cycle avait été acceptée.
+
+Lecture proposée : pas de génération automatique de tâches récurrentes, mais les alarmes de durée et la fin de cycle produisent des **alertes** que l'on peut traiter. À confirmer avant de coder un module de tâches.
