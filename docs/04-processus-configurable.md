@@ -268,3 +268,50 @@ Décisions :
 - actions en masse avec options complètes ;
 - éditeur complet ciblé pour le MVP ;
 - dépendance forte aux réponses cultivateur.
+
+## 15. Réponses cultivateur — 2026-07-30
+
+Source : `champignon-reponses-cultivateur-2026-07-30.json`.
+
+### 15.1 Structure du process
+
+- **Process entiers et sous-process réutilisables**, applicables à une unité, à un lot entier ou à une sélection filtrée.
+- Distinction **phase / étape** retenue : la phase est une grande période (incubation), l’étape un moment précis (incubation 1/2/3).
+- Un lot **peut changer de process en cours de route**.
+- Une étape peut être **sautée, refaite ou remise en arrière**.
+- Le moteur est le même pour toutes les espèces ; **seule la configuration change**.
+
+### 15.2 Durées et alarmes
+
+Chaque phase/étape porte une durée cible. Alarmes réglables étape par étape :
+
+| Alarme | Retenue |
+| --- | --- |
+| Rappel avant la fin prévue (ex : J-1) | ✅ |
+| Alerte au dépassement de la durée cible | ✅ |
+| 2ᵉ seuil : retard critique | ✅ |
+| Possibilité de n’avoir aucune alarme sur une étape | ✅ |
+| Rappel périodique tant que l’étape n’est pas finie | ❌ non retenu |
+| Rappel de contrôle en milieu d’étape | ❌ non retenu |
+
+Au dépassement : **prévenir, créer une tâche, marquer l’unité en retard — jamais bloquer**. Le passage à l’étape suivante est **toujours validé par une personne** ; l’automatisme ne fait que proposer et alerter. Une alarme doit pouvoir être **acquittée ou reportée**, en gardant la trace de qui l’a fait et quand.
+
+### 15.3 Versions de process
+
+- Modifier un process fait **basculer les unités déjà lancées sur la nouvelle version**, après une **confirmation explicite** de l’utilisateur.
+- Le cultivateur veut par ailleurs **comparer les résultats entre deux versions** d’un process.
+
+⚠️ **Ces deux réponses sont en tension.** Si toutes les unités basculent, il ne reste plus de population sur l’ancienne version à comparer. Deux pistes, à arbitrer avant implémentation :
+
+1. bascule proposée par défaut, mais possibilité d’**exclure une sélection** qui reste sur l’ancienne version (permet un vrai A/B) ;
+2. bascule systématique, et la comparaison ne porte que sur l’**historique déjà produit** (les unités terminées sous l’ancienne version).
+
+Dans les deux cas, la **version de process appliquée doit être enregistrée sur chaque unité** et figée dans les événements — sinon aucune comparaison n’est possible.
+
+### 15.4 Droits
+
+Création et modification d’un process : **le cultivateur seul**.
+
+### 15.5 Ce qui manque pour construire le premier process
+
+⏳ Aucune valeur n’a été fournie : durées, températures, humidité, critères de passage, seuils d’alarme. Toutes les questions de valeur ont reçu la réponse « configurable ». **Un process configurable a néanmoins besoin de valeurs par défaut** pour être amorcé en *seed data* — c’est le blocage principal côté implémentation.

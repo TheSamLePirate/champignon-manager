@@ -215,9 +215,9 @@ Cette découpe respecte l'intention « outil de production, pas démo » **tout 
 
 | ID | Sévérité | Sujet | Impact si ignoré |
 |----|----------|-------|------------------|
-| P0-1 | 🟠 En cours | Questionnaire cultivateur (Julien a commencé ; reste à finir) | MVP métier encore partiellement non spécifié |
+| P0-1 | 🟠 En cours | Questionnaire cultivateur — **84/188 réellement renseignées au 30/07/2026** ; structure close, **aucune valeur chiffrée** | Le process ne peut pas être amorcé en seed data |
 | P0-2 | 🔴 Bloquant | Éditeur de process complet au MVP | Le planning est absorbé par une brique non finalisable |
-| P0-3 | 🟠 Éclairé | Unité multi-stade (gélose→LC→grain→substrat) + lignée clone/transfert/division | Modèle posé (00/01/03/05/07) ; à figer avec Julien |
+| P0-3 | 🟢 Levé | Unité multi-stade + lignée clone/transfert/division — **figé le 30/07/2026** | Modèle arrêté (voir §9) |
 | P0-4 | 🟢 Levé | Scan iOS / HTTPS — **Tailscale confirmé** (`serve` + cert TLS) | Reste un spike de validation iOS + ACL tailnet |
 | P0-5 | 🔴 Bloquant | Driver Nimbot B21 inconnu | Livrable « impression stable » irréalisable |
 | P1-1 | 🟠 Majeur | « MVP » sur-dimensionné, sans estimation | Dérive planning, pas de v1 livrable |
@@ -226,7 +226,7 @@ Cette découpe respecte l'intention « outil de production, pas démo » **tout 
 | P1-4 | 🟠 Majeur | RBAC spéculatif (1 seul rôle réel) | Complexité inutile au MVP |
 | P1-5 | 🟠 Majeur | Module auth oublié | Trou dans le périmètre |
 | P1-6 | 🟠 Majeur | Stats T°/humidité impossibles sans Inkbird | Dashboards vides/trompeurs |
-| P1-7 | 🟠 Majeur | Migration de process non spécifiée | Lots en cours cassés à la 1re édition |
+| P1-7 | 🔴 Aggravé | Migration de process : réponse cultivateur **contradictoire** (bascule totale + comparaison de versions) | Comparaison A/B impossible, ou lots en cours déplacés sans témoin |
 | P2-1 | 🟡 Moyen | Sémantique poids/quantité | Rendements faux |
 | P2-3 | 🟡 Moyen | « Reconstructible » non garanti | Promesse d'audit creuse |
 | P2-4 | 🟡 Moyen | Pas d'idempotence/verrou optimiste | Double-action sur Wi-Fi instable |
@@ -236,3 +236,57 @@ Cette découpe respecte l'intention « outil de production, pas démo » **tout 
 ---
 
 *Fin de la revue. Ces critiques visent un cadrage déjà solide ; le but est de le rendre exécutable en levant d'abord les points P0 restants (P0-4 levé le 2026-06-17 par la confirmation Tailscale ; restent P0-1, P0-2, P0-3, P0-5).*
+
+---
+
+## 9. Mise à jour 2026-07-30 — réponses cultivateur reçues
+
+Source : `docs/champignon-reponses-cultivateur-2026-07-30.json`.
+
+### 9.1 Le chiffre à retenir : 84 / 188
+
+L'export affiche **« 188 répondues, 100 % »**. C'est faux : **104 questions ne contiennent ni texte ni case cochée** — elles ont été marquées répondues en masse (bouton « Marquer visibles répondues »). Le formulaire `16` a été corrigé pour recalculer le statut à partir du contenu réel, et le questionnaire `15` marque ces questions `⏳ SANS RÉPONSE`.
+
+**Ne pas planifier sur la base du 100 %.**
+
+### 9.2 P0-3 levé — le modèle est figé
+
+Les réponses ferment la question « unité vs lot vs session » :
+
+- l'unité est **tout objet physique manipulé**, à tout stade ;
+- le **parent** est un lien de parenté détaillé de bout en bout, **pas** une session d'inoculation — la session redevient une simple étiquette de regroupement ;
+- clonage à tous les stades, **sans limite de génération** ;
+- une unité peut **naître sans ascendant**, à n'importe quel stade ;
+- la **sortie de conservation crée une nouvelle unité** ; l'archivage est **réversible**.
+
+Ces règles sont propagées dans `01`, `04`, `05`, `14`. Le modèle de domaine peut être considéré comme stable.
+
+### 9.3 P0-1 réduit, mais toujours bloquant
+
+Ce qui reste manquant n'est plus structurel — c'est **entièrement quantitatif** : aucune durée, température, humidité, aucun ratio, aucun seuil d'alarme, aucune liste d'espèces réelle, aucun contenu d'étiquette, aucune conduite en cas de contamination.
+
+À toutes les questions de valeur, la réponse donnée est **« configurable »**. C'est cohérent avec le cadrage, mais **ça ne fait pas un produit utilisable** : un moteur configurable a besoin d'un jeu de valeurs par défaut pour démarrer. Sans elles, la recommandation « premier process en *seed data* » (P0-2) **ne peut pas être exécutée** — il n'y a rien à mettre dans le seed.
+
+**Action :** ne pas relancer le questionnaire entier. Demander uniquement le **tableau §20** (15 lignes × durée / alarme / T° / humidité / observation) pour une seule espèce. C'est le plus petit livrable qui débloque le seed.
+
+### 9.4 P1-7 aggravé — contradiction à arbitrer
+
+Deux réponses incompatibles :
+
+- « si tu modifies un process, les unités déjà lancées **basculent sur la nouvelle version** » (avec confirmation) ;
+- « veux-tu **comparer les résultats entre deux versions** d'un process ? » → oui.
+
+Si tout bascule, il ne reste aucune population témoin. Cela contredit aussi la recommandation P1-7 d'origine (versions publiées immuables, lot épinglé). À trancher avant de coder le moteur de process — voir `04-processus-configurable.md` §15.3.
+
+### 9.5 Effets secondaires du « tout est possible »
+
+Plusieurs réponses élargissent encore le périmètre sans le borner :
+
+| Réponse | Effet |
+| --- | --- |
+| Départ possible à **n'importe quel stade** | Aucune contrainte d'ascendant : la validation métier ne peut plus s'appuyer sur la chaîne |
+| Étape **sautée, refaite, remise en arrière** | Le moteur de process doit gérer un graphe libre, pas une séquence — coût réel sur P0-2 |
+| **Aucune limite de génération** | Pas de garde-fou contre la sénescence ; à compenser par une statistique de vigueur par génération |
+| Changement de process **en cours de route** | Complique le calcul de durée cible et l'historique d'alarmes |
+
+Aucun de ces points n'est un blocage en soi, mais **cumulés ils renforcent P0-2** : l'éditeur de process complet au MVP devient encore moins tenable. La recommandation de tranche verticale fine reste valable, et le seed doit couvrir un chemin nominal simple avant d'ouvrir toutes ces libertés.

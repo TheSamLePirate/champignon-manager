@@ -420,6 +420,58 @@
 
     .help ul { margin: 6px 0 0 18px; padding: 0; }
 
+    .preset {
+      padding: 12px 13px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .preset.validated {
+      border: 1px solid rgba(47, 107, 63, .32);
+      border-left: 4px solid var(--green-2);
+      background: var(--green-soft);
+      color: #1d4429;
+    }
+
+    .preset.followup {
+      border: 1px solid rgba(198, 123, 31, .35);
+      border-left: 4px solid var(--amber);
+      background: var(--amber-soft);
+      color: #5c4213;
+    }
+
+    .preset + .preset { margin-top: 8px; }
+
+    .preset-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 7px;
+    }
+
+    .preset-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .preset.validated .preset-tag { color: var(--green); }
+
+    .preset.followup .preset-tag { color: var(--amber); }
+
+    .preset-body { white-space: pre-line; }
+
+    .preset-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .preset.validated .btn { border: 1px solid rgba(47, 107, 63, .4); background: #fff; color: #1d4429; }
+
     .check-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -583,7 +635,7 @@
         <p>
           Remplis ce formulaire tranquillement. Chaque question peut être répondue, modifiée si elle est mal formulée,
           ou marquée comme non pertinente. À la fin, exporte le fichier JSON et transmets-le au développeur.
-          <br /><b>Nouveau :</b> le questionnaire couvre maintenant toute la chaîne amont (gélose, culture liquide, grain) avec clones et transferts — voir les sections « Chaîne de propagation » et « Détail stade ».
+          <br /><b>Mise à jour du 30/07/2026 (2ᵉ passe) :</b> tes réponses ont été intégrées — <b>84 questions sur 188</b> sont renseignées. Il en reste <b>104 sans aucune réponse</b> : surtout le détail terrain (incubations, fructifications, flushs, chambres, mesures, récoltes). Utilise le filtre <b>« Ce qui reste à préciser »</b> pour n’afficher que ce qui manque.
         </p>
       </div>
       <div class="hero-actions">
@@ -622,6 +674,7 @@
           <label class="label" for="statusFilter">Filtrer par statut</label>
           <select id="statusFilter">
             <option value="all">Tous les statuts</option>
+            <option value="remaining">⏳ Ce qui reste à préciser</option>
             <option value="todo">À répondre</option>
             <option value="answered">Répondu</option>
             <option value="na">Non pertinent</option>
@@ -644,6 +697,21 @@
           Le navigateur sauvegarde automatiquement les réponses sur cet appareil. Mais pour transmettre ou sécuriser le travail,
           il faut cliquer sur <b>Exporter JSON</b>. Le fichier JSON contient les réponses, les questions modifiées, les statuts,
           les cases cochées et les tableaux.
+        </p>
+        <p>
+          Les encadrés verts ✅ <b>« Validé par le cultivateur »</b> rappellent les principes déjà actés le 30/07/2026 : leur
+          réponse est <b>déjà écrite dans le champ de réponse</b>. Tu peux la compléter ou la modifier librement — le bouton
+          « Restaurer la réponse validée » remet le texte d’origine si besoin.
+        </p>
+        <p>
+          Les encadrés orange ⏳ <b>« Reste à préciser »</b> sont le vrai travail restant : les durées, températures, ratios,
+          seuils d’alarme et mots exacts que seul le terrain connaît. Les questions concernées sont marquées
+          <b>« À clarifier »</b>, et le filtre <b>« Ce qui reste à préciser »</b> permet de n’afficher qu’elles.
+        </p>
+        <p>
+          <b>Note sur la progression.</b> Une question sans texte ni case cochée est comptée <b>« À répondre »</b>, même si elle
+          avait été marquée comme répondue lors d’une passe précédente. C’est volontaire : le pourcentage doit refléter
+          ce qui est réellement écrit, sinon il donne une fausse impression d’avancement.
         </p>
       </section>
 
@@ -696,7 +764,8 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const FORM_VERSION = "2026-06-17.v2-chaine-propagation";
+    const FORM_VERSION = "2026-07-30.v5-reponses-cultivateur";
+    const PRESET_SEED_VERSION = "2026-07-30.reponses-cultivateur";
     const STORAGE_KEY = "champignon-manager:cultivator-process-form:v1";
 
     const STATUS_LABELS = {
@@ -706,6 +775,95 @@
       clarify: "À clarifier"
     };
 
+    // Réponses du cultivateur — export champignon-reponses-cultivateur-2026-07-30.json (2026-07-30).
+    // Seules les questions réellement renseignées figurent ici : les autres restent « à répondre ».
+    const CULTIVATOR_ANSWERS = {
+      q2_confirm: { answer: "Oui" },
+      q2_cadrage: { answer: "Les 10 principes sont validés en bloc, sans réserve ni objection.", selected: ["chaque phase produit ses propres unités, toutes traçables","toute unité peut être divisée, à n’importe quel stade","après division/transfert, le parent est soit conservé actif, soit archivé en historique","les clones sont possibles à chaque stade","chaque phase/étape a une durée avec des alarmes réglables","le process est entièrement configurable (process entiers + sous-process réutilisables)","chaque unité a son propre QR code, dès le début","toute unité peut être mise en conservation","les décisions humaines priment : l’app propose, l’humain valide","on doit pouvoir sélectionner des unités selon n’importe quel paramètre"] },
+      q4_1_1: { answer: "gélose/boîte de Pétri, culture liquide/LC, ballot de grain, ballot de substrat, bloc, sac, pain" },
+      q4_1_2: { answer: "Une unité = tout objet physique manipulé, à n’importe quelle phase : une souche, une gélose, une culture liquide, un ballot de grain, un sac de substrat, un ballot inoculé, un bac, une caisse. Basiquement, chaque phase produit ses propres unités, et chacune est traquée et monitorée." },
+      q4_1_3: { answer: "Oui, à chaque fois : toute unité peut être divisée, à n’importe quel stade, et chaque enfant reçoit son propre QR code." },
+      q4_1_4: { answer: "Les deux cas doivent exister, au choix au moment de l’opération : soit on garde le parent actif (il continue à vivre, à être scanné et suivi — cas d’une culture mère), soit on le bascule en historique (il ne bouge plus mais reste consultable et relié à ses enfants)." },
+      q4_1_5: { answer: "Le principe retenu est la traçabilité totale : chaque unité est traquée et monitorée, à tous les stades." },
+      q5_1: { answer: "Tout type de champignon, configurable dans l app" },
+      q5_2: { answer: "Ce qui change d’une variété à l’autre, c’est la configuration (durées, températures, humidité, nombre de flushs, seuils d’alarme), pas le moteur : le process de l’app doit pouvoir tout faire, pour n’importe quel champignon. Rien n’est codé en dur pour le pleurote." },
+      q5_3: { answer: "Traçabilité totale : espèce, variété, souche précise et fournisseur/origine, avec la lignée complète (de quelle souche et de quelle génération descend chaque unité)." },
+      q5_4: { answer: "Toutes les statistiques possibles doivent être calculables : rendement total et par flush, poids moyen par unité, rendement par kg de substrat, durée réelle de chaque stade, taux de contamination, pertes, ratios de multiplication, comparaison par souche et par génération." },
+      q5_5: { answer: "La chaîne et le moteur sont les mêmes pour toutes les espèces ; seules les configurations changent, et on peut composer un process différent par espèce si besoin." },
+      qcp_1: { answer: "Oui" },
+      qcp_2: { answer: "Traçabilité totale : on remonte jusqu’à l’origine (empreinte de spores ou souche achetée), quel que soit le point d’entrée réel.", selected: ["empreinte de spores","souche achetée / reçue","gélose","culture liquide (LC)","grain"] },
+      qcp_3: { answer: "au plus simple et clair" },
+      qcp_4: { answer: "Le clonage doit être possible à chaque stade — l’app ne doit interdire aucun stade.", selected: ["souche → souche","gélose → gélose","LC → LC","grain → grain","substrat → substrat (division)"] },
+      qcp_5: { answer: "La conservation doit être possible pour chaque unité, à n’importe quel stade — pas seulement en gélose ou en LC." },
+      qcp_6: { answer: "non" },
+      qcp_7: { answer: "oui, tout" },
+      qcp_8: { answer: "Oui : chaque unité a son propre QR code, dès le début de la chaîne et à tous les stades." },
+      qcp_9: { answer: "Oui, et c’est géré par la configuration : chaque stade peut avoir ses propres étapes, durées, conditions, observations et alarmes, assemblées librement (voir la section « Process configurable, sous-process et durées/alarmes »)." },
+      qcv_1: { answer: "En théorie toutes : la conservation doit être possible pour chaque unité, à chaque stade." },
+      qcv_2: { answer: "Frigo, dormance à température ambiante, contenant, configurable" },
+      qcv_3: { answer: "Une unité conservée passe dans un état « en réserve » — elle sort des tâches et des alarmes de durée courantes, mais reste scannable, retrouvable et reliée à sa lignée." },
+      qcv_4: { answer: "une nouvelle" },
+      qcv_5: { answer: "Les deux doivent être possibles, au choix au moment de l’opération : parent conservé (il continue à vivre) ou parent mis en historique (il ne bouge plus mais reste consultable)." },
+      qcv_6: { answer: "Oui, la conservation est une étape comme une autre, donc elle peut porter une durée cible et une alarme réglable." },
+      qcv_7: { answer: "oui" },
+      q6_1: { answer: "Tout est possible, Spores/gélose, culture liquide, grain, ou directement substrat, meme parfois des unités déjà prêtes" },
+      q6_2: { answer: "oui, c 'est possible" },
+      q6_3: { answer: "tout ca" },
+      q6_4: { answer: "Le QR existe dès le début : il est créé en même temps que l’unité, dès le premier stade de la chaîne, et non au moment du substrat." },
+      q6_5: { answer: "oui" },
+      q6_6: { answer: "oui" },
+      q7_1: { answer: "lien de parenté détaillé depuis le debut a la fin" },
+      q7_2: { answer: "oui" },
+      q7_3: { answer: "oui" },
+      q7_4: { answer: "oui" },
+      q7_5: { answer: "On doit pouvoir sélectionner des unités selon n’importe quel paramètre — parenté, clone, inoculation, stade, chambre, espèce, dates… — et combiner plusieurs critères en même temps.", selected: ["parent direct","lignée complète (tous les descendants d’une unité)","type de lien (clone / transfert / division)","génération","session d’inoculation","date d’inoculation","date de transfert","espèce/variété","souche","chambre","stade","phase","process appliqué","statut sanitaire","statut de conservation (mère, réserve, archivé)","retard sur la durée cible"] },
+      q7_6: { answer: "oui, filtres configurables" },
+      q8_1: { answer: "Cette liste n’est qu’un point de départ pleurote : le process est entièrement configurable dans l’app (phases, étapes, ordre, boucles de flush), donc rien n’est figé." },
+      q8_2: { answer: "une phase est une grande période, une étape est un moment plus précis. Exemple : phase incubation avec étapes incubation 1/2/3." },
+      q8_3: { answer: "Les deux à la fois : chaque phase/étape porte une durée cible qui déclenche des alarmes réglables, mais la décision humaine agit et prime — c’est l’opérateur qui valide le passage." },
+      qpr_1: { answer: "L’app doit permettre de créer des process entiers ET des sous-process réutilisables, puis de les appliquer à des lots." },
+      qpr_2: { answer: "Aux deux : un process ou un sous-process doit pouvoir s’appliquer à une unité seule, à un lot entier, ou à une sélection filtrée d’unités." },
+      qpr_3: { answer: "Oui, possible" },
+      qpr_4: { answer: "Oui, chaque phase/étape porte une durée, et les alarmes de durée sont réglables directement dans le process." },
+      qpr_5: { answer: "Les alarmes doivent être réglables étape par étape dans le process : délai, seuil, répétition.", selected: ["rappel avant la fin prévue (ex : J-1)","alerte quand la durée cible est dépassée","2ᵉ seuil : retard critique","aucune alarme sur certaines étapes"] },
+      qpr_6: { answer: "Prévenir et créer une tâche, marquer l’unité en retard — mais jamais bloquer : les décisions humaines priment." },
+      qpr_7: { answer: "Toujours validé par une personne : les décisions humaines agissent, l’app ne fait que proposer et alerter." },
+      qpr_8: { answer: "oui, possiblement" },
+      qpr_9: { answer: "elles basculent sur la nouvelle, avec un message clair (êtes vous sur)" },
+      qpr_10: { answer: "oui" },
+      qpr_11: { answer: "moi" },
+      qg_1: { answer: "Spores, clone de tissu, gélose reçue/achetée, tout est possible" },
+      qg_2: { answer: "ca depend( configurable)" },
+      qg_3: { answer: "configurable" },
+      qg_4: { answer: "Colonisation, contamination (moisissure, bactérie), couleur, vitesse, anomalies." },
+      qg_5: { answer: "Critère visuel, durée, décision humaine." },
+      qg_6: { answer: "Souche, espèce, origine, date, opérateur, génération, n° de boîte." },
+      qg_7: { answer: "Cloner, transférer en LC, observer contamination, marquer culture mère, imprimer QR, jeter." },
+      qlc_1: { answer: "ca depends, tout est possible" },
+      qlc_2: { answer: "oui" },
+      qlc_3: { answer: "configurable" },
+      qlc_4: { answer: "Croissance, trouble, contamination, odeur, vitesse." },
+      qlc_5: { answer: "configurable" },
+      qlc_6: { answer: "Volume, souche, origine (gélose mère), date, opérateur, génération." },
+      qlc_7: { answer: "Cloner, transférer vers grain, observer contamination, imprimer QR, jeter." },
+      qgr_1: { answer: "tout est possible" },
+      qgr_2: { answer: "oui" },
+      qgr_3: { answer: "Température, durée, secouage, stérilité." },
+      qgr_4: { answer: "Taux de colonisation, contamination, uniformité, vitesse." },
+      qgr_5: { answer: "configurable" },
+      qgr_6: { answer: "configurable" },
+      qgr_7: { answer: "Cloner, transférer vers substrat, observer contamination, imprimer QR, jeter." },
+      q9_1_3: { answer: "Informations obligatoires ou utiles pour la traçabilité." },
+      q11_6: { answer: "Oui — chaque unité est traquée et monitorée, quel que soit son stade." },
+      q13_1: { answer: "Toutes ces actions doivent exister, puisque cloner, diviser, conserver et archiver sont possibles à chaque stade.", selected: ["voir fiche","voir la lignée (parents et enfants)","avancer à l’étape suivante","ajouter observation","ajouter mesure / peser","déplacer chambre","cloner","transférer au stade suivant","diviser en plusieurs unités","mettre en conservation","appliquer un sous-process","récolter","déclarer contamination","terminer / compost","archiver en historique","réimprimer QR"] },
+      q13_2: { answer: "Toute action doit pouvoir s’appliquer à une sélection d’unités, y compris l’application d’un process ou d’un sous-process entier à un lot." },
+      q15_1: { answer: "Toutes les statistiques possibles doivent être calculables, puisque la traçabilité est totale." },
+      q15_5: { answer: "Oui — la traçabilité totale permet de comparer par souche, par génération et par type de lien (clone / transfert / division)." },
+      q16_1: { answer: "Le dépassement de la durée cible d’une étape (alarme réglable dans le process), la contamination déclarée, la récolte prête, la chambre hors consigne, et la fin de durée de conservation." },
+      q16_4: { answer: "Oui : puisque la décision humaine prime, une alarme doit pouvoir être acquittée ou reportée sans bloquer l’unité — en gardant la trace de qui l’a fait et quand." },
+      q17_1: { answer: "Chaque unité a son propre QR code, à tous les stades et dès le début — plus les chambres, les récoltes et les produits finaux." }
+    };
+
     const SECTIONS = [
       {
         id: "understanding",
@@ -713,7 +871,30 @@
         desc: "Cette section sert à corriger la vision actuelle avant de détailler le process.",
         questions: [
           { id: "q2_confirm", title: "Est-ce que le résumé actuel est correct ?", help: "Résumé mis à jour : chaîne complète « du spore à l’assiette » = origine → gélose → culture liquide (LC) → grain → substrat → fructification, avec clones (cultures secondaires) et transferts à chaque stade ; plusieurs espèces configurables (pleurote, shiitake, etc.) ; QR par unité ; incubations 1/2/3 → fructifications 1/2 → récoltes flush 1/2/3 ; poids par unité ; suivi iPhone en Wi‑Fi/Tailscale ; chambres avec conditions différentes ; stats détaillées.", type: "longtext" },
-          { id: "q2_missing", title: "Qu’est-ce qui manque ou est faux dans ce résumé ?", help: "Note ici les erreurs, oublis, mots pas adaptés, ou cas particuliers importants.", type: "longtext" }
+          { id: "q2_missing", title: "Qu’est-ce qui manque ou est faux dans ce résumé ?", help: "Note ici les erreurs, oublis, mots pas adaptés, ou cas particuliers importants.", type: "longtext" },
+          { id: "q2_cadrage", title: "Les 10 principes de cadrage sont-ils justes ?", help: "Ce sont les partis pris structurants de l’application. Ils ont été validés en bloc par le cultivateur le 30/07/2026, sans réserve.", type: "checklist", options: [
+            "chaque phase produit ses propres unités, toutes traçables",
+            "toute unité peut être divisée, à n’importe quel stade",
+            "après division/transfert, le parent est soit conservé actif, soit archivé en historique",
+            "les clones sont possibles à chaque stade",
+            "toute unité peut être mise en conservation",
+            "chaque unité a son propre QR code, dès le début",
+            "le process est entièrement configurable (process entiers + sous-process réutilisables)",
+            "chaque phase/étape a une durée avec des alarmes réglables",
+            "les décisions humaines priment : l’app propose, l’humain valide",
+            "on doit pouvoir sélectionner des unités selon n’importe quel paramètre"
+          ], presetSelected: [
+            "chaque phase produit ses propres unités, toutes traçables",
+            "toute unité peut être divisée, à n’importe quel stade",
+            "après division/transfert, le parent est soit conservé actif, soit archivé en historique",
+            "les clones sont possibles à chaque stade",
+            "toute unité peut être mise en conservation",
+            "chaque unité a son propre QR code, dès le début",
+            "le process est entièrement configurable (process entiers + sous-process réutilisables)",
+            "chaque phase/étape a une durée avec des alarmes réglables",
+            "les décisions humaines priment : l’app propose, l’humain valide",
+            "on doit pouvoir sélectionner des unités selon n’importe quel paramètre"
+          ], preset: "Les 10 principes sont validés en bloc, sans réserve ni objection.", followUp: "Rien à trancher ici : ces principes sont acquis et servent de base à l’architecture. Tout le travail restant porte sur les valeurs réelles (durées, conditions, ratios, vocabulaire) et sur ce qui serait trop lourd à saisir sur le terrain." }
         ]
       },
       {
@@ -722,9 +903,10 @@
         desc: "Il faut choisir les mots qui seront utilisés dans l’application.",
         questions: [
           { id: "q4_1_1", title: "Comment appelles-tu naturellement une unité, à chaque stade ?", help: "Le mot peut changer selon le stade : gélose/boîte de Pétri, culture liquide/LC, ballot de grain, ballot de substrat, bloc, sac, pain. Donne ton vocabulaire pour chacun.", type: "longtext" },
-          { id: "q4_1_2", title: "Une unité correspond à quoi physiquement ?", help: "Exemples : sac de substrat, ballot inoculé, bac, caisse, autre.", type: "longtext" },
-          { id: "q4_1_3", title: "Est-ce que l’unité peut être divisée physiquement en plusieurs enfants ?", help: "Exemple : un parent donne plusieurs sous-unités, chacune avec son QR code.", type: "longtext" },
-          { id: "q4_1_4", title: "Si une unité est divisée, le parent continue-t-il à exister ou devient-il seulement un historique ?", help: "Important pour savoir si le parent reste manipulable dans l’app ou s’il sert juste à relier les enfants.", type: "longtext" }
+          { id: "q4_1_2", title: "Une unité correspond à quoi physiquement ?", help: "Exemples : sac de substrat, ballot inoculé, bac, caisse, autre.", type: "longtext", preset: "Une unité = tout objet physique manipulé, à n’importe quelle phase : une souche, une gélose, une culture liquide, un ballot de grain, un sac de substrat, un ballot inoculé, un bac, une caisse. Basiquement, chaque phase produit ses propres unités, et chacune est traquée et monitorée.", followUp: "les contenants réels que tu utilises et leurs tailles typiques." },
+          { id: "q4_1_3", title: "Est-ce que l’unité peut être divisée physiquement en plusieurs enfants ?", help: "Exemple : un parent donne plusieurs sous-unités, chacune avec son QR code.", type: "longtext", preset: "Oui, à chaque fois : toute unité peut être divisée, à n’importe quel stade, et chaque enfant reçoit son propre QR code.", followUp: "à quels stades tu divises réellement, en combien de morceaux, et si le poids/volume de chaque enfant doit être saisi." },
+          { id: "q4_1_4", title: "Si une unité est divisée, le parent continue-t-il à exister ou devient-il seulement un historique ?", help: "Important pour savoir si le parent reste manipulable dans l’app ou s’il sert juste à relier les enfants.", type: "longtext", preset: "Les deux cas doivent exister, au choix au moment de l’opération : soit on garde le parent actif (il continue à vivre, à être scanné et suivi — cas d’une culture mère), soit on le bascule en historique (il ne bouge plus mais reste consultable et relié à ses enfants).", followUp: "quel est le comportement attendu par défaut, stade par stade." },
+          { id: "q4_1_5", title: "Toutes les unités doivent-elles être suivies avec le même niveau de détail ?", help: "Ex : une gélose mérite-t-elle autant de saisie qu’un sac de substrat ? Le principe retenu est « traçabilité totale », mais la saisie doit rester tenable sur le terrain.", type: "longtext", preset: "Le principe retenu est la traçabilité totale : chaque unité est traquée et monitorée, à tous les stades.", followUp: "où ça devient trop lourd en pratique, et quelles saisies doivent rester facultatives." }
         ]
       },
       {
@@ -733,10 +915,10 @@
         desc: "Ces réponses permettront de faire des statistiques par type cultivé.",
         questions: [
           { id: "q5_1", title: "Quelles espèces (et variétés) de champignons cultives-tu actuellement ?", help: "Exemples : pleurote gris/jaune/rose/panicaut, shiitake, et autres. L’espèce est configurable dans l’app — pas seulement le pleurote.", type: "longtext" },
-          { id: "q5_2", title: "Pour chaque espèce/variété, est-ce que le process change ?", help: "Exemples : durée d’incubation différente, température différente, humidité différente, nombre de flushs différent.", type: "longtext" },
-          { id: "q5_3", title: "Veux-tu suivre la souche précise, le fournisseur, ou seulement le type de champignon ?", help: "Plus on trace précisément, plus les statistiques peuvent expliquer les différences de rendement.", type: "longtext" },
-          { id: "q5_4", title: "Quelles statistiques veux-tu comparer par espèce/variété ?", help: "Exemples : rendement total, rendement par flush, durée d’incubation, taux de contamination, poids moyen par unité.", type: "longtext" },
-          { id: "q5_5", title: "Le process et la chaîne (gélose → LC → grain → substrat) sont-ils les mêmes pour toutes les espèces ?", help: "Ex : le shiitake peut avoir des durées, un substrat (bûche/sciure) ou un nombre de flushs différents. Précise les différences par espèce.", type: "longtext" }
+          { id: "q5_2", title: "Pour chaque espèce/variété, est-ce que le process change ?", help: "Exemples : durée d’incubation différente, température différente, humidité différente, nombre de flushs différent.", type: "longtext", preset: "Ce qui change d’une variété à l’autre, c’est la configuration (durées, températures, humidité, nombre de flushs, seuils d’alarme), pas le moteur : le process de l’app doit pouvoir tout faire, pour n’importe quel champignon. Rien n’est codé en dur pour le pleurote.", followUp: "les valeurs réelles, variété par variété." },
+          { id: "q5_3", title: "Veux-tu suivre la souche précise, le fournisseur, ou seulement le type de champignon ?", help: "Plus on trace précisément, plus les statistiques peuvent expliquer les différences de rendement.", type: "longtext", preset: "Traçabilité totale : espèce, variété, souche précise et fournisseur/origine, avec la lignée complète (de quelle souche et de quelle génération descend chaque unité).", followUp: "les identifiants que tu utilises pour nommer une souche." },
+          { id: "q5_4", title: "Quelles statistiques veux-tu comparer par espèce/variété ?", help: "Exemples : rendement total, rendement par flush, durée d’incubation, taux de contamination, poids moyen par unité.", type: "longtext", preset: "Toutes les statistiques possibles doivent être calculables : rendement total et par flush, poids moyen par unité, rendement par kg de substrat, durée réelle de chaque stade, taux de contamination, pertes, ratios de multiplication, comparaison par souche et par génération.", followUp: "lesquelles tu veux voir en premier, tous les jours, sur l’écran d’accueil." },
+          { id: "q5_5", title: "Le process et la chaîne (gélose → LC → grain → substrat) sont-ils les mêmes pour toutes les espèces ?", help: "Ex : le shiitake peut avoir des durées, un substrat (bûche/sciure) ou un nombre de flushs différents. Précise les différences par espèce.", type: "longtext", preset: "La chaîne et le moteur sont les mêmes pour toutes les espèces ; seules les configurations changent, et on peut composer un process différent par espèce si besoin.", followUp: "les espèces où la chaîne diffère vraiment (ex. bûches de shiitake) et en quoi." }
         ]
       },
       {
@@ -745,14 +927,28 @@
         desc: "Avant le substrat, il y a toute la chaîne amont : gélose → culture liquide (LC) → grain → substrat. À chaque stade on peut cloner (cultures secondaires) ou transférer au stade suivant.",
         questions: [
           { id: "qcp_1", title: "La chaîne « origine → gélose → culture liquide (LC) → grain → substrat → fructification » est-elle correcte ?", help: "Corrige l’ordre, les noms, ajoute ou retire un stade. Précise par où tu commences le plus souvent.", type: "longtext" },
-          { id: "qcp_2", title: "Jusqu’où veux-tu remonter la traçabilité ?", help: "Coche le point de départ le plus en amont que tu veux tracer.", type: "checklist", options: ["empreinte de spores", "gélose", "culture liquide (LC)", "grain", "substrat seulement", "autre"] },
+          { id: "qcp_2", title: "Jusqu’où veux-tu remonter la traçabilité ?", help: "Coche le point de départ le plus en amont que tu veux tracer.", type: "checklist", options: ["empreinte de spores", "souche achetée / reçue", "gélose", "culture liquide (LC)", "grain", "substrat seulement", "autre"], presetSelected: ["empreinte de spores", "souche achetée / reçue"], preset: "Traçabilité totale : on remonte jusqu’à l’origine (empreinte de spores ou souche achetée), quel que soit le point d’entrée réel.", followUp: "par où tu démarres réellement le plus souvent aujourd’hui." },
           { id: "qcp_3", title: "Comment nommes-tu chaque stade ?", help: "Donne ton mot pour chacun : gélose (boîte de Pétri ?), culture liquide/LC, grain (ballot de grain ?), substrat (ballot de substrat ?).", type: "longtext" },
-          { id: "qcp_4", title: "À quels stades fais-tu des clones (cultures secondaires de même type) ?", help: "Exemple : une gélose donne des géloses secondaires, une LC des LC secondaires, un grain des grains secondaires.", type: "checklist", options: ["gélose → gélose", "LC → LC", "grain → grain", "substrat → substrat (division)", "aucun", "autre"] },
-          { id: "qcp_5", title: "Conserves-tu des cultures mères ?", help: "Une unité (souvent gélose ou LC) gardée comme réserve génétique, pour cloner sans la consommer.", type: "longtext" },
-          { id: "qcp_6", title: "Limites-tu le nombre de générations de clone ?", help: "Exemple : après X repiquages, on repart des spores pour éviter la sénescence / perte de vigueur.", type: "longtext" },
+          { id: "qcp_4", title: "À quels stades fais-tu des clones (cultures secondaires de même type) ?", help: "Exemple : une gélose donne des géloses secondaires, une LC des LC secondaires, un grain des grains secondaires.", type: "checklist", options: ["souche → souche", "gélose → gélose", "LC → LC", "grain → grain", "substrat → substrat (division)", "clone de tissu depuis un champignon récolté", "aucun", "autre"], presetSelected: ["souche → souche", "gélose → gélose", "LC → LC", "grain → grain", "substrat → substrat (division)"], preset: "Le clonage doit être possible à chaque stade — l’app ne doit interdire aucun stade.", followUp: "ceux que tu pratiques vraiment, et à quelle fréquence." },
+          { id: "qcp_5", title: "Conserves-tu des cultures mères, et à quels stades ?", help: "Une unité gardée comme réserve génétique, pour cloner sans la consommer. Détail dans la section « Conservation, cultures mères et archivage ».", type: "longtext", preset: "La conservation doit être possible pour chaque unité, à n’importe quel stade — pas seulement en gélose ou en LC.", followUp: "ce que tu conserves réellement, où et combien de temps (voir la section conservation)." },
+          { id: "qcp_6", title: "Limites-tu le nombre de générations de clone ?", help: "Exemple : après X repiquages, on repart des spores pour éviter la sénescence / perte de vigueur. L’app comptera la génération de chaque unité automatiquement.", type: "longtext" },
           { id: "qcp_7", title: "Quels ratios de multiplication veux-tu suivre ?", help: "Exemple : 1 gélose → combien de LC ? 1 LC → combien de ballots de grain ? 1 grain → combien de substrats ?", type: "longtext" },
-          { id: "qcp_8", title: "Chaque unité amont (gélose, LC, grain) doit-elle avoir son propre QR ?", help: "Ou seulement le grain et le substrat ? Précise selon ta pratique de labo.", type: "longtext" },
-          { id: "qcp_9", title: "Le process (étapes, conditions) est-il différent à chaque stade ?", help: "Exemple : gélose et LC en conditions stériles, durées et observations propres. Faut-il un process par stade ?", type: "longtext" }
+          { id: "qcp_8", title: "Chaque unité amont (souche, gélose, LC, grain) doit-elle avoir son propre QR ?", help: "Ou seulement le grain et le substrat ? Précise selon ta pratique de labo.", type: "longtext", preset: "Oui : chaque unité a son propre QR code, dès le début de la chaîne et à tous les stades.", followUp: "le support d’étiquette réaliste pour les petits objets (boîte de Pétri, bocal de LC) — taille, résistance à l’humidité et à la stérilisation." },
+          { id: "qcp_9", title: "Le process (étapes, conditions) est-il différent à chaque stade ?", help: "Exemple : gélose et LC en conditions stériles, durées et observations propres. Faut-il un process par stade ?", type: "longtext", preset: "Oui, et c’est géré par la configuration : chaque stade peut avoir ses propres étapes, durées, conditions, observations et alarmes, assemblées librement (voir la section « Process configurable, sous-process et durées/alarmes »)." }
+        ]
+      },
+      {
+        id: "conservation",
+        title: "Conservation, cultures mères et archivage",
+        desc: "Cadrage retenu : chaque unité, à n’importe quel stade, peut être mise en conservation ; et après une division ou un transfert, le parent peut être gardé actif ou basculé en historique. Ici on vérifie ce que ça veut dire concrètement chez toi.",
+        questions: [
+          { id: "qcv_1", title: "Quelles unités mets-tu réellement en conservation, et à quel stade ?", help: "Souche, gélose, LC, grain, substrat… Dis ce que tu gardes vraiment en réserve.", type: "longtext", preset: "En théorie toutes : la conservation doit être possible pour chaque unité, à chaque stade.", followUp: "ce que tu conserves réellement, et ce qui n’a aucun sens à conserver chez toi." },
+          { id: "qcv_2", title: "Comment conserves-tu une unité ?", help: "Frigo, congélation, huile minérale, dormance à température ambiante, contenant, température, durée maximale.", type: "longtext" },
+          { id: "qcv_3", title: "Une unité en conservation doit-elle disparaître des listes de travail du jour ?", help: "Ex : masquée du tableau de bord quotidien et des alarmes de durée, mais toujours scannable et retrouvable.", type: "longtext", preset: "Une unité conservée passe dans un état « en réserve » — elle sort des tâches et des alarmes de durée courantes, mais reste scannable, retrouvable et reliée à sa lignée.", followUp: "est-ce bien ce que tu veux ?" },
+          { id: "qcv_4", title: "Quand tu réactives une unité conservée, est-ce la même unité ou une nouvelle ?", help: "Reprise de la même unité (même QR), ou création d’un clone au moment de la sortie de conservation ? Important pour la lignée et les statistiques.", type: "longtext" },
+          { id: "qcv_5", title: "Après une division ou un transfert, le parent est-il gardé actif ou archivé — et qui décide ?", help: "Le choix doit-il être fait à chaque opération, ou fixé une fois pour toutes par stade ?", type: "longtext", preset: "Les deux doivent être possibles, au choix au moment de l’opération : parent conservé (il continue à vivre) ou parent mis en historique (il ne bouge plus mais reste consultable).", followUp: "le comportement par défaut souhaité, stade par stade, pour éviter une question à chaque manipulation." },
+          { id: "qcv_6", title: "Faut-il une durée maximale de conservation avec alarme ?", help: "Ex : alerter au bout de X mois pour repiquer une culture mère avant qu’elle ne s’épuise.", type: "longtext", preset: "Oui, la conservation est une étape comme une autre, donc elle peut porter une durée cible et une alarme réglable.", followUp: "les durées réelles par stade (gélose, LC, grain…)." },
+          { id: "qcv_7", title: "Une unité archivée en historique peut-elle être réactivée ?", help: "Ex : on a archivé un parent par erreur, ou il repousse alors qu’on le croyait fini.", type: "longtext" }
         ]
       },
       {
@@ -763,7 +959,7 @@
           { id: "q6_1", title: "Où commence le process le plus souvent ?", help: "Spores/gélose, culture liquide, grain, ou directement substrat ? Et reçois-tu parfois des unités déjà prêtes (grain ou substrat inoculé) ?", type: "longtext" },
           { id: "q6_2", title: "Est-ce que certaines unités arrivent déjà inoculées ?", help: "Si oui, noter comment elles sont reçues et quelles infos sont connues.", type: "longtext" },
           { id: "q6_3", title: "Quelles informations faut-il enregistrer à l’inoculation ?", help: "Exemples : date, heure, espèce, souche, poids substrat, poids spawn, taux d’inoculation, opérateur, lot de matière première, fournisseur.", type: "longtext" },
-          { id: "q6_4", title: "Le QR code doit-il être imprimé au moment de l’inoculation ou plus tard ?", help: "Préciser le moment idéal sur le terrain.", type: "longtext" },
+          { id: "q6_4", title: "Le QR code doit-il être imprimé au moment de l’inoculation ou plus tard ?", help: "Préciser le moment idéal sur le terrain.", type: "longtext", preset: "Le QR existe dès le début : il est créé en même temps que l’unité, dès le premier stade de la chaîne, et non au moment du substrat.", followUp: "quand l’étiquette est physiquement imprimée et collée (avant la manipulation ? juste après ? en série au retour du labo ?)." },
           { id: "q6_5", title: "Est-ce qu’une inoculation crée plusieurs unités en même temps ?", help: "Exemple : une session d’inoculation produit 30 sacs.", type: "longtext" },
           { id: "q6_6", title: "Si oui, veux-tu pouvoir sélectionner toutes les unités d’une même session d’inoculation ?", help: "Utile pour actions en masse et statistiques par session.", type: "longtext" }
         ]
@@ -777,7 +973,8 @@
           { id: "q7_2", title: "Les enfants sont-ils les unités physiques avec QR code ?", help: "Confirme si chaque enfant correspond bien à un objet manipulé sur le terrain.", type: "longtext" },
           { id: "q7_3", title: "Dois-tu parfois faire avancer tous les enfants d’un même parent en même temps ?", help: "Exemple : passer tous les sacs inoculés le même jour en incubation 2.", type: "longtext" },
           { id: "q7_4", title: "Dois-tu parfois faire avancer seulement une partie des enfants ?", help: "Exemple : seulement ceux d’une chambre, ou seulement ceux qui sont prêts.", type: "longtext" },
-          { id: "q7_5", title: "Quels filtres sont indispensables pour sélectionner des unités en masse ?", help: "Coche les filtres utiles et ajoute des précisions si besoin.", type: "checklist", options: ["parent", "date d’inoculation", "espèce/variété", "souche", "chambre", "phase", "incubation 1/2/3", "statut sanitaire", "autre"] }
+          { id: "q7_5", title: "Quels filtres sont indispensables pour sélectionner des unités en masse ?", help: "Coche les filtres utiles et ajoute des précisions si besoin.", type: "checklist", options: ["parent direct", "lignée complète (tous les descendants d’une unité)", "type de lien (clone / transfert / division)", "génération", "session d’inoculation", "date d’inoculation", "date de transfert", "espèce/variété", "souche", "chambre", "emplacement (rack, niveau)", "stade", "phase", "incubation 1/2/3", "process appliqué", "statut sanitaire", "statut de conservation (mère, réserve, archivé)", "opérateur", "retard sur la durée cible", "autre"], presetSelected: ["parent direct", "lignée complète (tous les descendants d’une unité)", "type de lien (clone / transfert / division)", "génération", "session d’inoculation", "date d’inoculation", "date de transfert", "espèce/variété", "souche", "chambre", "stade", "phase", "process appliqué", "statut sanitaire", "statut de conservation (mère, réserve, archivé)", "retard sur la durée cible"], preset: "On doit pouvoir sélectionner des unités selon n’importe quel paramètre — parenté, clone, inoculation, stade, chambre, espèce, dates… — et combiner plusieurs critères en même temps.", followUp: "les 3 ou 4 sélections que tu fais tous les jours, pour les mettre en raccourci." },
+          { id: "q7_6", title: "Y a-t-il des sélections que tu refais tout le temps ?", help: "Elles pourront être enregistrées comme filtres favoris. Ex : « tout ce qui est en incubation dans la chambre 2 », « tout ce qui vient de la souche X ».", type: "longtext" }
         ]
       },
       {
@@ -785,9 +982,27 @@
         title: "Process global à décrire",
         desc: "Ici on valide les grandes phases et la logique de passage d’une étape à l’autre.",
         questions: [
-          { id: "q8_1", title: "La liste des phases/stades est-elle correcte ?", help: "Liste mise à jour : gélose, culture liquide (LC), grain, inoculation substrat, incubation 1/2/3, fructification 1/2, récolte flush 1/2/3, fin de cycle. Corrige, renomme, ajoute ou supprime, et précise quels stades te concernent.", type: "longtext" },
+          { id: "q8_1", title: "La liste des phases/stades est-elle correcte ?", help: "Liste mise à jour : gélose, culture liquide (LC), grain, inoculation substrat, incubation 1/2/3, fructification 1/2, récolte flush 1/2/3, fin de cycle. Corrige, renomme, ajoute ou supprime, et précise quels stades te concernent.", type: "longtext", preset: "Cette liste n’est qu’un point de départ pleurote : le process est entièrement configurable dans l’app (phases, étapes, ordre, boucles de flush), donc rien n’est figé.", followUp: "ce qui manque, ce qui ne colle pas, et les noms que tu utilises vraiment." },
           { id: "q8_2", title: "La distinction phase / étape est-elle utile pour toi ?", help: "Dans l’app : une phase est une grande période, une étape est un moment plus précis. Exemple : phase incubation avec étapes incubation 1/2/3.", type: "longtext" },
-          { id: "q8_3", title: "Le passage d’une étape à l’autre est-il basé sur durée, observation, mesure, décision humaine ou règle fixe ?", help: "Réponse générale. Le détail sera demandé étape par étape ensuite.", type: "longtext" }
+          { id: "q8_3", title: "Le passage d’une étape à l’autre est-il basé sur durée, observation, mesure, décision humaine ou règle fixe ?", help: "Réponse générale. Le détail sera demandé étape par étape ensuite.", type: "longtext", preset: "Les deux à la fois : chaque phase/étape porte une durée cible qui déclenche des alarmes réglables, mais la décision humaine agit et prime — c’est l’opérateur qui valide le passage.", followUp: "les étapes où la durée seule suffirait, et celles où c’est toujours l’œil qui décide." }
+        ]
+      },
+      {
+        id: "process-configurable",
+        title: "Process configurable, sous-process et durées/alarmes",
+        desc: "Cadrage retenu : dans l’app, on doit pouvoir créer des process entiers ou des « sous-process » réutilisables, et les appliquer à des lots. Chaque phase/étape porte une durée avec des alarmes réglables, mais les décisions humaines priment. Cette section vérifie que ça correspond au terrain.",
+        questions: [
+          { id: "qpr_1", title: "Un « sous-process » réutilisable, ça correspondrait à quoi chez toi ?", help: "Un sous-process est un bloc d’étapes qu’on réutilise à plusieurs endroits. Exemples : un bloc « cycle de flush » (repos → fructification → récolte) rejoué 2 ou 3 fois ; un bloc « préparation labo » commun à toutes les espèces ; un bloc « quarantaine ».", type: "longtext", preset: "L’app doit permettre de créer des process entiers ET des sous-process réutilisables, puis de les appliquer à des lots.", followUp: "quels blocs se répètent réellement chez toi et méritent d’être nommés." },
+          { id: "qpr_2", title: "Applique-t-on un process à une unité, à un lot, ou aux deux ?", help: "Ex : appliquer le sous-process « flush suivant » à 40 sacs d’un coup.", type: "longtext", preset: "Aux deux : un process ou un sous-process doit pouvoir s’appliquer à une unité seule, à un lot entier, ou à une sélection filtrée d’unités." },
+          { id: "qpr_3", title: "Un lot peut-il changer de process en cours de route ?", help: "Ex : on décide en milieu d’incubation de basculer une partie des unités sur un autre sous-process (relance, quarantaine, test).", type: "longtext" },
+          { id: "qpr_4", title: "Chaque phase/étape a-t-elle une durée cible chez toi ?", help: "Durée prévue avant de passer à la suite. Elle sert de base aux alarmes.", type: "longtext", preset: "Oui, chaque phase/étape porte une durée, et les alarmes de durée sont réglables directement dans le process.", followUp: "les durées réelles par stade et par espèce (c’est le gros du travail restant)." },
+          { id: "qpr_5", title: "Quelles alarmes de durée veux-tu pouvoir régler par étape ?", help: "Coche celles qui sont utiles. Chaque alarme sera réglable étape par étape dans le process.", type: "checklist", options: ["rappel avant la fin prévue (ex : J-1)", "alerte quand la durée cible est dépassée", "2ᵉ seuil : retard critique", "rappel périodique tant que l’étape n’est pas terminée", "rappel de contrôle en milieu d’étape", "aucune alarme sur certaines étapes", "autre"], presetSelected: ["rappel avant la fin prévue (ex : J-1)", "alerte quand la durée cible est dépassée", "2ᵉ seuil : retard critique", "aucune alarme sur certaines étapes"], preset: "Les alarmes doivent être réglables étape par étape dans le process : délai, seuil, répétition.", followUp: "les délais concrets, et les étapes où tu ne veux surtout pas être dérangé." },
+          { id: "qpr_6", title: "Que doit faire l’app quand la durée cible est dépassée ?", help: "Prévenir seulement, créer une tâche, marquer l’unité « en retard », bloquer, ne rien faire.", type: "longtext", preset: "Prévenir et créer une tâche, marquer l’unité en retard — mais jamais bloquer : les décisions humaines priment.", followUp: "qui doit être prévenu et par quel canal." },
+          { id: "qpr_7", title: "Le passage à l’étape suivante doit-il être automatique une fois la durée atteinte, ou toujours validé par une personne ?", help: "L’automatisme fait gagner du temps mais peut mentir sur l’état réel des unités.", type: "longtext", preset: "Toujours validé par une personne : les décisions humaines agissent, l’app ne fait que proposer et alerter.", followUp: "existe-t-il des étapes purement mécaniques où l’avancement automatique serait acceptable ?" },
+          { id: "qpr_8", title: "Une étape peut-elle être sautée, refaite ou remise en arrière ?", help: "Ex : sauter incubation 3, relancer une fructification, revenir en arrière après une erreur de scan.", type: "longtext" },
+          { id: "qpr_9", title: "Si tu modifies un process, que deviennent les unités déjà lancées avec l’ancienne version ?", help: "Elles gardent l’ancienne version, ou basculent sur la nouvelle ? Important pour ne pas fausser les statistiques.", type: "longtext" },
+          { id: "qpr_10", title: "Veux-tu comparer les résultats entre deux versions d’un process ?", help: "Ex : tester un process B sur 10 unités et comparer son rendement au process A.", type: "longtext" },
+          { id: "qpr_11", title: "Qui a le droit de créer ou modifier un process ?", help: "Toi seul, plusieurs personnes, ou tout le monde ? Les personnes qui font avancer les unités sur le terrain n’ont pas forcément besoin de ce droit.", type: "longtext" }
         ]
       },
       {
@@ -988,7 +1203,8 @@
           { id: "q11_2", title: "À quelle fréquence fais-tu ces mesures ?", help: "Exemples : matin/soir, quotidien, par étape, seulement si problème.", type: "longtext" },
           { id: "q11_3", title: "Quelles mesures sont liées à une unité et lesquelles sont liées à une chambre ?", help: "Exemple : poids = unité ; température = chambre.", type: "longtext" },
           { id: "q11_4", title: "Les appareils Inkbird doivent-ils seulement servir d’historique, ou aussi déclencher des alertes ?", help: "ITC-308-WIFI pour température, IHC-200-WIFI pour humidité. Contrôle actif plus tard seulement si souhaité.", type: "longtext" },
-          { id: "q11_5", title: "Quelles valeurs veux-tu voir dans les statistiques ?", help: "Exemples : température moyenne par chambre, humidité au moment de fructification, écart aux consignes.", type: "longtext" }
+          { id: "q11_5", title: "Quelles valeurs veux-tu voir dans les statistiques ?", help: "Exemples : température moyenne par chambre, humidité au moment de fructification, écart aux consignes.", type: "longtext" },
+          { id: "q11_6", title: "Doit-on pouvoir suivre des mesures sur n’importe quelle unité, à n’importe quel stade ?", help: "Ex : peser un ballot de grain, noter la température d’une étuve de gélose.", type: "longtext", preset: "Oui — chaque unité est traquée et monitorée, quel que soit son stade.", followUp: "les mesures qui ont un sens à chaque stade, pour ne pas proposer des champs inutiles sur l’iPhone." }
         ]
       },
       {
@@ -1008,8 +1224,8 @@
         title: "Actions à faire depuis l’iPhone",
         desc: "Après scan QR, l’app doit proposer les bonnes actions au bon moment.",
         questions: [
-          { id: "q13_1", title: "Quelles actions veux-tu absolument après scan d’une unité ?", help: "Coche les actions utiles et ajoute tes précisions.", type: "checklist", options: ["voir fiche", "avancer à l’étape suivante", "ajouter observation", "ajouter mesure", "déplacer chambre", "récolter", "déclarer contamination", "mettre en pause", "terminer / compost", "réimprimer QR", "autre"] },
-          { id: "q13_2", title: "Quelles actions veux-tu faire en masse sur plusieurs unités ?", help: "Exemples : déplacer 40 unités en chambre fructification, passer toutes les unités du parent X en incubation 2.", type: "longtext" },
+          { id: "q13_1", title: "Quelles actions veux-tu absolument après scan d’une unité ?", help: "Coche les actions utiles et ajoute tes précisions.", type: "checklist", options: ["voir fiche", "voir la lignée (parents et enfants)", "avancer à l’étape suivante", "ajouter observation", "ajouter mesure / peser", "déplacer chambre", "cloner", "transférer au stade suivant", "diviser en plusieurs unités", "mettre en conservation", "appliquer un sous-process", "récolter", "déclarer contamination", "mettre en pause", "terminer / compost", "archiver en historique", "réimprimer QR", "autre"], presetSelected: ["voir fiche", "voir la lignée (parents et enfants)", "avancer à l’étape suivante", "ajouter observation", "ajouter mesure / peser", "déplacer chambre", "cloner", "transférer au stade suivant", "diviser en plusieurs unités", "mettre en conservation", "appliquer un sous-process", "récolter", "déclarer contamination", "terminer / compost", "archiver en historique", "réimprimer QR"], preset: "Toutes ces actions doivent exister, puisque cloner, diviser, conserver et archiver sont possibles à chaque stade.", followUp: "les 3 ou 4 actions à mettre en gros boutons juste après le scan — le reste peut être dans un menu secondaire." },
+          { id: "q13_2", title: "Quelles actions veux-tu faire en masse sur plusieurs unités ?", help: "Exemples : déplacer 40 unités en chambre fructification, passer toutes les unités du parent X en incubation 2, appliquer un sous-process à tout un lot.", type: "longtext", preset: "Toute action doit pouvoir s’appliquer à une sélection d’unités, y compris l’application d’un process ou d’un sous-process entier à un lot.", followUp: "les actions de masse que tu fais vraiment, et celles qui seraient dangereuses en masse." },
           { id: "q13_3", title: "Faut-il une validation avant action en masse ?", help: "Important pour éviter une erreur sur beaucoup d’unités.", type: "longtext" },
           { id: "q13_4", title: "Faut-il pouvoir annuler ou corriger une action ?", help: "Si oui, qui a le droit et jusqu’à quand ?", type: "longtext" }
         ]
@@ -1032,10 +1248,11 @@
         title: "Statistiques souhaitées",
         desc: "On priorise les stats vraiment utiles pour piloter la culture.",
         questions: [
-          { id: "q15_1", title: "Quelles statistiques veux-tu voir en premier ?", help: "Coche les indicateurs importants.", type: "checklist", options: ["rendement total par unité", "rendement par flush", "rendement par espèce/variété", "rendement par date d’inoculation", "rendement par parent/session", "rendement par chambre", "durée moyenne incubation", "durée moyenne fructification", "taux de contamination", "pertes", "comparaison température/humidité", "autre"] },
+          { id: "q15_1", title: "Quelles statistiques veux-tu voir en premier ?", help: "Le principe retenu est « toutes les stats possibles ». Ici, l’important n’est pas de tout cocher, mais de dire lesquelles tu regarderais tous les jours.", type: "checklist", options: ["rendement total par unité", "rendement par flush", "rendement par kg de substrat", "rendement par espèce/variété", "rendement par souche", "rendement par génération", "rendement par date d’inoculation", "rendement par parent/session", "rendement par chambre", "durée réelle par étape vs durée cible", "durée moyenne incubation", "durée moyenne fructification", "taux de contamination", "taux de réussite par type de lien (clone / transfert / division)", "ratios de multiplication réels", "pertes", "comparaison température/humidité", "comparaison entre versions de process", "autre"], preset: "Toutes les statistiques possibles doivent être calculables, puisque la traçabilité est totale.", followUp: "les 3 ou 4 chiffres que tu veux voir en ouvrant l’app le matin." },
           { id: "q15_2", title: "Veux-tu comparer les enfants d’un même parent entre eux ?", help: "Utile pour voir quelles unités d’une même session performent mieux.", type: "longtext" },
           { id: "q15_3", title: "Veux-tu comparer les performances entre chambres ?", help: "Rendement, contamination, durée, qualité, etc.", type: "longtext" },
-          { id: "q15_4", title: "Veux-tu exporter les données en CSV/Excel ?", help: "Pour analyses externes ou partage.", type: "longtext" }
+          { id: "q15_4", title: "Veux-tu exporter les données en CSV/Excel ?", help: "Pour analyses externes ou partage.", type: "longtext" },
+          { id: "q15_5", title: "Veux-tu des statistiques sur la lignée et les générations ?", help: "Ex : cette souche perd-elle en vigueur après 5 repiquages ? Les clones font-ils aussi bien que les transferts ?", type: "longtext", preset: "Oui — la traçabilité totale permet de comparer par souche, par génération et par type de lien (clone / transfert / division).", followUp: "les questions concrètes auxquelles tu veux que ces chiffres répondent." }
         ]
       },
       {
@@ -1043,9 +1260,10 @@
         title: "Alertes et tâches",
         desc: "Définir ce que l’application doit signaler automatiquement.",
         questions: [
-          { id: "q16_1", title: "Quelles situations doivent créer une alerte ?", help: "Exemples : incubation trop longue, humidité trop basse, contamination, récolte prête, chambre hors température.", type: "longtext" },
+          { id: "q16_1", title: "Quelles situations doivent créer une alerte ?", help: "Exemples : incubation trop longue, humidité trop basse, contamination, récolte prête, chambre hors température.", type: "longtext", preset: "Le dépassement de la durée cible d’une étape (alarme réglable dans le process), la contamination déclarée, la récolte prête, la chambre hors consigne, et la fin de durée de conservation.", followUp: "les seuils réels et ce qui te dérangerait pour rien." },
           { id: "q16_2", title: "Faut-il des tâches automatiques ?", help: "Exemples : vérifier incubation, récolter aujourd’hui, nettoyer chambre.", type: "longtext" },
-          { id: "q16_3", title: "Les alertes doivent-elles être visibles seulement dans l’app ou aussi envoyées ailleurs ?", help: "Exemples : notification téléphone, email, Telegram, autre — pas forcément MVP.", type: "longtext" }
+          { id: "q16_3", title: "Les alertes doivent-elles être visibles seulement dans l’app ou aussi envoyées ailleurs ?", help: "Exemples : notification téléphone, email, Telegram, autre — pas forcément MVP.", type: "longtext" },
+          { id: "q16_4", title: "Une alerte doit-elle pouvoir être ignorée ou reportée ?", help: "Ex : « je sais, c’est normal, rappelle-moi dans 3 jours ». Cohérent avec le principe « la décision humaine prime ».", type: "longtext", preset: "Oui : puisque la décision humaine prime, une alarme doit pouvoir être acquittée ou reportée sans bloquer l’unité — en gardant la trace de qui l’a fait et quand." }
         ]
       },
       {
@@ -1053,7 +1271,7 @@
         title: "QR code et étiquettes",
         desc: "Le QR relie l’unité physique à l’application.",
         questions: [
-          { id: "q17_1", title: "Quelles unités doivent avoir un QR ?", help: "Gélose, culture liquide, grain, substrat/lot, parent/session, chambre, récolte, produit final, caisse, autre. Précise à partir de quel stade tu veux un QR.", type: "longtext" },
+          { id: "q17_1", title: "Quelles unités doivent avoir un QR ?", help: "Gélose, culture liquide, grain, substrat/lot, parent/session, chambre, récolte, produit final, caisse, autre. Précise à partir de quel stade tu veux un QR.", type: "longtext", preset: "Chaque unité a son propre QR code, à tous les stades et dès le début — plus les chambres, les récoltes et les produits finaux.", followUp: "le format et le support d’étiquette utilisables sur les petits objets et en milieu humide." },
           { id: "q17_2", title: "Que doit afficher l’étiquette en texte lisible ?", help: "Exemples : code unité, espèce, date inoculation, parent, chambre, phase.", type: "longtext" },
           { id: "q17_3", title: "Faut-il un QR pour les chambres ?", help: "Utile pour voir toutes les unités présentes et saisir des mesures de chambre.", type: "longtext" },
           { id: "q17_4", title: "Faut-il un QR pour les récoltes ou produits finaux ?", help: "Utile pour traçabilité jusqu’à la vente ou au stock.", type: "longtext" },
@@ -1077,20 +1295,22 @@
         title: "Synthèse finale du process",
         desc: "Tableau simple pour transformer les réponses en process configurable dans l’application.",
         questions: [
-          { id: "q20_table", title: "Version simplifiée du process à confirmer", help: "Remplis ou corrige les lignes. Tu peux ajouter une étape. La colonne « Action suivante » sert à indiquer un clone ou un transfert vers le stade suivant.", type: "table", columns: ["Ordre", "Stade / étape", "Durée typique", "Température", "Humidité", "Observation clé", "Action suivante (clone / transfert)"], rowsData: [
-            ["1", "Gélose", "", "", "", "contamination / colonisation", "clone gélose ou transfert LC"],
-            ["2", "Culture liquide (LC)", "", "", "", "trouble / contamination", "clone LC ou transfert grain"],
-            ["3", "Grain (ballot)", "", "", "", "colonisation / contamination", "clone grain ou transfert substrat"],
-            ["4", "Inoculation substrat", "", "", "", "", "incubation 1"],
-            ["5", "Incubation 1", "", "", "", "", ""],
-            ["6", "Incubation 2", "", "", "", "", ""],
-            ["7", "Incubation 3", "", "", "", "", ""],
-            ["8", "Fructification 1", "", "", "", "", ""],
-            ["9", "Fructification 2", "", "", "", "", ""],
-            ["10", "Récolte flush 1", "", "", "", "poids par unité", ""],
-            ["11", "Récolte flush 2", "", "", "", "poids par unité", ""],
-            ["12", "Récolte flush 3", "", "", "", "poids par unité", ""],
-            ["13", "Fin de cycle", "", "", "", "", ""]
+          { id: "q20_table", title: "Version simplifiée du process à confirmer", help: "Remplis ou corrige les lignes. Tu peux ajouter une étape. « Durée cible » et « Alarme » alimenteront directement les alarmes réglables du process. La colonne « Action suivante » sert à indiquer un clone ou un transfert vers le stade suivant.", type: "table", columns: ["Ordre", "Stade / étape", "Durée cible", "Alarme si dépassement", "Température", "Humidité", "Observation clé", "Action suivante (clone / transfert)"], rowsData: [
+            ["1", "Origine (spores / souche reçue)", "", "", "", "", "viabilité", "transfert gélose"],
+            ["2", "Gélose", "", "", "", "", "contamination / colonisation", "clone gélose ou transfert LC"],
+            ["3", "Culture liquide (LC)", "", "", "", "", "trouble / contamination", "clone LC ou transfert grain"],
+            ["4", "Grain (ballot)", "", "", "", "", "colonisation / contamination", "clone grain ou transfert substrat"],
+            ["5", "Inoculation substrat", "", "", "", "", "", "incubation 1"],
+            ["6", "Incubation 1", "", "", "", "", "", ""],
+            ["7", "Incubation 2", "", "", "", "", "", ""],
+            ["8", "Incubation 3", "", "", "", "", "", ""],
+            ["9", "Fructification 1", "", "", "", "", "", ""],
+            ["10", "Fructification 2", "", "", "", "", "", ""],
+            ["11", "Récolte flush 1", "", "", "", "", "poids par unité", ""],
+            ["12", "Récolte flush 2", "", "", "", "", "poids par unité", ""],
+            ["13", "Récolte flush 3", "", "", "", "", "poids par unité", ""],
+            ["14", "Conservation (optionnel, à tout stade)", "", "", "", "", "viabilité", "réactivation ou clone"],
+            ["15", "Fin de cycle", "", "", "", "", "", ""]
           ] },
           { id: "q19_resume", title: "Quelles sont les 5 décisions ou règles les plus importantes à retenir ?", help: "Réponse libre pour résumer ce qui compte vraiment dans ton process.", type: "longtext" }
         ]
@@ -1137,7 +1357,51 @@
           next.questions[q.id].table = buildDefaultRows(q);
         }
       });
+      next.presetSeed = raw && raw.presetSeed ? raw.presetSeed : null;
+      migrateTables(next);
+      seedValidatedAnswers(next);
       return next;
+    }
+
+    // Quand les colonnes d'un tableau changent, les lignes sauvegardées gardent les anciennes
+    // clés et s'affichent vides. On les remappe par position plutôt que de les perdre.
+    function migrateTables(target) {
+      allQuestions().filter(q => q.type === "table").forEach(q => {
+        const qs = target.questions[q.id];
+        if (!qs || !Array.isArray(qs.table)) return;
+        const stale = qs.table.some(row => !q.columns.every(col => col in row));
+        if (!stale) return;
+        qs.table = qs.table.map(row => {
+          const values = Object.values(row);
+          return Object.fromEntries(q.columns.map((col, idx) => [col, col in row ? row[col] : (values[idx] || "")]));
+        });
+      });
+    }
+
+    // Amorçage en deux temps, sans jamais écraser une saisie existante :
+    //   1. les réponses de cadrage validées le 30/07/2026 ;
+    //   2. par-dessus, les réponses réellement données par le cultivateur (export du 30/07/2026).
+    // Une question laissée vide reste « à répondre » — l'export d'origine les comptait comme
+    // répondues alors qu'elles ne contenaient rien.
+    function seedValidatedAnswers(target) {
+      if (target.presetSeed === PRESET_SEED_VERSION) return;
+      allQuestions().forEach(q => {
+        const qs = target.questions[q.id];
+        if (!qs) return;
+        if (q.preset && !(qs.answer || "").trim()) qs.answer = q.preset;
+        if (q.presetSelected && q.presetSelected.length && !(qs.selected || []).length) {
+          qs.selected = [...q.presetSelected];
+        }
+        const given = CULTIVATOR_ANSWERS[q.id];
+        if (given) {
+          if (given.answer) qs.answer = given.answer;
+          if (given.selected) qs.selected = [...given.selected];
+        }
+        const hasContent = (qs.answer || "").trim() || (qs.selected || []).length;
+        if (qs.status === "todo" && hasContent) qs.status = q.followUp ? "clarify" : "answered";
+        if (!hasContent) qs.status = "todo";
+      });
+      target.presetSeed = PRESET_SEED_VERSION;
     }
 
     function loadState() {
@@ -1227,6 +1491,7 @@
           </div>
           <div class="question-body">
             ${q.help ? `<div class="help">${formatHelp(q.help)}</div>` : ""}
+            ${renderPreset(q)}
             ${renderAnswerControl(q, qs)}
             <div class="field">
               <label class="label">Notes / précisions / à revoir ensemble</label>
@@ -1235,6 +1500,37 @@
           </div>
         </article>
       `;
+    }
+
+    function renderPreset(q) {
+      const blocks = [];
+      if (q.preset || (q.presetSelected && q.presetSelected.length)) {
+        const buttons = [];
+        if (q.presetSelected && q.presetSelected.length) {
+          buttons.push(`<button class="btn small" data-action="use-preset-selected" data-qid="${q.id}" type="button">☑️ Recocher la sélection validée</button>`);
+        }
+        if (q.preset) {
+          buttons.push(`<button class="btn small" data-action="use-preset" data-qid="${q.id}" type="button">↧ Restaurer la réponse validée</button>`);
+        }
+        blocks.push(`
+          <div class="preset validated">
+            <div class="preset-head">
+              <span class="preset-tag">✅ Validé par le cultivateur — 30/07/2026</span>
+              <div class="preset-actions">${buttons.join("")}</div>
+            </div>
+            ${q.preset ? `<div class="preset-body">${formatHelp(q.preset)}</div>` : ""}
+          </div>
+        `);
+      }
+      if (q.followUp) {
+        blocks.push(`
+          <div class="preset followup">
+            <div class="preset-head"><span class="preset-tag">⏳ Reste à préciser</span></div>
+            <div class="preset-body">${formatHelp(q.followUp)}</div>
+          </div>
+        `);
+      }
+      return blocks.join("");
     }
 
     function renderAnswerControl(q, qs) {
@@ -1396,6 +1692,24 @@
         state.questions[qid].table.splice(row, 1);
         saveNow();
         render();
+        return;
+      }
+      if (action === "use-preset" || action === "use-preset-selected") {
+        const q = allQuestions().find(item => item.id === qid);
+        if (!q) return;
+        const qs = state.questions[qid];
+        if (action === "use-preset") {
+          const existing = (qs.answer || "").trim();
+          if (existing && existing !== q.preset.trim() && !confirm("Remplacer la réponse actuelle par la réponse validée au cadrage ?")) return;
+          qs.answer = q.preset;
+        } else {
+          qs.selected = Array.from(new Set([...(qs.selected || []), ...(q.presetSelected || [])]));
+        }
+        qs.updatedAt = new Date().toISOString();
+        maybeAutoAnswered(qid);
+        saveNow();
+        render();
+        toast("Réponse validée restaurée.");
       }
     }
 
@@ -1408,9 +1722,13 @@
         const qid = card.dataset.qid;
         const qs = state.questions[qid];
         const q = allQuestions().find(item => item.id === qid);
-        const haystack = [qs.title, q.title, q.help, qs.answer, qs.notes, (qs.selected || []).join(" "), JSON.stringify(qs.table || "")].join(" ").toLowerCase();
+        const haystack = [qs.title, q.title, q.help, q.preset, (q.presetSelected || []).join(" "), qs.answer, qs.notes, (qs.selected || []).join(" "), JSON.stringify(qs.table || "")].join(" ").toLowerCase();
         const matchesSearch = !search || haystack.includes(search);
-        const matchesStatus = status === "all" || qs.status === status;
+        const matchesStatus = status === "all"
+          ? true
+          : status === "remaining"
+            ? (!!q.followUp || qs.status === "todo" || qs.status === "clarify")
+            : qs.status === status;
         const visible = matchesSearch && matchesStatus;
         card.classList.toggle("hidden", !visible);
         if (visible) visibleCards++;
@@ -1436,6 +1754,10 @@
             type: q.type || "longtext",
             originalTitle: q.title,
             currentTitle: qs.title,
+            validatedAnswer: q.preset || "",
+            validatedSelectedOptions: q.presetSelected || [],
+            followUp: q.followUp || "",
+            answerDiffersFromValidated: !!q.preset && (qs.answer || "").trim() !== q.preset.trim(),
             status: qs.status,
             statusLabel: STATUS_LABELS[qs.status] || qs.status,
             answer: qs.answer || "",
@@ -1499,6 +1821,8 @@
           md.push(`### ${q.id} — ${q.currentTitle}`);
           md.push("");
           md.push(`Statut : **${q.statusLabel}**`);
+          if (q.validatedAnswer) md.push(`\nRéponse validée au cadrage :\n\n> ${q.validatedAnswer.replace(/\n/g, "\n> ")}`);
+          if (q.followUp) md.push(`\nReste à préciser :\n\n> ${q.followUp.replace(/\n/g, "\n> ")}`);
           if (q.selectedOptions.length) md.push(`\nCases cochées : ${q.selectedOptions.join(", ")}`);
           if (q.answer) md.push(`\nRéponse :\n\n${q.answer}`);
           if (q.tableRows) {

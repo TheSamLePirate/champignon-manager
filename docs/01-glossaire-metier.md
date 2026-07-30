@@ -117,3 +117,25 @@ Les états exacts seront configurables, mais on peut prévoir :
 - Les types exacts de produits finaux vendus.
 - Les statuts réellement utilisés sur site.
 - Les mesures obligatoires par stade/étape.
+
+## Vocabulaire confirmé par le cultivateur — 2026-07-30
+
+Source : `champignon-reponses-cultivateur-2026-07-30.json`.
+
+| Stade | Terme retenu |
+| --- | --- |
+| Milieu gélosé | **gélose** (ou *boîte de Pétri*) |
+| Milieu liquide | **culture liquide** / **LC** |
+| Grain colonisé | **ballot de grain** |
+| Substrat inoculé | **ballot de substrat**, aussi **bloc**, **sac**, **pain** |
+
+Consigne donnée pour le nommage des stades dans l’application : **« au plus simple et clair »**.
+
+Précisions :
+
+- **Unité** = tout objet physique manipulé, à n’importe quelle phase : souche, gélose, culture liquide, ballot de grain, sac de substrat, ballot inoculé, bac, caisse. Chaque phase produit ses propres unités.
+- Le terme **« lot »** ne désigne pas un objet distinct : c’est une unité au stade substrat/fructification, ou une sélection d’unités sur laquelle on applique une action groupée.
+- Le terme **« parent »** ne désigne pas une session d’inoculation mais le **lien de parenté détaillé, du début à la fin de la chaîne**.
+- Une unité remise en service après conservation est une **nouvelle unité**, pas la reprise de l’ancienne.
+
+⏳ Reste indéterminé : le mot employé pour la souche/origine avant gélose, les contenants réels et leurs tailles, et les noms des produits finaux.

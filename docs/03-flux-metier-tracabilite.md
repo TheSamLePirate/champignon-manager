@@ -187,3 +187,31 @@ Dans le cas d’un mélange, le produit final doit stocker plusieurs origines av
 - Lot sans poids initial : autoriser mais signaler l’information manquante.
 - Contamination en amont (gélose/LC) : isoler, jeter, repartir d’une culture mère saine.
 - Sénescence d’une souche après trop de générations de clone : tracer la génération pour décider de repartir des spores.
+
+## Mise à jour 2026-07-30 — flux confirmés par le cultivateur
+
+Source : `champignon-reponses-cultivateur-2026-07-30.json`.
+
+### Points d'entrée dans la chaîne
+
+Le flux **ne commence pas à un stade fixe**. Une unité peut entrer à n'importe quel niveau :
+
+- empreinte de spores ou souche achetée/reçue ;
+- gélose ;
+- culture liquide ;
+- ballot de grain ;
+- directement substrat, y compris **reçu déjà inoculé**.
+
+Conséquence : une unité peut exister **sans ascendant**. La traçabilité ascendante remonte aussi loin que la chaîne saisie le permet, pas jusqu'à un stade obligatoire.
+
+### Sorties et retours
+
+- **Conservation** : possible depuis n'importe quel stade. La sortie de conservation **crée une nouvelle unité** reliée à la conservée — c'est un embranchement de lignée, pas une reprise.
+- **Archivage** : réversible. Une unité mise en historique peut être réactivée.
+- **Retour arrière** : une étape peut être sautée, refaite ou remise en arrière. Le flux est donc un **graphe**, pas une séquence linéaire.
+
+### Regroupement
+
+Une action (avancement d'étape, application d'un sous-process, déplacement) s'applique indifféremment à une unité, à tous les enfants d'un parent, ou à une **partie seulement** de la sélection.
+
+⏳ Non renseigné : la conduite réelle en cas de contamination, de retard ou de fusion d'unités (§18 du questionnaire, entièrement vide).
