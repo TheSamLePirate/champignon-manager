@@ -764,8 +764,8 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const FORM_VERSION = "2026-07-30.v5-reponses-cultivateur";
-    const PRESET_SEED_VERSION = "2026-07-30.reponses-cultivateur";
+    const FORM_VERSION = "2026-07-30.v6-reponses-batch";
+    const PRESET_SEED_VERSION = "2026-07-30.reponses-cultivateur-b2";
     const STORAGE_KEY = "champignon-manager:cultivator-process-form:v1";
 
     const STATUS_LABELS = {
@@ -778,6 +778,61 @@
     // Réponses du cultivateur — export champignon-reponses-cultivateur-2026-07-30.json (2026-07-30).
     // Seules les questions réellement renseignées figurent ici : les autres restent « à répondre ».
     const CULTIVATOR_ANSWERS = {
+      q9_2_8: { answer: "Les mêmes actions qu'ailleurs : la liste complète existe à tous les stades, l'app masque simplement ce qui n'a pas de sens au stade courant." },
+      q9_3_7: { answer: "Les mêmes actions qu'ailleurs, filtrées par pertinence selon le stade." },
+      q9_5_6: { answer: "Les mêmes actions qu'ailleurs, filtrées par pertinence selon le stade." },
+      q9_6_7: { answer: "Les mêmes actions qu'ailleurs, filtrées par pertinence selon le stade." },
+      q12_2: { answer: "Pas de liste d'observations propre à chaque étape : la liste complète est disponible partout, l'app masque ce qui n'a pas de sens au stade courant." },
+      q9_2_7: { answer: "À l'observation visuelle, validée par une personne. La durée cible n'est qu'indicative — l'alarme sert de rappel, c'est l'œil qui déclenche le passage." },
+      q9_3_6: { answer: "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel." },
+      q9_4_7: { answer: "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel." },
+      q9_6_5: { answer: "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel." },
+      q9_7_1: { answer: "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel." },
+      q9_9_2: { answer: "À l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel." },
+      q9_7_2: { answer: "Oui, poids par unité à chaque flush." },
+      q9_7_3: { answer: "Poids par unité, qualité, et pertes avec leur cause." },
+      q9_7_4: { answer: "Oui, la qualité est notée." },
+      q9_7_5: { answer: "Oui, la cause des pertes est notée." },
+      q9_8_4: { answer: "Oui, poids par unité au flush 2 également, même méthode." },
+      q9_8_5: { answer: "Oui, la qualité diffère du flush 1." },
+      q9_9_4: { answer: "Oui, poids par unité au flush 3 également." },
+      q14_1: { answer: "Oui, poids par unité à chaque flush." },
+      q14_3: { answer: "Poids par unité, qualité et pertes avec leur cause." },
+      q12_3: { answer: "Oui, une photo doit être possible sur toute observation." },
+      q12_4: { answer: "Photo obligatoire en cas de contamination." },
+      q12_5: { answer: "Oui, gravité à trois niveaux : faible, moyen, critique." },
+      q9_4_2: { answer: "Non, incubation 3 est optionnelle — pas obligatoire pour toutes les espèces." },
+      q9_8_1: { answer: "Oui, toutes les unités font un flush 2." },
+      q9_9_1: { answer: "Optionnel — le flush 3 n'est pas systématique." },
+      q9_6_6: { answer: "Oui, une observation « maturité récolte » dédiée est utile." },
+      q9_10_2: { answer: "Oui, un poids final est mesuré." },
+      q9_10_3: { answer: "Oui, une raison de fin est notée." },
+      q9_10_4: { answer: "Oui, l'emplacement reste occupé jusqu'au nettoyage." },
+      q9_10_5: { answer: "Oui, une tâche de nettoyage est créée en fin de cycle." },
+      q10_4: { answer: "Oui, une unité peut changer plusieurs fois de chambre." },
+      q10_5: { answer: "Oui, scanner le QR d'une chambre doit afficher toutes les unités présentes." },
+      q13_3: { answer: "Oui, une validation est requise avant toute action en masse." },
+      q13_4: { answer: "Oui, une action doit pouvoir être annulée ou corrigée." },
+      q14_4: { answer: "Oui, les récoltes de plusieurs unités peuvent être mélangées." },
+      q14_5: { answer: "Oui, les proportions exactes doivent être conservées en cas de mélange." },
+      q15_2: { answer: "Oui, comparer les enfants d'un même parent entre eux." },
+      q15_3: { answer: "Oui, comparer les performances entre chambres." },
+      q15_4: { answer: "Oui, export CSV/Excel." },
+      q17_3: { answer: "Oui, un QR pour les chambres." },
+      q17_4: { answer: "Oui, un QR pour les récoltes et les produits finaux." },
+      q11_4: { answer: "Les Inkbird doivent aussi déclencher des alertes, pas seulement servir d'historique." },
+      q18_2: { answer: "Non, une unité contaminée ne peut plus produire." },
+      q9_10_1: { answer: "Terminé, compost, rebut, contaminé — ces quatre statuts suffisent." },
+      q9_7_6: { answer: "Repos, fructification 2, ou directement flush 2 — les trois chemins existent." },
+      q9_7_7: { answer: "Les trois sont possibles : repos, fructification 2, ou directement flush 2." },
+      q9_8_6: { answer: "Repos, fructification suivante, ou directement flush 3 — les trois chemins existent." },
+      q9_9_5: { answer: "Repos, fructification suivante, ou fin de cycle." },
+      q10_1: { answer: "Chambres, étagères, niveau et position." },
+      q10_2: { answer: "Les deux : chambre, étagère, niveau et position." },
+      q11_1: { answer: "Tout est fait à la main aujourd'hui : température, humidité, poids, contrôle visuel. Des appareils connectés sont envisagés dans un futur proche." },
+      q11_2: { answer: "Manuellement aujourd'hui ; la fréquence dépendra des appareils connectés à venir." },
+      q11_3: { answer: "Aujourd'hui tout est saisi à la main — température, humidité, poids, visuel. Les appareils connectés prendront le relais sur les mesures d'ambiance (chambre), le poids restant lié à l'unité." },
+      q17_2: { answer: "Nom de l'unité, type, date, et le code QR." },
       q2_confirm: { answer: "Oui" },
       q2_cadrage: { answer: "Les 10 principes sont validés en bloc, sans réserve ni objection.", selected: ["chaque phase produit ses propres unités, toutes traçables","toute unité peut être divisée, à n’importe quel stade","après division/transfert, le parent est soit conservé actif, soit archivé en historique","les clones sont possibles à chaque stade","chaque phase/étape a une durée avec des alarmes réglables","le process est entièrement configurable (process entiers + sous-process réutilisables)","chaque unité a son propre QR code, dès le début","toute unité peut être mise en conservation","les décisions humaines priment : l’app propose, l’humain valide","on doit pouvoir sélectionner des unités selon n’importe quel paramètre"] },
       q4_1_1: { answer: "gélose/boîte de Pétri, culture liquide/LC, ballot de grain, ballot de substrat, bloc, sac, pain" },

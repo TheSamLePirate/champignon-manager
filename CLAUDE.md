@@ -77,7 +77,7 @@ Ce sont des fichiers **HTML autonomes**, **data-driven** (donc faciles à modifi
 
 **Mise à jour 2026-07-30** — réponses reçues (`docs/champignon-reponses-cultivateur-2026-07-30.json`). Détail : `docs/14` §18, `claude-critics.md` §9.
 
-⚠️ L'export annonce « 100 % / 188 répondues » mais **seules 84 questions contiennent réellement une réponse** ; 104 avaient été marquées répondues en masse, sans contenu.
+⚠️ L'export annonçait « 100 % / 188 » à tort : 84 questions réellement renseignées en 1ʳᵉ passe (104 marquées répondues en masse, sans contenu), **139 après une 2ᵉ passe de questions groupées** le même jour. Il reste **49 questions**, presque toutes des demandes de valeurs.
 
 **Structure figée — ne plus rediscuter :**
 - traçabilité jusqu'aux spores / souche reçue ; QR sur **chaque unité dès le début** ;
@@ -86,6 +86,12 @@ Ce sont des fichiers **HTML autonomes**, **data-driven** (donc faciles à modifi
 - **parent = lien de parenté détaillé de bout en bout**, pas une session d'inoculation ;
 - conservation possible partout ; **sortie de conservation = nouvelle unité** ; archivage **réversible** ;
 - étapes **sautables, refaisables, réversibles** ; changement de process en cours de route autorisé ;
+- **le passage d’étape se fait à l’observation visuelle**, validé par une personne — la durée cible n’est qu’un rappel, jamais un déclencheur ;
+- **pas de liste d’actions ni d’observations par étape** : liste complète partout, filtrée par pertinence ;
+- récolte : **poids par unité + qualité + pertes avec cause** ; mélanges autorisés avec proportions exactes ;
+- emplacement suivi **jusqu’à la position** (chambre, étagère, niveau) ;
+- photo obligatoire sur contamination, **gravité à 3 niveaux** ;
+- étiquette : nom d’unité, type, date, code QR ;
 - modification d'un process → **bascule des unités en cours** après confirmation ;
 - process créé/modifié par **une seule personne** (cohérent avec l'auth `admin` unique) ;
 - vocabulaire : gélose/boîte de Pétri, culture liquide/LC, ballot de grain, ballot de substrat, bloc, sac, pain.
