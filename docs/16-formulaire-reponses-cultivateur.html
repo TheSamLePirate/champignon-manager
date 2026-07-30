@@ -751,6 +751,9 @@
           <b>Pour n’avoir que le travail restant</b>, clique sur <b>🎯 Questions à répondre</b> en haut de page — ou sur
           n’importe quelle tuile de compteur dans la colonne de gauche (<i>répondues</i>, <i>à clarifier</i>, <i>à répondre</i>…).
           Un second clic sur la même tuile réaffiche tout. La recherche se combine avec le filtre.
+          <br />Une question <b>ne disparaît pas pendant que tu écris dedans</b>, même si elle passe en « Répondu » dès la
+          première lettre : la liste reste figée tant que tu travailles. Le bouton <b>↻ Rafraîchir la liste</b> apparaît alors
+          dans le bandeau bleu pour recalculer ce qu’il reste.
         </p>
       </section>
 
@@ -783,7 +786,10 @@
 
       <div class="filter-banner" id="filterBanner">
         <span id="filterBannerText"></span>
-        <button class="btn ghost small" id="filterBannerClear" type="button">✕ Tout afficher</button>
+        <span style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn ghost small hidden" id="filterRefresh" type="button">↻ Rafraîchir la liste</button>
+          <button class="btn ghost small" id="filterBannerClear" type="button">✕ Tout afficher</button>
+        </span>
       </div>
 
       <div id="sections"></div>
@@ -808,7 +814,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const FORM_VERSION = "2026-07-30.v7-filtres-rapides";
+    const FORM_VERSION = "2026-07-30.v8-filtre-fige-saisie";
     const PRESET_SEED_VERSION = "2026-07-30.reponses-cultivateur-b2";
     const STORAGE_KEY = "champignon-manager:cultivator-process-form:v1";
 
@@ -1813,10 +1819,31 @@
       }
     }
 
-    function applyFilters() {
+    // Le filtre par statut est FIGÉ pendant la saisie. Sans ça, la première lettre tapée
+    // fait passer la question en « Répondu », le filtre se ré-applique, et la carte
+    // disparaît sous les doigts. On mémorise donc les questions retenues au moment où le
+    // filtre est posé, et on ne recalcule que sur demande explicite.
+    let filterSnapshot = null;
+
+    function matchesStatusNow(q, qs, status) {
+      if (status === "all") return true;
+      if (status === "remaining") return !!q.followUp || qs.status === "todo" || qs.status === "clarify";
+      return qs.status === status;
+    }
+
+    function applyFilters(rebuild = false) {
       const search = document.getElementById("searchInput").value.trim().toLowerCase();
       const status = document.getElementById("statusFilter").value;
       let visibleCards = 0;
+      let staleCards = 0;
+
+      if (rebuild || !filterSnapshot || filterSnapshot.status !== status) {
+        const ids = new Set();
+        allQuestions().forEach(q => {
+          if (matchesStatusNow(q, state.questions[q.id], status)) ids.add(q.id);
+        });
+        filterSnapshot = { status, ids };
+      }
 
       document.querySelectorAll(".question-card").forEach(card => {
         const qid = card.dataset.qid;
@@ -1824,14 +1851,15 @@
         const q = allQuestions().find(item => item.id === qid);
         const haystack = [qs.title, q.title, q.help, q.preset, (q.presetSelected || []).join(" "), qs.answer, qs.notes, (qs.selected || []).join(" "), JSON.stringify(qs.table || "")].join(" ").toLowerCase();
         const matchesSearch = !search || haystack.includes(search);
-        const matchesStatus = status === "all"
-          ? true
-          : status === "remaining"
-            ? (!!q.followUp || qs.status === "todo" || qs.status === "clarify")
-            : qs.status === status;
+        // on se fie à l'instantané, pas au statut courant : la carte reste en place
+        // même si elle vient de changer de statut sous la saisie
+        const matchesStatus = status === "all" || filterSnapshot.ids.has(qid);
         const visible = matchesSearch && matchesStatus;
         card.classList.toggle("hidden", !visible);
-        if (visible) visibleCards++;
+        if (visible) {
+          visibleCards++;
+          if (!matchesStatusNow(q, qs, status)) staleCards++;
+        }
       });
 
       document.querySelectorAll("[data-section]").forEach(section => {
@@ -1840,7 +1868,7 @@
       });
 
       document.getElementById("emptyFilter").classList.toggle("hidden", visibleCards !== 0);
-      syncFilterUi(status, search, visibleCards);
+      syncFilterUi(status, search, visibleCards, staleCards);
     }
 
     const FILTER_LABELS = {
@@ -1852,7 +1880,7 @@
     };
 
     // Garde les tuiles, la bannière et le select alignés sur le filtre actif.
-    function syncFilterUi(status, search, visibleCards) {
+    function syncFilterUi(status, search, visibleCards, staleCards) {
       document.querySelectorAll("button.stat[data-filter]").forEach(btn => {
         btn.setAttribute("aria-pressed", String(btn.dataset.filter === status));
       });
@@ -1860,27 +1888,32 @@
       const banner = document.getElementById("filterBanner");
       const active = status !== "all" || !!search;
       banner.classList.toggle("show", active);
+      document.getElementById("filterRefresh").classList.toggle("hidden", staleCards === 0);
       if (!active) return;
 
       const bits = [];
       if (status !== "all") bits.push(FILTER_LABELS[status] || status);
       if (search) bits.push(`contenant « ${search} »`);
-      document.getElementById("filterBannerText").textContent =
-        `Affichage filtré : ${bits.join(" · ")} — ${visibleCards} question${visibleCards > 1 ? "s" : ""} visible${visibleCards > 1 ? "s" : ""}.`;
+      const plural = visibleCards > 1 ? "s" : "";
+      let text = `Affichage filtré : ${bits.join(" · ")} — ${visibleCards} question${plural} visible${plural}.`;
+      if (staleCards) {
+        text += ` ${staleCards} vient${staleCards > 1 ? "nent" : ""} de changer de statut et reste${staleCards > 1 ? "nt" : ""} affichée${staleCards > 1 ? "s" : ""} pour ne pas disparaître pendant la saisie.`;
+      }
+      document.getElementById("filterBannerText").textContent = text;
     }
 
     function setStatusFilter(status) {
       const select = document.getElementById("statusFilter");
       // recliquer la tuile active revient à tout afficher
       select.value = select.value === status ? "all" : status;
-      applyFilters();
+      applyFilters(true);
       document.getElementById("sections").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function clearFilters() {
       document.getElementById("searchInput").value = "";
       document.getElementById("statusFilter").value = "all";
-      applyFilters();
+      applyFilters(true);
     }
 
     function collectPayload() {
@@ -2009,6 +2042,7 @@
         try {
           const payload = JSON.parse(reader.result);
           applyImportedPayload(payload);
+          filterSnapshot = null; // l état change en bloc : on repart d un filtre frais
           saveNow();
           render();
           toast("JSON importé. Les réponses sont chargées.");
@@ -2059,6 +2093,7 @@
       if (!confirm("Effacer la sauvegarde locale de ce navigateur ? Pense à exporter le JSON avant.")) return;
       localStorage.removeItem(STORAGE_KEY);
       state = ensureStateShape(null);
+      filterSnapshot = null;
       render();
       toast("Sauvegarde locale effacée.");
     }
@@ -2076,9 +2111,10 @@
     document.addEventListener("click", onClick);
 
     document.getElementById("searchInput").addEventListener("input", applyFilters);
-    document.getElementById("statusFilter").addEventListener("change", applyFilters);
+    document.getElementById("statusFilter").addEventListener("change", () => applyFilters(true));
     document.getElementById("resetFilters").addEventListener("click", clearFilters);
     document.getElementById("filterBannerClear").addEventListener("click", clearFilters);
+    document.getElementById("filterRefresh").addEventListener("click", () => applyFilters(true));
     document.getElementById("filterTodoTop").addEventListener("click", () => setStatusFilter("todo"));
     document.querySelectorAll("button.stat[data-filter]").forEach(btn => {
       btn.addEventListener("click", () => setStatusFilter(btn.dataset.filter));
