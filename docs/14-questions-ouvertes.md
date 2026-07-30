@@ -270,3 +270,33 @@ Ces réponses closent les questions §1.4, §1.5, §2.4, §2.7, §5.6, §13.4 ci
 - tableau de synthèse §20 : vide.
 
 Le mot « configurable » revient à chaque question de valeur. C’est cohérent avec le cadrage, mais **une application configurable a quand même besoin de valeurs par défaut** pour être utilisable le premier jour. Sans elles, aucun process ne peut être amorcé en *seed data*.
+
+### 18.4 Seconde passe — questions groupées (30/07/2026)
+
+55 questions supplémentaires closes en regroupant celles qui se répétaient d’un stade à l’autre. **139 / 188 renseignées.**
+
+| Sujet | Décision | Ferme |
+| --- | --- | --- |
+| Actions par étape | **Pas de liste par étape** : la liste complète existe partout, l’app masque ce qui n’a pas de sens au stade courant. Idem pour les observations. | q9_2_8, q9_3_7, q9_5_6, q9_6_7, q12_2 |
+| Passage d’étape | **L’observation visuelle déclenche**, validée par une personne. La durée cible n’est qu’un rappel. | q9_2_7, q9_3_6, q9_4_7, q9_6_5, q9_7_1, q9_9_2 |
+| Récoltes | **Poids par unité à chaque flush + qualité + pertes avec leur cause.** | q9_7_2→5, q9_8_4, q9_8_5, q9_9_4, q14_1, q14_3 |
+| Observations | Photo possible partout, **obligatoire en cas de contamination**. Gravité à 3 niveaux (faible / moyen / critique). | q12_3, q12_4, q12_5 |
+| Incubation 3 | **Optionnelle**, pas obligatoire pour toutes les espèces. | q9_4_2 |
+| Flush 2 / flush 3 | Flush 2 systématique, qualité différente du flush 1. **Flush 3 optionnel.** | q9_8_1, q9_8_5, q9_9_1 |
+| Après un flush | **Repos, fructification suivante ou flush suivant** — les trois chemins existent. | q9_7_6, q9_7_7, q9_8_6, q9_9_5 |
+| Fin de cycle | Statuts **terminé / compost / rebut / contaminé** (suffisants). Poids final, raison de fin, emplacement occupé jusqu’au nettoyage, tâche de nettoyage créée. | q9_10_1→5 |
+| Emplacements | Suivi **jusqu’à la position** : chambre, étagère, niveau, position. Une unité change plusieurs fois de chambre ; scan du QR chambre = inventaire. | q10_1, q10_2, q10_4, q10_5 |
+| Mesures | **Tout à la main aujourd’hui** : température, humidité, poids, visuel. Appareils connectés envisagés à court terme ; les Inkbird devront **déclencher des alertes**, pas seulement historiser. | q11_1, q11_2, q11_3, q11_4 |
+| Actions en masse | **Validation obligatoire** avant exécution ; toute action doit être **annulable ou corrigeable**. | q13_3, q13_4 |
+| Mélange de récoltes | Autorisé, avec **conservation des proportions exactes**. | q14_4, q14_5 |
+| Statistiques | Comparaison enfants d’un même parent, comparaison entre chambres, **export CSV/Excel**. | q15_2, q15_3, q15_4 |
+| QR & étiquette | QR pour chambres, récoltes et produits finaux. Étiquette : **nom de l’unité, type, date, code QR**. | q17_2, q17_3, q17_4 |
+| Contamination | Une unité contaminée **ne peut plus produire**. | q18_2 |
+
+#### Nuance importante sur les durées
+
+La réponse « le passage se fait à **l’observation visuelle**, la durée n’est qu’un rappel » **précise le principe n°8 du cadrage** (§2.1), qui plaçait durée et décision humaine à égalité. Conséquence pour l’implémentation : la durée cible **n’est jamais un déclencheur d’avancement**, seulement une base de calcul d’alarme. Le moteur ne doit pas modéliser de transition automatique par échéance.
+
+#### Ce qui reste (49 questions)
+
+Presque uniquement des **valeurs et des gestes** : déroulé exact de l’inoculation, différences réelles entre incubations 1/2/3, leviers de déclenchement de la fructification, conduite en cas de contamination / retard / fusion, et surtout le **tableau §20** — durée, alarme, température, humidité par stade. Ce dernier reste le seul vrai blocage.

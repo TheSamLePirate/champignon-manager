@@ -215,7 +215,7 @@ Cette découpe respecte l'intention « outil de production, pas démo » **tout 
 
 | ID | Sévérité | Sujet | Impact si ignoré |
 |----|----------|-------|------------------|
-| P0-1 | 🟠 En cours | Questionnaire cultivateur — **84/188 réellement renseignées au 30/07/2026** ; structure close, **aucune valeur chiffrée** | Le process ne peut pas être amorcé en seed data |
+| P0-1 | 🟠 En cours | Questionnaire cultivateur — **139/188 après 2 passes** ; structure entièrement close, **aucune valeur chiffrée** | Le process ne peut pas être amorcé en seed data |
 | P0-2 | 🔴 Bloquant | Éditeur de process complet au MVP | Le planning est absorbé par une brique non finalisable |
 | P0-3 | 🟢 Levé | Unité multi-stade + lignée clone/transfert/division — **figé le 30/07/2026** | Modèle arrêté (voir §9) |
 | P0-4 | 🟢 Levé | Scan iOS / HTTPS — **Tailscale confirmé** (`serve` + cert TLS) | Reste un spike de validation iOS + ACL tailnet |
@@ -243,7 +243,7 @@ Cette découpe respecte l'intention « outil de production, pas démo » **tout 
 
 Source : `docs/champignon-reponses-cultivateur-2026-07-30.json`.
 
-### 9.1 Le chiffre à retenir : 84 / 188
+### 9.1 Le chiffre à retenir : 84 / 188 en 1ʳᵉ passe, **139 / 188 après la 2ᵉ** (voir §9.6)
 
 L'export affiche **« 188 répondues, 100 % »**. C'est faux : **104 questions ne contiennent ni texte ni case cochée** — elles ont été marquées répondues en masse (bouton « Marquer visibles répondues »). Le formulaire `16` a été corrigé pour recalculer le statut à partir du contenu réel, et le questionnaire `15` marque ces questions `⏳ SANS RÉPONSE`.
 
@@ -290,3 +290,14 @@ Plusieurs réponses élargissent encore le périmètre sans le borner :
 | Changement de process **en cours de route** | Complique le calcul de durée cible et l'historique d'alarmes |
 
 Aucun de ces points n'est un blocage en soi, mais **cumulés ils renforcent P0-2** : l'éditeur de process complet au MVP devient encore moins tenable. La recommandation de tranche verticale fine reste valable, et le seed doit couvrir un chemin nominal simple avant d'ouvrir toutes ces libertés.
+
+### 9.6 Seconde passe (30/07/2026) — 139/188, et une bonne nouvelle pour P0-2
+
+En regroupant les questions qui se répétaient d'un stade à l'autre, 55 réponses supplémentaires ont été obtenues. Deux d'entre elles **allègent réellement le moteur de process** :
+
+1. **Pas de liste d'actions ni d'observations par étape.** La liste complète existe partout, l'app masque ce qui n'a pas de sens au stade courant. L'éditeur de process n'a donc pas à gérer une configuration d'actions étape par étape — seulement des règles de pertinence par stade.
+2. **La durée ne déclenche aucun passage.** Le passage se fait à l'observation visuelle, validée par une personne ; la durée n'est qu'un rappel. Il n'y a donc **pas de moteur de transition temporelle** à écrire : ni job planifié, ni état « prêt » calculé depuis une date.
+
+C'est le premier allègement réel du périmètre depuis le début de la revue. **P0-2 reste néanmoins bloquant** : les libertés accordées (étapes sautables, réversibles, changement de process en cours, bascule de version) restent coûteuses, et surtout le seed n'a toujours rien à contenir.
+
+**P0-1 reste ouvert pour une seule raison** : le tableau §20. Les 49 questions restantes sont presque toutes des demandes de valeurs. Aucune ne rouvre une question de structure.

@@ -221,3 +221,23 @@ Pour commencer :
 - association mesures/observations à lot ou chambre ;
 - historique dans timeline ;
 - architecture prête pour Reolink et Inkbird, sans intégration active au MVP.
+
+## Mise à jour 30/07/2026 — réponses cultivateur
+
+### Mesures
+
+**Tout est fait à la main aujourd’hui** : température, humidité, poids, contrôle visuel. Aucune fréquence fixe n’a été donnée — elle dépendra des appareils connectés, envisagés à court terme.
+
+Répartition attendue : les mesures d’ambiance (température, humidité) se rattachent à la **chambre**, le poids à l’**unité**. Une mesure doit pouvoir être saisie sur n’importe quelle unité, à n’importe quel stade.
+
+Les **Inkbird doivent déclencher des alertes**, pas seulement alimenter un historique.
+
+### Observations
+
+- Une **photo est possible sur toute observation**.
+- Elle devient **obligatoire en cas de contamination**.
+- Les observations portent une **gravité à trois niveaux** : faible, moyen, critique.
+- Il n’existe **pas de liste d’observations par étape** : la liste complète est disponible partout, filtrée par pertinence selon le stade.
+- Une observation dédiée **« maturité récolte »** est souhaitée.
+
+⏳ Non renseigné : la liste précise des observations à proposer, et les valeurs à afficher dans les statistiques de mesure.

@@ -282,3 +282,35 @@ IDs exposés :
 - Détail des DTO pour formulaires dynamiques.
 - Stratégie exacte OpenAPI/client généré ou client typé maison.
 - Règles de suppression logique / correction côté API.
+
+## 20. Mise à jour 2026-07-30 — impact des réponses cultivateur
+
+### 20.1 Endpoints à prévoir
+
+| Besoin | Endpoint |
+| --- | --- |
+| Mettre une unité en conservation | `POST /units/:id/reserve` |
+| Sortir de conservation — **crée une nouvelle unité** | `POST /units/:id/reserve-exit` → renvoie la nouvelle unité, reliée par lignée |
+| Archiver / réactiver (réversible) | `POST /units/:id/archive`, `POST /units/:id/unarchive` |
+| Appliquer un process ou sous-process à une sélection | `POST /process/apply` `{ templateId, unitIds \| filter }` |
+| Filtres favoris | `GET/POST/DELETE /saved-filters` |
+| Annuler une action | `POST /events/:id/reverse` — événement de compensation, jamais de suppression |
+| Inventaire d’une chambre par scan | `GET /rooms/:id/units` |
+
+### 20.2 Règles transverses
+
+- **Validation obligatoire avant action en masse** : les endpoints de masse doivent fonctionner en deux temps — un appel de *prévisualisation* renvoyant le nombre et la liste des unités touchées, puis l’exécution avec un jeton de confirmation. Ne jamais exécuter une action de masse en un seul appel non confirmé.
+- **Pas d’endpoint d’avancement automatique.** Le passage d’étape est toujours déclenché par une personne ; aucune API ne doit faire avancer une unité sur la seule base d’une échéance.
+- **Bascule de version de process** : l’endpoint de publication doit renvoyer le nombre d’unités en cours impactées **avant** d’appliquer, pour permettre la confirmation explicite demandée par le cultivateur.
+- **`parentId` nullable** dans les payloads de création : une unité peut être créée à n’importe quel stade sans ascendant.
+
+### 20.3 Récoltes et produits
+
+- `POST /harvests` accepte `weight`, `quality` et `losses[] { weight, cause }` **par unité**.
+- `POST /final-products` accepte des sources **pondérées** `{ harvestId, unitId, weight, share }` — les proportions exactes doivent être conservées.
+
+### 20.4 Observations
+
+`POST /observations` doit **rejeter** une observation de type contamination sans photo (règle applicative, pas seulement côté UI), et exige `severity` ∈ `low | medium | critical`.
+
+⚠️ **Contrat non stabilisable aujourd’hui** : tout ce qui touche aux valeurs de configuration (durées, seuils d’alarme, conditions cibles) reste sans données réelles — voir `04` §15.5.

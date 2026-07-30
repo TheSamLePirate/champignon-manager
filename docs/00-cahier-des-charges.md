@@ -236,3 +236,33 @@ L’application est considérée utile si l’utilisateur peut :
 7. enregistrer une récolte ;
 8. créer un produit final ;
 9. retrouver tout l’historique depuis le produit final jusqu’à la gélose/origine (traçabilité complète « du spore à l’assiette »).
+
+## Mise à jour 2026-07-30 — périmètre après réponses du cultivateur
+
+Détail : `14-questions-ouvertes.md` §18. Le questionnaire est renseigné à **139 / 188**.
+
+### Ce que le produit doit faire (confirmé)
+
+- Tracer **toute unité physique**, à tout stade, chacune avec son **QR dès sa création**.
+- Accepter une entrée dans la chaîne **à n’importe quel stade**, y compris une unité reçue déjà prête, donc **sans ascendant**.
+- Permettre **clone, transfert, division et conservation** à tous les stades, sans limite de génération.
+- Conserver une **lignée détaillée de bout en bout**, avec le type de lien.
+- Rendre **conservation et archivage réversibles** ; la sortie de conservation crée une **nouvelle unité**.
+- Composer des **process et sous-process réutilisables**, applicables à une unité, un lot ou une sélection.
+- Porter une **durée cible et des alarmes réglables** par étape — qui alertent, **jamais ne bloquent** ni ne font avancer.
+- Laisser l’**opérateur décider** de chaque passage d’étape, à l’observation visuelle.
+- Suivre l’emplacement **jusqu’à la position** (chambre, étagère, niveau).
+- Enregistrer **poids par unité, qualité et pertes avec cause** à chaque flush ; autoriser les mélanges **avec proportions exactes**.
+- Sélectionner des unités selon **n’importe quel critère combiné**, avec filtres enregistrables.
+- Calculer **toutes les statistiques** issues de cette traçabilité, exportables en CSV/Excel.
+
+### Ce que le produit ne doit PAS faire
+
+- **Aucun avancement automatique** d’étape sur échéance.
+- **Aucune liste d’actions ou d’observations propre à chaque étape** : liste globale filtrée par pertinence.
+- **Aucun blocage** d’unité par une alarme.
+- **Aucune suppression** : une action annulée produit un événement de compensation.
+
+### Ce qui empêche encore de démarrer
+
+**Aucune valeur n’a été fournie** : ni durée, ni température, ni humidité, ni ratio, ni seuil d’alarme, ni liste d’espèces. Le produit est spécifié, mais **non paramétrable en l’état** — voir `13-roadmap-implementation.md`.

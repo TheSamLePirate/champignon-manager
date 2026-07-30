@@ -209,3 +209,15 @@ Décisions :
 - Taille physique des étiquettes.
 - Résistance des étiquettes à humidité/température.
 - Besoin de QR seulement ou QR + texte + logo.
+
+## Mise à jour 30/07/2026 — contenu de l’étiquette
+
+Réponse du cultivateur : l’étiquette doit afficher, à côté du QR — **nom de l’unité, type, date**, et le **code QR** lui-même en clair.
+
+Périmètre des QR confirmé :
+
+- **chaque unité**, à tous les stades, dès sa création ;
+- les **chambres** — scanner le QR d’une chambre doit afficher toutes les unités présentes ;
+- les **récoltes** et les **produits finaux**.
+
+⏳ Non renseigné : la conduite à tenir quand un QR est abîmé ou perdu (réimprimer le même, en créer un nouveau, révoquer l’ancien), ainsi que le format et le support d’étiquette utilisables sur les petits objets et en milieu humide.

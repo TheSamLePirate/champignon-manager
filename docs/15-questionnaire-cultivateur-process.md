@@ -8,13 +8,13 @@ But : comprendre précisément comment se passe la culture sur le terrain pour q
 
 L’application devra permettre de suivre chaque unité avec un QR code, depuis l’inoculation ou la réception jusqu’aux récoltes, avec les poids, les chambres, les conditions et les statistiques.
 
-> **Mise à jour 2026-07-30 — réponses du cultivateur intégrées.** Source : `champignon-reponses-cultivateur-2026-07-30.json`. Les réponses sont recopiées dans les blocs `Réponse` de ce document.
+> **Mise à jour 2026-07-30 — réponses du cultivateur intégrées (2 passes).** Sources : `champignon-reponses-cultivateur-2026-07-30.json`, puis une session de questions groupées le même jour.
 >
-> **État réel : 84 questions renseignées sur 188.** L’export annonçait « 100 % / 188 répondues », mais **104 questions ne contiennent ni texte ni case cochée** — elles ont été marquées répondues en masse. Elles portent ici la mention `⏳ SANS RÉPONSE au 30/07/2026`, et le formulaire les a repassées en « À répondre ».
+> **État : 139 questions renseignées sur 188.** La 1ʳᵉ passe en couvrait 84 (l’export annonçait à tort 100 % : 104 questions étaient vides). Une seconde passe, en regroupant les questions qui se répétaient d’un stade à l’autre, en a clos 55 de plus. Les 49 restantes portent la mention `⏳ SANS RÉPONSE`.
 >
-> **Ce qui est acquis** : les 10 principes de cadrage (§2.1, validés sans réserve) et les décisions de structure — départ possible à n’importe quel stade, clonage partout, pas de limite de générations, réactivation d’une unité conservée = nouvelle unité, bascule des lots sur la nouvelle version de process avec confirmation, un seul auteur de process.
+> **Ce qui est acquis** : les 10 principes de cadrage (§2.1) ; la structure de la chaîne (départ à n’importe quel stade, clonage partout, pas de limite de générations, réactivation = nouvelle unité, bascule de version avec confirmation, un seul auteur de process) ; et depuis la 2ᵉ passe — actions identiques à tous les stades filtrées par pertinence, **passage d’étape déclenché par l’observation visuelle** (la durée n’étant qu’un rappel), poids par unité + qualité + pertes avec cause à chaque flush, photo obligatoire sur contamination et gravité à 3 niveaux, suivi jusqu’à la position sur l’étagère, statuts de fin, et contenu de l’étiquette.
 >
-> **Ce qui manque toujours** — et c’est le chemin critique : **toutes les valeurs chiffrées**. Aucune durée, aucune température, aucune humidité, aucun ratio, aucun seuil d’alarme, aucune liste d’espèces réelle. Les sections 9 (détail par étape), 10 (chambres), 11 (mesures), 12 (observations), 14 (récoltes), 18 (cas particuliers) et le tableau §20 sont entièrement vides.
+> **Ce qui manque toujours** — chemin critique inchangé : **toutes les valeurs chiffrées**. Aucune durée, température, humidité, aucun ratio, aucun seuil d’alarme, aucune liste d’espèces. Le **tableau §20 reste vide**, et c’est lui qui bloque l’amorçage du premier process.
 
 ## 2. Ce que nous avons compris pour l’instant
 
@@ -727,7 +727,9 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Critère de passage : à l’observation visuelle, validée par une personne — la durée n’est qu’un rappel.
+Actions dans l’app : les mêmes que partout, filtrées par pertinence selon le stade.
+⏳ Durée, température, humidité, lumière/obscurité, CO2 et observations attendues : NON FOURNIS.
 ```
 
 ### 9.3 Incubation 2
@@ -747,7 +749,9 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Critère de passage à incubation 3 : observation visuelle + validation humaine.
+Actions dans l’app : les mêmes que partout, filtrées par pertinence.
+⏳ Raison de la séparation avec incubation 1, ce qui change, durée et conditions : NON FOURNIS.
 ```
 
 ### 9.4 Incubation 3
@@ -767,7 +771,9 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Incubation 3 est OPTIONNELLE — pas obligatoire pour toutes les espèces.
+Critère de passage en fructification : observation visuelle + validation humaine.
+⏳ Objectif de l’étape, durée, conditions, signes visuels et risques : NON FOURNIS.
 ```
 
 ### 9.5 Fructification 1
@@ -791,7 +797,8 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Actions dans l’app : les mêmes que partout, filtrées par pertinence.
+⏳ Leviers de déclenchement, délai avant les premiers signes, observations, problèmes et chambre utilisée : NON FOURNIS.
 ```
 
 ### 9.6 Fructification 2
@@ -811,7 +818,10 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Une observation « maturité récolte » dédiée est souhaitée.
+Critère « flush 1 prêt » : observation visuelle + validation humaine.
+Actions dans l’app : les mêmes que partout, filtrées par pertinence.
+⏳ Raison de la séparation avec fructification 1, durée et conditions : NON FOURNIS.
 ```
 
 ### 9.7 Récolte flush 1
@@ -831,7 +841,9 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Décision de récolter : observation visuelle + validation humaine.
+Poids mesuré PAR UNITÉ, qualité notée, pertes notées AVEC LEUR CAUSE.
+Après flush 1 : repos, fructification 2, ou directement flush 2 — les trois chemins existent.
 ```
 
 ### 9.8 Récolte flush 2
@@ -848,7 +860,9 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Toutes les unités font un flush 2. Poids par unité, même méthode qu’au flush 1. La qualité diffère du flush 1.
+Après flush 2 : repos, fructification suivante, ou directement flush 3.
+⏳ Durée entre flush 1 et 2, et conditions particulières entre les deux : NON FOURNIES.
 ```
 
 ### 9.9 Récolte flush 3
@@ -864,7 +878,9 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Le flush 3 est OPTIONNEL, pas systématique. Décision d’arrêt : observation visuelle + validation humaine. Poids mesuré par unité également.
+Après flush 3 : repos, fructification suivante, ou fin de cycle.
+⏳ Seuil de rentabilité (le flush 3 vaut-il le coût et l’espace) : NON FOURNI.
 ```
 
 ### 9.10 Fin de cycle
@@ -885,7 +901,8 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Statuts : terminé, compost, rebut, contaminé — ces quatre suffisent.
+Poids final mesuré. Raison de fin notée. L’emplacement reste occupé jusqu’au nettoyage. Une tâche de nettoyage est créée.
 ```
 
 ## 10. Conditions de culture par chambre
@@ -905,7 +922,7 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Chambres, étagères, niveau et position.
 ```
 
 2. Faut-il suivre seulement la chambre, ou aussi l’étagère/le niveau/la position ?
@@ -913,7 +930,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Les deux : chambre, étagère, niveau et position.
 ```
 
 3. Quelles conditions cibles par chambre ?
@@ -930,7 +947,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, une unité peut changer plusieurs fois de chambre.
 ```
 
 5. Veux-tu scanner le QR d’une chambre pour voir toutes les unités présentes ?
@@ -938,7 +955,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, scanner le QR d'une chambre doit afficher toutes les unités présentes.
 ```
 
 ## 11. Mesures à saisir ou récupérer
@@ -952,7 +969,7 @@ Exemples : température, humidité, poids, nombre de sacs, contamination.
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Tout est fait à la main aujourd'hui : température, humidité, poids, contrôle visuel. Des appareils connectés sont envisagés dans un futur proche.
 ```
 
 2. À quelle fréquence ?
@@ -960,7 +977,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Manuellement aujourd'hui ; la fréquence dépendra des appareils connectés à venir.
 ```
 
 3. Quelles mesures sont liées à une unité et lesquelles sont liées à une chambre ?
@@ -970,7 +987,7 @@ Exemple : poids = unité ; température = chambre.
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Aujourd'hui tout est saisi à la main — température, humidité, poids, visuel. Les appareils connectés prendront le relais sur les mesures d'ambiance (chambre), le poids restant lié à l'unité.
 ```
 
 4. Les appareils Inkbird doivent-ils seulement servir d’historique, ou aussi déclencher des alertes ?
@@ -978,7 +995,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Les Inkbird doivent aussi déclencher des alertes, pas seulement servir d'historique.
 ```
 
 5. Quelles valeurs veux-tu voir dans les statistiques ?
@@ -1024,7 +1041,7 @@ Exemple : en incubation, contamination/colonisation ; en fructification, maturit
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Pas de liste d'observations propre à chaque étape : la liste complète est disponible partout, l'app masque ce qui n'a pas de sens au stade courant.
 ```
 
 3. Faut-il pouvoir prendre une photo à chaque observation ?
@@ -1032,7 +1049,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, une photo doit être possible sur toute observation.
 ```
 
 4. Pour quelles observations la photo devrait-elle être obligatoire ?
@@ -1040,7 +1057,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Photo obligatoire en cas de contamination.
 ```
 
 5. Faut-il une notion de gravité ?
@@ -1050,7 +1067,7 @@ Exemple : faible, moyen, critique.
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, gravité à trois niveaux : faible, moyen, critique.
 ```
 
 ## 13. Actions à faire depuis l’iPhone
@@ -1111,7 +1128,7 @@ Toute action doit pouvoir s’appliquer à une sélection d’unités, y compris
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, une validation est requise avant toute action en masse.
 ```
 
 4. Faut-il pouvoir annuler ou corriger une action ?
@@ -1119,7 +1136,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, une action doit pouvoir être annulée ou corrigée.
 ```
 
 ## 14. Récoltes et poids par unité
@@ -1131,7 +1148,7 @@ Questions :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, poids par unité à chaque flush.
 ```
 
 2. Quelle unité de poids utilises-tu ? grammes ou kilogrammes ?
@@ -1153,7 +1170,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Poids par unité, qualité et pertes avec leur cause.
 ```
 
 4. La récolte d’une unité peut-elle être mélangée avec celle d’une autre unité ?
@@ -1161,7 +1178,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, les récoltes de plusieurs unités peuvent être mélangées.
 ```
 
 5. Si oui, faut-il garder les proportions exactes ?
@@ -1169,7 +1186,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, les proportions exactes doivent être conservées en cas de mélange.
 ```
 
 6. Quels indicateurs de rendement veux-tu ?
@@ -1225,7 +1242,7 @@ Toutes les statistiques possibles doivent être calculables, puisque la traçabi
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, comparer les enfants d'un même parent entre eux.
 ```
 
 3. Veux-tu comparer les performances entre chambres ?
@@ -1233,7 +1250,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, comparer les performances entre chambres.
 ```
 
 4. Veux-tu exporter les données en CSV/Excel ?
@@ -1241,7 +1258,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, export CSV/Excel.
 ```
 
 5. Veux-tu des statistiques sur la lignée et les générations ?
@@ -1329,7 +1346,7 @@ Exemples : code unité, espèce, date inoculation, parent, chambre, phase.
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Nom de l'unité, type, date, et le code QR.
 ```
 
 3. Faut-il un QR pour les chambres ?
@@ -1337,7 +1354,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, un QR pour les chambres.
 ```
 
 4. Faut-il un QR pour les récoltes ou produits finaux ?
@@ -1345,7 +1362,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Oui, un QR pour les récoltes et les produits finaux.
 ```
 
 5. Que faire si un QR est abîmé ou perdu ?
@@ -1373,7 +1390,7 @@ Réponse :
 Réponse :
 
 ```text
-⏳ SANS RÉPONSE au 30/07/2026
+Non, une unité contaminée ne peut plus produire.
 ```
 
 3. Que fais-tu si une unité est en retard ?

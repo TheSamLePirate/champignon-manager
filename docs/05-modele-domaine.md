@@ -336,3 +336,27 @@ Chaque unité doit porter la **version du process** qui lui est appliquée, et c
 ### 6.4 Filtres persistés
 
 Les filtres de sélection doivent être **enregistrables comme favoris** : prévoir une entité de filtre sauvegardé (critères combinés + nom), rattachée à l’utilisateur.
+
+## 7. Précisions du 30/07/2026 (2ᵉ passe)
+
+### 7.1 Emplacement
+
+Le suivi descend **jusqu’à la position** : chambre → étagère → niveau → position. Une unité **change plusieurs fois de chambre** au cours de sa vie : l’emplacement est donc un attribut historisé, pas une propriété stable.
+
+En fin de cycle, l’**emplacement reste occupé jusqu’au nettoyage** — il faut donc un état d’occupation distinct de la présence d’une unité active, et une **tâche de nettoyage** générée automatiquement.
+
+### 7.2 Récolte
+
+Chaque flush enregistre, **par unité** : le poids, la qualité, et les **pertes avec leur cause**. Les récoltes de plusieurs unités peuvent être **mélangées dans un même produit final**, en **conservant les proportions exactes** — le lien produit → unités d’origine est donc pondéré, pas un simple ensemble.
+
+Après un flush, trois chemins existent : **repos, fructification suivante, ou flush suivant directement**. Le modèle ne doit pas imposer de séquence.
+
+### 7.3 Fin de cycle
+
+Statuts : **terminé, compost, rebut, contaminé** — jugés suffisants. Un **poids final** et une **raison de fin** sont enregistrés.
+
+Une unité **contaminée ne peut plus produire** : c’est un état terminal côté production, même si l’unité reste consultable.
+
+### 7.4 Actions
+
+Toute action en masse exige une **validation préalable**, et **toute action doit être annulable ou corrigeable** — ce qui impose, dans un modèle à événements immuables, un événement de compensation plutôt qu’une suppression.

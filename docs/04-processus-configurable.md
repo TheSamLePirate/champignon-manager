@@ -315,3 +315,21 @@ Création et modification d’un process : **le cultivateur seul**.
 ### 15.5 Ce qui manque pour construire le premier process
 
 ⏳ Aucune valeur n’a été fournie : durées, températures, humidité, critères de passage, seuils d’alarme. Toutes les questions de valeur ont reçu la réponse « configurable ». **Un process configurable a néanmoins besoin de valeurs par défaut** pour être amorcé en *seed data* — c’est le blocage principal côté implémentation.
+
+## 16. Précision du 30/07/2026 (2ᵉ passe) — la durée ne déclenche rien
+
+Réponse du cultivateur à « sur quoi repose le passage d’une étape à la suivante ? » : **l’observation visuelle, validée par une personne. La durée cible n’est qu’un rappel.**
+
+Cela **précise le §15.2** : les alarmes de durée restent telles que définies, mais le moteur ne doit modéliser **aucune transition automatique par échéance**. La durée sert exclusivement à :
+
+- calculer les seuils d’alarme (avant échéance, dépassement, retard critique) ;
+- marquer une unité « en retard » ;
+- alimenter la statistique « durée réelle vs durée cible ».
+
+Elle n’est **jamais** une condition de passage. Concrètement : pas de job d’avancement planifié, pas d’état « prêt à passer » calculé depuis une date — seul un opérateur fait avancer une unité.
+
+### Actions et observations : pas de liste par étape
+
+Il n’y a **pas de liste d’actions ni d’observations propre à chaque étape**. La liste complète existe à tous les stades ; l’application **masque simplement ce qui n’a pas de sens** au stade courant (par exemple « récolter » sur une gélose).
+
+Conséquence : la configuration de process ne porte pas une liste d’actions par étape, mais au plus des **règles de pertinence par stade**. Cela simplifie nettement l’éditeur de process — un argument de plus pour le seed data avant l’éditeur visuel.
