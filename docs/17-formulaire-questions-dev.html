@@ -583,6 +583,10 @@
         <p>
           Remplis ce formulaire pour figer les décisions techniques avant de coder. Chaque question peut être répondue, modifiée,
           ou marquée comme non pertinente. À la fin, exporte le JSON pour l’utiliser comme base de spécification développeur.
+          <br /><b>Répondu le 17/06/2026</b> — synthèse dans <code>18-decisions-techniques-dev.md</code>.
+          <br /><b>Mise à jour 30/07/2026 :</b> les réponses du cultivateur <b>rouvrent trois questions</b> — versioning/migration de process
+          (<code>dev_06_05</code>, contradiction à trancher), rôles au MVP (<code>dev_09_02</code>, confirmé : un seul auteur)
+          et niveau d’éditeur de process (<code>dev_06_06</code>, le seed n’a aucune valeur à contenir). Voir leurs encadrés d’aide.
         </p>
       </div>
       <div class="hero-actions">
@@ -694,7 +698,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const FORM_VERSION = "2026-06-17.dev-v1";
+    const FORM_VERSION = "2026-07-30.dev-v2-impact-cultivateur";
     const STORAGE_KEY = "champignon-manager:developer-questions-form:v1";
 
     const STATUS_LABELS = {
@@ -1004,13 +1008,13 @@
                   {
                         "id": "dev_06_05",
                         "title": "Comment versionner et migrer un process déjà utilisé par des lots ?",
-                        "help": "Un lot doit référencer une version publiée. Décider si migration manuelle, jamais, ou assistant de migration.",
+                        "help": "Un lot doit référencer une version publiée. Décider si migration manuelle, jamais, ou assistant de migration.\n\n⚠️ ROUVERTE PAR LE CULTIVATEUR (30/07/2026) : il demande à la fois que les unités en cours BASCULENT sur la nouvelle version (après confirmation) ET de pouvoir COMPARER les résultats entre deux versions. Incompatible en l’état : si tout bascule, il ne reste aucune population témoin. À trancher — bascule avec exclusion possible d’une sélection, ou comparaison limitée à l’historique déjà produit. Voir doc 04 §15.3.",
                         "type": "longtext"
                   },
                   {
                         "id": "dev_06_06",
                         "title": "Quel niveau d’éditeur de process veux-tu au MVP ?",
-                        "help": "Options : seed JSON uniquement, écran admin simple, éditeur complet plus tard.",
+                        "help": "Options : seed JSON uniquement, écran admin simple, éditeur complet plus tard.\n\n⚠️ À REVOIR (30/07/2026) : les réponses cultivateur alourdissent le moteur — étapes sautables, refaisables et réversibles, changement de process en cours de route, bascule de version — mais ne fournissent AUCUNE valeur : ni durée, ni température, ni seuil. Un seed JSON n’a donc rien à contenir aujourd’hui ; obtenir le tableau §20 du questionnaire pour une seule espèce est le préalable.",
                         "type": "longtext"
                   }
             ]
@@ -1131,7 +1135,7 @@
                   {
                         "id": "dev_09_02",
                         "title": "Quels rôles implémenter dès le début ?",
-                        "help": "Coche les rôles nécessaires au MVP.",
+                        "help": "Coche les rôles nécessaires au MVP.\n\n✅ Confirmé par le cultivateur (30/07/2026) : à « qui a le droit de créer ou modifier un process ? », la réponse est « moi » — un seul auteur. Cela conforte le rôle admin unique au MVP.",
                         "type": "checklist",
                         "options": [
                               "admin",

@@ -241,8 +241,8 @@ header.top{
       </div>
     </div>
     <div class="spacer"></div>
-    <div class="species" title="L'espèce est configurable — pleurote est la première espèce de référence">
-      <span class="dot"></span><b>Pleurote</b><small>référence · espèce configurable</small>
+    <div class="species" title="Réponse du cultivateur (30/07/2026) : « tout type de champignon, configurable dans l'app ». Aucune liste d'espèces n'a été fournie.">
+      <span class="dot"></span><b>Toutes espèces</b><small>configurables · liste non fournie</small>
     </div>
     <button class="iconbtn" id="themeBtn" title="Basculer clair / sombre" aria-label="Thème">
       <svg id="themeIcon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -301,7 +301,7 @@ header.top{
               <p><b>Clique sur une étape</b> du schéma pour voir son objectif, sa durée, ses conditions, observations et actions.</p>
               <div class="hint" style="margin-top:12px">
                 <span class="i">✺</span>
-                <span>Glisse pour déplacer, molette pour zoomer. Beaucoup de durées/conditions restent <span class="tbd">à confirmer</span> avec le cultivateur.</span>
+                <span>Glisse pour déplacer, molette pour zoomer. La structure est figée depuis le 30/07/2026 ; les durées et conditions sont <span class="tbd">non fournies</span> — réponse « configurable » partout.</span>
               </div>
             </div>
           </div>
@@ -332,14 +332,16 @@ header.top{
  *  Pour modifier un process : changez le texte `mermaid` et/ou `nodes`.
  *  Les classes :::stXxx colorent les nœuds selon leur stade (voir THEME).
  * ================================================================= */
-const tbd = "à confirmer (cultivateur)";
+// 30/07/2026 : le cultivateur a répondu « configurable » à toutes les questions de valeur.
+// Aucune durée, température, humidité ni ratio réel n’a été fourni.
+const tbd = "non fourni — « configurable »";
 
 const PROCESSES = [
   {
     id:"overview", glyph:"🧭", accent:"--st-fruct", status:"ok",
     title:"Chaîne de propagation",
     short:"Du spore à l'assiette — vue d'ensemble",
-    desc:"La traçabilité couvre toute la chaîne : origine → gélose → culture liquide → grain → substrat → fructification → récolte → produit. À chaque stade : clone (même stade) ou transfert (stade suivant).",
+    desc:"La traçabilité couvre toute la chaîne : origine → gélose → culture liquide → grain → substrat → fructification → récolte → produit. À chaque stade : clone (même stade) ou transfert (stade suivant). Confirmé le 30/07/2026 : une unité peut entrer à n'importe quel stade — y compris un substrat reçu déjà inoculé — donc exister sans ascendant.",
     mermaid:`flowchart LR
   origine["🧬 Origine<br/><small>spores · culture mère · clone tissu</small>"]:::stOrigine
   gelose["🧫 Gélose<br/><small>boîte de Pétri</small>"]:::stGelose
@@ -479,13 +481,14 @@ const PROCESSES = [
     id:"etats", glyph:"◑", accent:"--st-decision", status:"ok",
     title:"Cycle de vie d'une unité",
     short:"Machine à états",
-    desc:"Les états possibles d'une unité de culture et leurs transitions. Les états exacts restent configurables.",
+    desc:"États d'une unité et transitions, mis à jour le 30/07/2026. Deux états sont réversibles : « En réserve » (conservation) et « Archivé ». Sortir de conservation ne réveille pas l'unité — cela crée une nouvelle unité reliée à elle.",
     mermaid:`stateDiagram-v2
   state "Brouillon" as Brouillon
   state "Actif" as Actif
   state "En attente" as EnAttente
-  state "Divisé" as Divise
+  state "En réserve" as Reserve
   state "En production" as EnProd
+  state "Archivé" as Archive
   state "Terminé" as Termine
   state "Rebut" as Rebut
   state "Transformé" as Transforme
@@ -493,36 +496,100 @@ const PROCESSES = [
   Brouillon --> Actif: activation
   Actif --> EnAttente: pause / blocage
   EnAttente --> Actif: reprise
-  Actif --> Divise: division
+  Actif --> Reserve: mise en conservation
+  Reserve --> Actif: remise en service
+  Reserve --> Termine: fin de viabilité
   Actif --> EnProd: entrée fructification
   EnProd --> Actif: repos / relance
   EnProd --> Transforme: récolte → produit
+  Actif --> Archive: archivage après division / transfert
+  EnProd --> Archive: archivage
+  Archive --> Actif: réactivation
   Actif --> Termine: fin normale
   EnProd --> Termine: fin de production
   Actif --> Rebut: contamination
   EnProd --> Rebut: contamination
-  Divise --> Termine: parent conteneur
   Termine --> [*]
   Rebut --> [*]
   Transforme --> [*]`,
     nodes:{}
   },
   {
+    id:"moteur", glyph:"⚙", accent:"--st-decision", status:"ok",
+    title:"Moteur de process",
+    short:"Sous-process · durées · alarmes · versions",
+    desc:"Confirmé le 30/07/2026. On compose des process entiers ou des sous-process réutilisables, appliqués à une unité, un lot ou une sélection. Chaque étape porte une durée cible et des alarmes réglables — qui alertent, jamais ne bloquent : la décision humaine prime.",
+    mermaid:`flowchart TB
+  subgraph DEF["Définition — par le cultivateur seul"]
+    direction LR
+    sp1["Sous-process<br/><small>« cycle de flush »</small>"]:::stProcess
+    sp2["Sous-process<br/><small>« préparation labo »</small>"]:::stProcess
+    pr["Process complet<br/><small>assemblage</small>"]:::stProcess
+    sp1 --> pr
+    sp2 --> pr
+  end
+  subgraph APP["Application"]
+    direction LR
+    cible["Unité · lot · sélection filtrée"]:::stSubstrat
+  end
+  subgraph RUN["Exécution d'une étape"]
+    direction TB
+    et["Étape<br/><small>durée cible</small>"]:::stFruct
+    av["Rappel avant échéance"]:::stDecision
+    dep["Dépassement<br/><small>tâche + unité en retard</small>"]:::stRecolte
+    crit["2ᵉ seuil — retard critique"]:::stDanger
+    hum{"Validation humaine"}:::stDecision
+    suite["Étape suivante"]:::stFruct
+    et --> av --> dep --> crit
+    et --> hum
+    hum -->|"valide"| suite
+    hum -. "saute / refait / revient en arrière" .-> et
+  end
+  pr --> cible --> et
+  subgraph VER["Versions"]
+    direction LR
+    v1["Process v1"]:::stProcess
+    v2["Process v2"]:::stProcess
+    basc["Bascule des unités en cours<br/><small>après confirmation</small>"]:::stDecision
+    comp["Comparer v1 / v2"]:::stDanger
+    v1 --> basc --> v2
+    v2 -. "⚠ contradiction" .-> comp
+  end
+  cible --> v1`,
+    nodes:{
+      sp1:{stage:"Sous-process", tone:"stProcess", desc:"Bloc d'étapes réutilisable, rejoué plusieurs fois.", f:{"Exemple":"repos → fructification → récolte","Réutilisation":"appelé à chaque flush","Défini par":"le cultivateur seul"}},
+      sp2:{stage:"Sous-process", tone:"stProcess", desc:"Bloc commun à toutes les espèces.", f:{"Exemple":"préparation labo, quarantaine","Portée":"partagé entre process"}},
+      pr:{stage:"Process", tone:"stProcess", desc:"Process complet composé de phases, d'étapes et de sous-process.", f:{"Phases":"grande période (incubation)","Étapes":"moment précis (incubation 1/2/3)","Moteur":"identique pour toutes les espèces — seule la config change"}},
+      cible:{stage:"Cible", tone:"stSubstrat", desc:"Un process ou sous-process s'applique à n'importe quelle granularité.", f:{"Cibles":"une unité · un lot entier · une sélection filtrée","En cours de route":"un lot peut changer de process","Filtres":"enregistrables comme favoris"}},
+      et:{stage:"Étape", tone:"stFruct", desc:"Chaque étape porte une durée cible.", f:{"Durée":tbd,"Alarmes":"réglables étape par étape","Sans alarme":"possible sur certaines étapes"}},
+      av:{stage:"Alarme", tone:"stDecision", desc:"Rappel avant la fin prévue.", f:{"Exemple":"J-1","Seuil":tbd}},
+      dep:{stage:"Alarme", tone:"stRecolte", desc:"Dépassement de la durée cible.", f:{"Effet":"prévenir · créer une tâche · marquer l'unité en retard","Ne fait jamais":"bloquer l'unité","Acquittement":"reportable, avec trace de qui et quand"}},
+      crit:{stage:"Alarme", tone:"stDanger", desc:"Second seuil de retard.", f:{"Seuil":tbd,"Non retenu":"rappel périodique · rappel en milieu d'étape"}},
+      hum:{stage:"Décision", tone:"stDecision", desc:"Le passage à l'étape suivante est toujours validé par une personne.", f:{"Principe":"l'app propose et alerte, l'humain valide","Libertés":"une étape peut être sautée, refaite ou remise en arrière","Automatisme":"aucun avancement automatique"}},
+      v1:{stage:"Version", tone:"stProcess", desc:"Version de process appliquée à une unité.", f:{"À enregistrer":"la version doit être figée sur l'unité et dans les événements"}},
+      basc:{stage:"Migration", tone:"stDecision", desc:"Modifier un process fait basculer les unités déjà lancées.", f:{"Confirmation":"explicite (« êtes-vous sûr »)","Portée":"toutes les unités en cours"}},
+      comp:{stage:"Analyse", tone:"stDanger", desc:"Comparer les résultats entre deux versions de process.", f:{"⚠ Contradiction":"si toutes les unités basculent, il ne reste aucune population témoin à comparer","Pistes":"exclure une sélection de la bascule, ou ne comparer que l'historique déjà produit","À trancher":"avant de coder le moteur — voir doc 04 §15.3"}}
+    }
+  },
+  {
     id:"lignee", glyph:"🌿", accent:"--st-mother", status:"ok",
     title:"Lignée & généalogie",
-    short:"Clone · transfert · division",
-    desc:"Exemple concret de lignée. Trois relations : clone (même stade), transfert (stade suivant), division (séparation physique du substrat).",
+    short:"Clone · transfert · division · conservation",
+    desc:"Exemple concret de lignée. Trois relations : clone (même stade), transfert (stade suivant), division (à tout stade). La sortie de conservation crée elle aussi un nouveau maillon. Aucune limite de génération n'est imposée (confirmé le 30/07/2026).",
     mermaid:`flowchart LR
   o["🧬 Origine<br/><small>spores souche X</small>"]:::stOrigine
   g1["Gélose G-001"]:::stGelose
   gm["Gélose G-001-c1<br/><small>★ culture mère</small>"]:::stMother
+  gr["Gélose G-001-c1-r<br/><small>sortie de réserve</small>"]:::stGelose
   l1["LC L-014"]:::stLC
   r1["Grain GR-052"]:::stGrain
   r2["Grain GR-053"]:::stGrain
   s1["Substrat S-300…309<br/><small>10 ballots</small>"]:::stSubstrat
   sub["Sous-lots<br/><small>division</small>"]:::stSubstrat
+  sx["🟫 Substrat S-400<br/><small>reçu déjà inoculé</small>"]:::stSubstrat
   o -->|"inoculation"| g1
   g1 -. "clone" .-> gm
+  gm -. "sortie de conservation<br/>= nouvelle unité" .-> gr
   g1 -->|"transfert"| l1
   l1 -->|"transfert ×3"| r1
   l1 -->|"transfert"| r2
@@ -531,7 +598,9 @@ const PROCESSES = [
     nodes:{
       o:{stage:"Origine", tone:"stOrigine", desc:"Racine de la lignée.", f:{"Souche":"X","Traçabilité":"Tout descend de ce point"}},
       g1:{stage:"Gélose", tone:"stGelose", desc:"Première gélose issue de l'origine.", f:{"Relation":"transfert (origine → gélose)"}},
-      gm:{stage:"Culture mère", tone:"stMother", desc:"Clone conservé comme réserve génétique.", f:{"Relation":"clone (même stade)","Génération":"G-001-c1"}},
+      gm:{stage:"Culture mère", tone:"stMother", desc:"Clone conservé comme réserve génétique.", f:{"Relation":"clone (même stade)","Génération":"G-001-c1","Générations max":"aucune limite (30/07/2026)"}},
+      gr:{stage:"Gélose", tone:"stGelose", desc:"Unité créée en sortant la culture mère de conservation.", f:{"Relation":"sortie de conservation","Règle":"Remettre en service crée une nouvelle unité, pas une reprise de l'ancienne","Parent":"reste en réserve ou est archivé — au choix"}},
+      sx:{stage:"Substrat", tone:"stSubstrat", desc:"Unité entrée directement au stade substrat, sans ascendant.", f:{"Règle":"Une unité peut entrer à n'importe quel stade (30/07/2026)","Cas":"Ballot reçu déjà inoculé","Lignée":"Racine de sa propre lignée"}},
       l1:{stage:"LC", tone:"stLC", desc:"Culture liquide issue de la gélose.", f:{"Relation":"transfert (gélose → LC)"}},
       r1:{stage:"Grain", tone:"stGrain", desc:"Ballot de grain inoculé par la LC.", f:{"Relation":"transfert (LC → grain)","Multiplication":"×3"}},
       s1:{stage:"Substrat", tone:"stSubstrat", desc:"10 ballots de substrat issus d'un grain.", f:{"Relation":"transfert (grain → substrat)","Multiplication":"×10"}},
@@ -685,7 +754,7 @@ function selectNode(key,g){
   const meta = current.nodes[key];
   const accent = cssVar(STAGE_CLASSES[meta.tone] || "--st-process");
   const rows = Object.entries(meta.f||{}).map(([k,v])=>{
-    const val = String(v).includes("à confirmer") ? `<span class="tbd">${v}</span>` : v;
+    const val = String(v).includes("non fourni") ? `<span class="tbd">${v}</span>` : v;
     return `<div class="row"><dt>${k}</dt><dd>${val}</dd></div>`;
   }).join("");
   $("#detailBody").innerHTML = `
@@ -768,7 +837,7 @@ function select(p){
   $("#procDesc").textContent=p.desc;
   $("#procNum").textContent=String(PROCESSES.indexOf(p)+1).padStart(2,"0")+" / "+String(PROCESSES.length).padStart(2,"0");
   $("#detailBody").innerHTML=`<div class="empty-detail"><p><b>Clique sur une étape</b> du schéma pour ses détails.</p>
-    <div class="hint" style="margin-top:12px"><span class="i">✺</span><span>${p.status==="tbd"?"Plusieurs durées / conditions sont <span class='tbd'>à confirmer</span> avec le cultivateur.":"Schéma de structure — les libellés exacts restent configurables."}</span></div></div>`;
+    <div class="hint" style="margin-top:12px"><span class="i">✺</span><span>${p.status==="tbd"?"Structure figée, mais les durées et conditions sont <span class='tbd'>non fournies</span> : le cultivateur a répondu « configurable » partout (30/07/2026).":"Schéma de structure — les libellés exacts restent configurables."}</span></div></div>`;
   document.querySelectorAll(".proc").forEach(el=>el.classList.remove("active"));
   buildList($("#search").value);
   renderCurrent();
