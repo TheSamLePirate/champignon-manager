@@ -215,3 +215,32 @@ Conséquence : une unité peut exister **sans ascendant**. La traçabilité asce
 Une action (avancement d'étape, application d'un sous-process, déplacement) s'applique indifféremment à une unité, à tous les enfants d'un parent, ou à une **partie seulement** de la sélection.
 
 ⏳ Non renseigné : la conduite réelle en cas de contamination, de retard ou de fusion d'unités (§18 du questionnaire, entièrement vide).
+
+## Complément 31/07/2026 — le flux substrat réel
+
+Le flux aval, tel qu'il est réellement pratiqué (les subdivisions 1/2/3 n'existent pas) :
+
+```
+inoculation ──► incubation ──► [colonisation complète ?]
+   poids            2-3 sem.          │
+   substrat         24 °C             ├─ contamination ──► compost / rebut
+   total            obscurité         │                    (ne produit plus)
+                                      ▼
+                            déclenchement : ouverture du sac,
+                            lumière, 90 % HR, 18-24 °C
+                                      ▼
+                              fructification ──► [maturité ?]
+                              primordia à 2-3 j        ▼
+                                              flush 1 ──► repos ──► flush 2
+                                                 │                    │
+                                                 │       repos ──► flush 3 (opt.)
+                                                 ▼                    ▼
+                                         produit final          fin de cycle
+                                    (mélange pondéré possible)   poids final
+                                                                 emplacement occupé
+                                                                 jusqu'au nettoyage
+```
+
+Chaque flush enregistre, **par unité** : poids en grammes, qualité, pertes avec leur cause. Le flush 2 est systématique, le flush 3 optionnel mais rentable.
+
+Détail et valeurs : [`20-modele-process-par-defaut.md`](./20-modele-process-par-defaut.md).

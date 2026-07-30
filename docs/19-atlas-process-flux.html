@@ -301,7 +301,7 @@ header.top{
               <p><b>Clique sur une étape</b> du schéma pour voir son objectif, sa durée, ses conditions, observations et actions.</p>
               <div class="hint" style="margin-top:12px">
                 <span class="i">✺</span>
-                <span>Glisse pour déplacer, molette pour zoomer. La structure est figée depuis le 30/07/2026 ; les durées et conditions sont <span class="tbd">non fournies</span> — réponse « configurable » partout.</span>
+                <span>Glisse pour déplacer, molette pour zoomer. Process substrat : <b>valeurs réelles du cultivateur</b> (31/07/2026). Stades labo : encore <span class="tbd">non fournis</span>. Tout reste configurable dans l’app.</span>
               </div>
             </div>
           </div>
@@ -367,9 +367,9 @@ const PROCESSES = [
       gelose:{stage:"Gélose", tone:"stGelose", desc:"Culture sur milieu gélosé stérile (agar). Premier maillon, souvent culture mère.", f:{"Objectif":"Obtenir un mycélium pur","Durée":tbd,"Conditions":"Stérile · "+tbd,"Observations":"Contamination, vitesse de colonisation","Actions app":"Cloner · transférer en LC · marquer culture mère","Contamination":"Risque élevé — isoler / jeter"}},
       lc:{stage:"Culture liquide (LC)", tone:"stLC", desc:"Mycélium en milieu liquide, pour inoculer rapidement le grain.", f:{"Objectif":"Multiplier vite avant le grain","Durée":tbd,"Conditions":"Agitation · stérile · "+tbd,"Observations":"Trouble, contamination, croissance","Actions app":"Cloner · transférer vers grain","Ratio":"1 LC → N grains ("+tbd+")"}},
       grain:{stage:"Grain", tone:"stGrain", desc:"Grain colonisé (spawn) issu d'une LC ou gélose, pour inoculer le substrat.", f:{"Objectif":"Produire le spawn d'inoculation","Durée":tbd,"Observations":"Taux de colonisation, contamination, uniformité","Actions app":"Cloner (grain→grain) · transférer vers substrat","Ratio":"1 grain → N substrats ("+tbd+")"}},
-      substrat:{stage:"Substrat", tone:"stSubstrat", desc:"Ballot de substrat inoculé — c'est le « lot » du process aval.", f:{"Objectif":"Colonisation puis fructification","Poids":"Poids substrat (rendement = récolte / substrat)","Actions app":"Diviser · déplacer · suivre le process substrat","Lien":"Voir le process « Substrat → récolte »"}},
-      fruct:{stage:"Fructification", tone:"stFruct", desc:"Apparition et croissance des champignons après déclenchement (choc).", f:{"Conditions":"Humidité, lumière, aération — "+tbd,"Observations":"Primordia, maturité, contamination","Chambre":"Chambre de fructification"}},
-      recolte:{stage:"Récolte", tone:"stRecolte", desc:"Vagues de récolte (flush) avec pesée par unité.", f:{"Mesure":"Poids brut / net / pertes par unité","Flushs":"1, 2, 3 (3 souvent optionnel)","Qualité":"Calibre, grade — "+tbd}},
+      substrat:{stage:"Substrat", tone:"stSubstrat", desc:"Ballot de substrat inoculé — c'est le « lot » du process aval.", f:{"Incubation":"2-3 semaines · 24 °C · obscurité","Poids":"poids substrat total (g) — base du rendement","Actions app":"diviser · déplacer · suivre le process substrat","Lien":"voir le process « Substrat → récolte »"}},
+      fruct:{stage:"Fructification", tone:"stFruct", desc:"Apparition et croissance des champignons après ouverture du sac.", f:{"Conditions":"90 % HR · 18-24 °C · lumière","Premiers signes":"2-3 jours","Observations":"primordia · maturité · contamination","Chambres":"2 chambres de fructification"}},
+      recolte:{stage:"Récolte", tone:"stRecolte", desc:"Vagues de récolte (flush) avec pesée par unité.", f:{"Mesure":"poids en GRAMMES par unité","Aussi noté":"qualité + pertes avec leur cause","Flushs":"1 et 2 systématiques, 3 optionnel mais rentable"}},
       produit:{stage:"Produit final", tone:"stProduit", desc:"Conditionnement issu d'une ou plusieurs récoltes.", f:{"Types":"Frais, barquette, vrac, séché… (par espèce)","Traçabilité":"Garde le lien vers récoltes → … → gélose","Stock":"Entrées / sorties"}}
     }
   },
@@ -377,7 +377,7 @@ const PROCESSES = [
     id:"labo", glyph:"🧫", accent:"--st-gelose", status:"tbd",
     title:"Process amont — labo",
     short:"Gélose · culture liquide · grain",
-    desc:"Les trois stades stériles de laboratoire. À chaque contrôle : sain → clone ou transfert ; contaminé → rebut. Durées et conditions restent à confirmer.",
+    desc:"Les trois stades stériles de laboratoire. À chaque contrôle : sain → clone ou transfert ; contaminé → rebut. Seuls stades pour lesquels AUCUNE valeur n'a été fournie — le modèle par défaut (doc 20) propose des durées inventées, à ajuster.",
     mermaid:`flowchart TB
   subgraph SG["① Gélose — milieu gélosé stérile"]
     direction LR
@@ -426,33 +426,30 @@ const PROCESSES = [
     }
   },
   {
-    id:"substrat", glyph:"🟫", accent:"--st-substrat", status:"tbd",
+    id:"substrat", glyph:"🟫", accent:"--st-substrat", status:"ok",
     title:"Substrat → récolte",
     short:"Incubation · fructification · flushs",
-    desc:"Le process déjà exploré : du ballot de substrat inoculé jusqu'aux flushs et au produit. Étapes confirmées, conditions à préciser par espèce.",
+    desc:"Le process réel, corrigé le 31/07/2026 : les subdivisions incubation 1/2/3 et fructification 1/2 ont été SUPPRIMÉES — le cultivateur a répondu « pas de différence ». Les valeurs affichées sont les siennes ; celles marquées « inventé » sont des points de départ à ajuster.",
     mermaid:`flowchart TB
   start(["Transfert grain → substrat"]):::stGrain
-  inoc["Inoculation substrat"]:::stSubstrat
-  inc1["Incubation 1"]:::stSubstrat
-  inc2["Incubation 2"]:::stSubstrat
-  inc3["Incubation 3"]:::stSubstrat
+  inoc["Inoculation substrat<br/><small>⚖️ poids substrat total</small>"]:::stSubstrat
+  incub["Incubation<br/><small>2-3 sem. · 24 °C · obscurité</small>"]:::stSubstrat
   colc{"Colonisation<br/>complète ?"}:::stDecision
-  choc["Choc / déclenchement"]:::stFruct
-  fr1["Fructification 1<br/><small>primordia</small>"]:::stFruct
-  fr2["Fructification 2<br/><small>maturation</small>"]:::stFruct
+  choc["Déclenchement<br/><small>ouverture du sac · lumière</small>"]:::stFruct
+  fruct["Fructification<br/><small>90 % HR · 18-24 °C</small>"]:::stFruct
   matc{"Maturité<br/>récolte ?"}:::stDecision
-  fl1["Récolte flush 1<br/><small>⚖️ poids / unité</small>"]:::stRecolte
-  rp1["Repos / relance"]:::stSubstrat
-  fl2["Récolte flush 2"]:::stRecolte
-  rp2["Repos / relance"]:::stSubstrat
-  fl3["Récolte flush 3<br/><small>optionnel</small>"]:::stRecolte
+  fl1["Récolte flush 1<br/><small>⚖️ g / unité + qualité + pertes</small>"]:::stRecolte
+  rp1["Repos"]:::stSubstrat
+  fl2["Récolte flush 2<br/><small>systématique</small>"]:::stRecolte
+  rp2["Repos"]:::stSubstrat
+  fl3["Récolte flush 3<br/><small>optionnel · rentable</small>"]:::stRecolte
   fin["Fin de cycle"]:::stProcess
   compost["♻️ Compost / rebut"]:::stDanger
   produit["📦 Produit final"]:::stProduit
-  start --> inoc --> inc1 --> inc2 --> inc3 --> colc
+  start --> inoc --> incub --> colc
   colc -->|"oui"| choc
   colc -->|"contamination"| compost
-  choc --> fr1 --> fr2 --> matc
+  choc --> fruct --> matc
   matc -->|"prêt"| fl1
   fl1 --> rp1 --> fl2 --> rp2 --> fl3 --> fin
   fl1 --> produit
@@ -460,21 +457,20 @@ const PROCESSES = [
   fl3 --> produit
   fin --> compost`,
     nodes:{
-      inoc:{stage:"Substrat", tone:"stSubstrat", desc:"Création des ballots de substrat à partir du grain.", f:{"Saisie":"Poids substrat, souche, parent grain, date","QR":"Étiquette par ballot ("+tbd+")"}},
-      inc1:{stage:"Incubation 1", tone:"stSubstrat", desc:"Première période de colonisation.", f:{"Durée":tbd,"Température":tbd,"Observations":"Colonisation, contamination"}},
-      inc2:{stage:"Incubation 2", tone:"stSubstrat", desc:"Deuxième période — séparation à confirmer.", f:{"Durée":tbd,"Différence inc.1":tbd}},
-      inc3:{stage:"Incubation 3", tone:"stSubstrat", desc:"Fin de colonisation avant fructification.", f:{"Durée":tbd,"Obligatoire ?":"NON — optionnelle, pas pour toutes les espèces (30/07/2026)","Passage":"à l'observation visuelle, validé par une personne"}},
-      colc:{stage:"Contrôle", tone:"stDecision", desc:"Le substrat est-il prêt à fructifier ?", f:{"Oui":"→ choc / déclenchement","Contamination":"→ compost / rebut"}},
-      choc:{stage:"Fructification", tone:"stFruct", desc:"Déclenchement de la fructification.", f:{"Leviers":"Température, humidité, lumière, aération, ouverture — "+tbd}},
-      fr1:{stage:"Fructification 1", tone:"stFruct", desc:"Apparition des primordia.", f:{"Durée":tbd,"Observations":"Primordia, humidité de surface"}},
-      fr2:{stage:"Fructification 2", tone:"stFruct", desc:"Maturation avant récolte.", f:{"Critère récolte":"Taille / forme du chapeau — "+tbd}},
-      matc:{stage:"Contrôle", tone:"stDecision", desc:"Maturité atteinte pour récolter ?", f:{"Prêt":"→ récolte flush 1"}},
-      fl1:{stage:"Récolte", tone:"stRecolte", desc:"Première vague de récolte.", f:{"Mesure":"poids PAR UNITÉ à chaque flush","Aussi noté":"qualité + pertes AVEC LEUR CAUSE (30/07/2026)","Décision de récolter":"observation visuelle + validation humaine","Après":"repos, fructification 2, ou directement flush 2 — les trois existent"}},
-      fl2:{stage:"Récolte", tone:"stRecolte", desc:"Deuxième flush — systématique.", f:{"Toutes les unités ?":"OUI (30/07/2026)","Qualité":"différente du flush 1","Poids":"par unité, même méthode","Délai flush 1→2":tbd}},
-      fl3:{stage:"Récolte", tone:"stRecolte", desc:"Troisième flush — optionnel, pas systématique.", f:{"Fréquence":"optionnel (30/07/2026)","Poids":"mesuré par unité également","Décision d'arrêt":"observation visuelle + validation humaine","Rentabilité":tbd}},
-      fin:{stage:"Fin de cycle", tone:"stProcess", desc:"L'unité ne produit plus.", f:{"Statuts":"terminé, compost, rebut, contaminé — suffisants (30/07/2026)","Poids final":"mesuré","Raison de fin":"notée","Emplacement":"reste occupé jusqu'au nettoyage","Tâche":"nettoyage créée automatiquement"}},
-      produit:{stage:"Produit final", tone:"stProduit", desc:"Conditionnement des récoltes.", f:{"Origine":"une ou plusieurs récoltes","Mélange":"autorisé, avec conservation des PROPORTIONS EXACTES (30/07/2026)","QR":"les produits finaux ont leur propre QR"}},
-      compost:{stage:"Rebut", tone:"stDanger", desc:"Sortie du flux (compost / rebut).", f:{"Raison":"Fin normale, contamination, rendement faible"}}
+      inoc:{stage:"Substrat", tone:"stSubstrat", desc:"Vérification du grain, transfert sur le substrat, scellage, mise en incubation.", f:{"Saisie":"poids substrat TOTAL (g)","Contrôle qualité":"aspect · odeur · propreté · température","Étiquette":"QR par unité + nom + type + date","Nombre d'unités":"configurable"}},
+      incub:{stage:"Incubation", tone:"stSubstrat", desc:"Colonisation du substrat. UNE SEULE étape : les incubations 1/2/3 n'ont aucune différence sur le terrain.", f:{"Durée":"2 à 3 semaines (configurable)","Température":"24 °C","Humidité":"pas de contrôle","Lumière":"obscurité","CO2 / aération":"sans importance","Observations":"colonisation · contamination · couleur · odeur · humidité du sac","Passage":"à l'observation visuelle, validé par une personne"}},
+      colc:{stage:"Contrôle", tone:"stDecision", desc:"Le substrat est-il prêt à fructifier ?", f:{"Décision":"visuelle, jamais automatique","Oui":"→ déclenchement","Contamination":"→ compost / rebut (l'unité ne produit plus)"}},
+      choc:{stage:"Fructification", tone:"stFruct", desc:"Déclenchement de la fructification.", f:{"Leviers":"ouverture du sac / bloc · passage en lumière · humidité portée à 90 % · température 18-24 °C","Premiers signes":"2-3 jours"}},
+      fruct:{stage:"Fructification", tone:"stFruct", desc:"UNE SEULE étape : fructification 1 et 2 n'ont aucune différence sur le terrain.", f:{"Température":"18-24 °C","Humidité":"90 %","Lumière":"oui","Chambres":"2 (configurable)","Durée":"5-8 j (inventé — à ajuster)","Observations":"primordia · humidité de surface · couleur · densité · contamination","Problèmes":"dessèchement · excès d'eau · CO2 · déformation"}},
+      matc:{stage:"Contrôle", tone:"stDecision", desc:"Maturité atteinte pour récolter ?", f:{"Décision":"observation visuelle + validation humaine","Observation dédiée":"« maturité récolte »"}},
+      fl1:{stage:"Récolte", tone:"stRecolte", desc:"Première vague de récolte.", f:{"Mesure":"poids en GRAMMES, par unité","Aussi noté":"qualité + pertes AVEC LEUR CAUSE","Décision de récolter":"observation visuelle + validation humaine","Après":"repos, fructification, ou directement flush 2"}},
+      rp1:{stage:"Repos", tone:"stSubstrat", desc:"Période de repos entre deux flushs.", f:{"Durée":"7-14 j (inventé — à ajuster)","Conditions":"identiques à la fructification"}},
+      fl2:{stage:"Récolte", tone:"stRecolte", desc:"Deuxième flush — systématique.", f:{"Toutes les unités ?":"OUI","Qualité":"différente du flush 1","Poids":"grammes par unité, même méthode","Durée / conditions":"AUCUNE différence avec le flush 1"}},
+      rp2:{stage:"Repos", tone:"stSubstrat", desc:"Repos avant un éventuel flush 3.", f:{"Durée":"7-14 j (inventé — à ajuster)"}},
+      fl3:{stage:"Récolte", tone:"stRecolte", desc:"Troisième flush — optionnel.", f:{"Fréquence":"optionnel, pas systématique","Rentabilité":"OUI — vaut encore le coût et l'espace","Poids":"grammes par unité également"}},
+      fin:{stage:"Fin de cycle", tone:"stProcess", desc:"L'unité ne produit plus.", f:{"Statuts":"terminé · compost · rebut · contaminé — suffisants","Poids final":"mesuré","Raison de fin":"notée","Emplacement":"reste occupé jusqu'au nettoyage","Nettoyage":"alerte (pas de tâche automatique — à confirmer)"}},
+      produit:{stage:"Produit final", tone:"stProduit", desc:"Conditionnement des récoltes.", f:{"Origine":"une ou plusieurs récoltes","Mélange":"autorisé, avec conservation des PROPORTIONS EXACTES","QR":"les produits finaux ont leur propre QR"}},
+      compost:{stage:"Rebut", tone:"stDanger", desc:"Sortie du flux (compost / rebut).", f:{"Raison":"fin normale · contamination · rendement faible","Contamination":"une unité contaminée ne peut plus produire","Conduite":"quarantaine · rebut · observation · photo · nettoyage · poursuite — configurable"}}
     }
   },
   {

@@ -396,21 +396,17 @@ Merci de décrire le process réel, même approximatif.
 >
 > ⏳ **Reste à préciser** : ce qui manque, ce qui ne colle pas, et les noms réellement utilisés.
 
-Est-ce que cette liste est correcte ?
+⚠️ **Cette liste s'est révélée fausse** (réponses du 30/07/2026) : incubation 1/2/3 → « pas de différence », fructification 1/2 → « pas de différences ». Les subdivisions venaient de la formulation de ce questionnaire, pas du terrain.
 
-1. Gélose ;
-2. Culture liquide (LC) ;
-3. Grain (ballot de grain) ;
-4. Inoculation substrat ;
-5. Incubation 1 ;
-6. Incubation 2 ;
-7. Incubation 3 ;
-8. Fructification 1 ;
-9. Fructification 2 ;
-10. Récolte flush 1 ;
-11. Récolte flush 2 ;
-12. Récolte flush 3 ;
-13. Fin de cycle.
+Liste initialement proposée (conservée pour mémoire) :
+
+1. Gélose ; 2. Culture liquide (LC) ; 3. Grain ; 4. Inoculation substrat ; 5. Incubation 1 ; 6. Incubation 2 ; 7. Incubation 3 ; 8. Fructification 1 ; 9. Fructification 2 ; 10. Récolte flush 1 ; 11. Récolte flush 2 ; 12. Récolte flush 3 ; 13. Fin de cycle.
+
+✅ **Process réel retenu — 6 étapes** (voir [20-modele-process-par-defaut.md](./20-modele-process-par-defaut.md)) :
+
+1. Gélose *(optionnel)* ; 2. Culture liquide *(optionnel)* ; 3. Ballot de grain *(optionnel)* ;
+4. **Inoculation substrat** ; 5. **Incubation** ; 6. **Fructification** ;
+7. **Flush 1** → repos → **flush 2** → repos → **flush 3** *(optionnel)* ; 8. **Fin de cycle**.
 
 Réponse / correction :
 
@@ -1454,22 +1450,22 @@ Après remplissage, on devra pouvoir extraire :
 
 ## 20. Version simplifiée du process à confirmer
 
-Table de synthèse à remplir. Les colonnes « Durée cible » et « Alarme si dépassement » alimenteront directement les alarmes réglables du process.
+✅ **Rempli le 31/07/2026** à partir des réponses réelles, complété par les valeurs par défaut du modèle. Ce tableau n'est plus un questionnaire : c'est la synthèse du process retenu.
 
-| Ordre | Stade / étape | Durée cible | Alarme si dépassement | Température | Humidité | Observation clé | Action suivante (clone / transfert) |
+| Ordre | Stade / étape | Durée cible | Alarme si dépassement | Température | Humidité | Observation clé | Action suivante |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Origine (spores / souche reçue) | | | | | viabilité | transfert gélose |
-| 2 | Gélose | | | | | contamination / colonisation | clone gélose ou transfert LC |
-| 3 | Culture liquide (LC) | | | | | trouble / contamination | clone LC ou transfert grain |
-| 4 | Grain (ballot) | | | | | colonisation / contamination | clone grain ou transfert substrat |
-| 5 | Inoculation substrat | | | | | | incubation 1 |
-| 6 | Incubation 1 | | | | | | |
-| 7 | Incubation 2 | | | | | | |
-| 8 | Incubation 3 | | | | | | |
-| 9 | Fructification 1 | | | | | | |
-| 10 | Fructification 2 | | | | | | |
-| 11 | Récolte flush 1 | | | | | poids par unité | |
-| 12 | Récolte flush 2 | | | | | poids par unité | |
-| 13 | Récolte flush 3 | | | | | poids par unité | |
-| 14 | Conservation (optionnel, à tout stade) | | | | | viabilité | réactivation ou clone |
-| 15 | Fin de cycle | | | | | | |
+| 1 | Origine (spores / souche reçue) | — | — | — | — | viabilité | transfert gélose |
+| 2 | Gélose *(opt.)* | 12 j ⚠️ | J-1 / +50 % ⚠️ | 22-24 °C ⚠️ | — | contamination / colonisation | clone ou transfert LC |
+| 3 | Culture liquide *(opt.)* | 10 j ⚠️ | J-1 / +50 % ⚠️ | 22-24 °C ⚠️ | — | trouble / contamination | clone ou transfert grain |
+| 4 | Ballot de grain *(opt.)* | 18 j ⚠️ | J-1 / +50 % ⚠️ | 24 °C ⚠️ | — | colonisation / contamination | clone ou transfert substrat |
+| 5 | Inoculation substrat | ponctuelle | — | — | — | aspect · odeur · propreté · T° | incubation |
+| 6 | **Incubation** | **2-3 semaines** | J-1 / +50 % ⚠️ | **24 °C** | **non contrôlée** | colonisation · contamination · couleur · odeur | fructification |
+| 7 | **Fructification** | 5-8 j ⚠️ | J-1 / +50 % ⚠️ | **18-24 °C** | **90 %** | primordia · maturité récolte | flush 1 |
+| 8 | **Flush 1** | 1-3 j ⚠️ | — | idem | idem | poids (g) + qualité + pertes | repos / fructification / flush 2 |
+| 9 | Repos | 7-14 j ⚠️ | — | idem | idem | — | flush suivant |
+| 10 | **Flush 2** *(systématique)* | 1-3 j ⚠️ | — | idem | idem | poids (g) + qualité + pertes | repos / flush 3 / fin |
+| 11 | **Flush 3** *(optionnel, rentable)* | 1-3 j ⚠️ | — | idem | idem | poids (g) + qualité + pertes | fin de cycle |
+| 12 | Conservation *(optionnel, à tout stade)* | 180 j ⚠️ | alarme de fin ⚠️ | frigo / ambiant | — | viabilité | réactivation = **nouvelle unité** |
+| 13 | **Fin de cycle** | — | — | — | — | poids final · raison de fin | compost / rebut |
+
+**Gras** = valeur donnée par le cultivateur. ⚠️ = valeur inventée pour le modèle par défaut, à ajuster (voir [doc 20](./20-modele-process-par-defaut.md) §8).

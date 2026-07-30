@@ -138,4 +138,10 @@ Précisions :
 - Le terme **« parent »** ne désigne pas une session d’inoculation mais le **lien de parenté détaillé, du début à la fin de la chaîne**.
 - Une unité remise en service après conservation est une **nouvelle unité**, pas la reprise de l’ancienne.
 
+### Étapes — vocabulaire corrigé le 31/07/2026
+
+Les termes **« incubation 1 / 2 / 3 »** et **« fructification 1 / 2 »** sont à **retirer du vocabulaire** : le cultivateur a répondu « pas de différence ». Employer simplement **incubation** et **fructification**.
+
+Termes retenus pour le process substrat : *inoculation*, *incubation*, *fructification*, *flush 1 / 2 / 3*, *repos*, *fin de cycle*.
+
 ⏳ Reste indéterminé : le mot employé pour la souche/origine avant gélose, les contenants réels et leurs tailles, et les noms des produits finaux.

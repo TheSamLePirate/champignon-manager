@@ -365,3 +365,27 @@ Photo possible partout, **imposée par l’interface en cas de contamination**. 
 ### 17.6 Récolte
 
 Saisie **par unité** à chaque flush : poids, qualité, et pertes **avec leur cause**. En cas de mélange de plusieurs unités dans un produit final, l’UI doit permettre de saisir les **proportions**.
+
+## 18. Complément 31/07/2026 — écrans et valeurs réelles
+
+### Le process affiché fait 6 étapes
+
+Les écrans de suivi ne doivent pas présenter incubation 1/2/3 ni fructification 1/2 : ces subdivisions n'existent pas. La timeline d'une unité substrat comporte au plus : inoculation → incubation → fructification → flush 1 → repos → flush 2 → repos → flush 3 → fin de cycle.
+
+### Saisies attendues par écran
+
+| Écran | Champs |
+| --- | --- |
+| Inoculation | poids substrat **total** (g), contrôle qualité (aspect, odeur, propreté, température), impression QR (nom, type, date) |
+| Incubation | observations : colonisation, contamination, couleur, odeur, humidité du sac |
+| Fructification | observations : primordia, humidité de surface, couleur, densité, contamination, **maturité récolte** |
+| Récolte (chaque flush) | poids **en grammes par unité**, qualité, pertes **avec leur cause** |
+| Fin de cycle | poids final, raison de fin, statut (terminé / compost / rebut / contaminé) |
+
+### Notifications
+
+Les alertes ne restent pas dans l'application : **notification sur le téléphone** en plus du dashboard. Le dashboard de statistiques doit être **configurable**.
+
+### Premier démarrage
+
+L'application propose le **modèle de process par défaut** ([doc 20](./20-modele-process-par-defaut.md)), explicitement présenté comme un exemple modifiable. Les valeurs inventées y sont signalées comme telles — l'interface doit conserver cette distinction plutôt que de les afficher au même niveau que les valeurs réelles.

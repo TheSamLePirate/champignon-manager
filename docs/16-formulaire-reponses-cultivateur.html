@@ -814,7 +814,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const FORM_VERSION = "2026-07-31.v9-export-integre";
+    const FORM_VERSION = "2026-07-31.v10-process-reel";
     const PRESET_SEED_VERSION = "2026-07-31.export-v8";
     const STORAGE_KEY = "champignon-manager:cultivator-process-form:v1";
 
@@ -1217,7 +1217,7 @@
       {
         id: "incubation-1",
         title: "Détail étape — Incubation 1",
-        desc: "Première période où le mycélium colonise le substrat.",
+        desc: "Colonisation du substrat — UNE SEULE étape en réalité (2-3 semaines, 24 °C, obscurité). Les « incubations 2 et 3 » n’existent pas sur le terrain.",
         questions: [
           { id: "q9_2_1", title: "Combien de temps dure généralement incubation 1 ?", help: "Donner une durée typique et une fourchette.", type: "longtext" },
           { id: "q9_2_2", title: "Quelle est la température cible en incubation 1 ?", help: "Donner une valeur ou plage, et préciser si ça dépend de la variété.", type: "longtext" },
@@ -1232,7 +1232,7 @@
       {
         id: "incubation-2",
         title: "Détail étape — Incubation 2",
-        desc: "Deuxième période d’incubation, si elle existe vraiment dans le process.",
+        desc: "⚠️ RÉPONSE OBTENUE : « pas de différence » avec incubation 1. Cette étape n’a aucune réalité métier — elle est absente du modèle de process par défaut. Section conservée comme trace de la question.",
         questions: [
           { id: "q9_3_1", title: "Pourquoi séparer incubation 1 et incubation 2 ?", help: "Explique la différence métier entre les deux.", type: "longtext" },
           { id: "q9_3_2", title: "Qu’est-ce qui change en incubation 2 ?", help: "Conditions, manipulation, état du mycélium, objectif, chambre, etc.", type: "longtext" },
@@ -1246,7 +1246,7 @@
       {
         id: "incubation-3",
         title: "Détail étape — Incubation 3",
-        desc: "Troisième période d’incubation ou fin de colonisation avant fructification.",
+        desc: "⚠️ RÉPONSE OBTENUE : « pas de différence », et l’étape est OPTIONNELLE. Absente du modèle de process par défaut. Section conservée comme trace de la question.",
         questions: [
           { id: "q9_4_1", title: "À quoi correspond incubation 3 ?", help: "Décris l’objectif de cette étape.", type: "longtext" },
           { id: "q9_4_2", title: "Incubation 3 est-elle obligatoire pour toutes les espèces ?", help: "Précise les exceptions selon l’espèce, la variété ou la méthode.", type: "longtext" },
@@ -1260,7 +1260,7 @@
       {
         id: "fructification-1",
         title: "Détail étape — Fructification 1",
-        desc: "Étape où l’on déclenche ou accompagne l’apparition des champignons.",
+        desc: "Déclenchement par ouverture du sac, passage en lumière, 90 % d’humidité, 18-24 °C. Premiers signes à 2-3 jours. UNE SEULE étape de fructification en réalité.",
         questions: [
           { id: "q9_5_1", title: "Que changes-tu en passant en fructification 1 ?", help: "Température, humidité, lumière, aération, ouverture du sac/bloc, déplacement, choc, autre.", type: "longtext" },
           { id: "q9_5_2", title: "Combien de temps avant de voir les premiers signes en fructification 1 ?", help: "Durée typique et fourchette.", type: "longtext" },
@@ -1273,7 +1273,7 @@
       {
         id: "fructification-2",
         title: "Détail étape — Fructification 2",
-        desc: "Deuxième phase de fructification, peut-être maturation ou préparation de récolte.",
+        desc: "⚠️ RÉPONSE OBTENUE : « pas de différences » avec fructification 1. Absente du modèle de process par défaut. Section conservée comme trace de la question.",
         questions: [
           { id: "q9_6_1", title: "Pourquoi séparer fructification 1 et fructification 2 ?", help: "Explique la différence concrète.", type: "longtext" },
           { id: "q9_6_2", title: "Qu’est-ce qui change entre fructification 1 et 2 ?", help: "Conditions, observation, maturité, actions, chambre, etc.", type: "longtext" },
