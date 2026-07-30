@@ -262,3 +262,25 @@ Décisions clés :
 - TypeScript strict, Zod, Hono, MongoDB native driver, OpenAPI automatique.
 - Tests élevés : Vitest, Playwright, formulaires dynamiques testés, validation locale au départ.
 - UI mobile iPhone prioritaire avec gros boutons, contraste, mode sombre et confirmations.
+
+## Mise à jour 2026-07-30 — conséquences techniques
+
+### Pas de planificateur d’avancement
+
+Le passage d’étape se fait à l’observation visuelle, validé par une personne (cf. `04` §16). Il n’y a donc **aucun job planifié d’avancement d’unité** à prévoir dans l’architecture.
+
+Un **planificateur reste nécessaire**, mais uniquement pour :
+
+- évaluer les **seuils d’alarme de durée** (avant échéance, dépassement, retard critique) ;
+- générer les **tâches** associées (nettoyage de chambre en fin de cycle, contrôles) ;
+- lire les **appareils connectés** quand ils arriveront (Inkbird), qui doivent **déclencher des alertes** et pas seulement historiser.
+
+Ces traitements ne modifient jamais l’état métier d’une unité : ils produisent des alertes et des tâches.
+
+### Actions annulables
+
+« Annuler ou corriger une action » est confirmé. Dans un modèle à événements immuables, cela se traduit par un **événement de compensation**, pas par une suppression — voir `07` §13.6. Prévoir la cohérence transactionnelle correspondante (replica set MongoDB déjà retenu).
+
+### Volumétrie
+
+Le suivi descend **jusqu’à la position** et chaque unité est historisée à chaque déplacement : prévoir la croissance de `locationHistory` et des index associés, en particulier sur Raspberry Pi.

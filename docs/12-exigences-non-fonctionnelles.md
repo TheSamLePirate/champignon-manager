@@ -214,3 +214,27 @@ Points clés :
 - Dev macOS / Windows 11, production Raspberry Pi.
 - Tailscale confirmé pour l’accès local étendu/distant, HTTPS via Tailscale.
 - Reolink, Inkbird, offline avancé, ventes et facturation après MVP.
+
+## Mise à jour 2026-07-30 — exigences issues des réponses cultivateur
+
+### Sécurité des actions
+
+- **Validation obligatoire avant toute action en masse** : l’exécution en un seul appel non confirmé est interdite. Une action de masse touche potentiellement toute la production.
+- **Toute action doit être annulable ou corrigeable**, sans suppression de données (événement de compensation).
+- **Un seul auteur de process.** La modification d’un process fait basculer les unités en cours : ce droit unique est autant une protection qu’une simplification.
+
+### Alertes
+
+- Une alarme **ne bloque jamais** une unité — elle prévient, crée une tâche, marque un retard.
+- Une alarme doit être **acquittable ou reportable**, avec trace de l’auteur et de l’horodatage.
+- Les appareils connectés (Inkbird) devront **déclencher des alertes**, pas seulement historiser.
+
+### Intégrité de la traçabilité
+
+- Une unité **contaminée ne peut plus produire** : état terminal côté production, mais l’unité reste consultable.
+- Les **proportions exactes** doivent être conservées lors d’un mélange de récoltes — la traçabilité ascendante d’un produit final doit rester quantifiée.
+- La **version de process** appliquée doit être figée sur l’unité et dans les événements, sinon les comparaisons entre versions sont invalides.
+
+### Saisie terrain
+
+Le principe de traçabilité totale est retenu, mais **aucune limite de charge de saisie n’a été fixée**. Le cultivateur n’a pas indiqué où la saisie devient trop lourde. À surveiller : la pesée par unité à chaque flush, avec qualité et cause de perte, est l’opération la plus répétitive du produit.

@@ -333,3 +333,35 @@ Décisions UX/frontend :
 - rapports ;
 - settings imprimante ;
 - login minimal.
+
+## 17. Mise à jour 2026-07-30 — impact des réponses cultivateur
+
+### 17.1 Après un scan
+
+La liste d’actions est **la même à tous les stades** ; l’interface **masque simplement ce qui n’a pas de sens** au stade courant (pas de « récolter » sur une gélose). Il n’y a donc pas de configuration d’actions par étape à exposer dans l’UI.
+
+Actions retenues : voir fiche, voir la lignée, avancer d’étape, observation, mesure/pesée, déplacer, cloner, transférer, diviser, mettre en conservation, appliquer un sous-process, récolter, déclarer contamination, terminer/compost, archiver, réimprimer le QR. *(« Mettre en pause » n’a pas été retenu.)*
+
+⏳ Reste à trancher : les 3 ou 4 actions à mettre en gros boutons juste après le scan — le reste ira dans un menu secondaire.
+
+### 17.2 Avancement d’étape
+
+L’écran ne doit **jamais présenter une unité comme « prête » sur la seule base d’une durée écoulée**. Le passage se décide à l’œil : l’UI affiche la durée cible et l’état d’alarme comme information, mais l’action reste manuelle.
+
+Une alarme doit pouvoir être **acquittée ou reportée** depuis la fiche, sans bloquer l’unité, en gardant la trace de qui et quand.
+
+### 17.3 Actions en masse
+
+**Écran de confirmation obligatoire** : nombre d’unités touchées, aperçu de la liste, puis validation. Toute action doit ensuite pouvoir être **annulée ou corrigée**.
+
+### 17.4 Emplacements
+
+Le sélecteur descend jusqu’à la **position** : chambre → étagère → niveau → position. Scanner le QR d’une **chambre** ouvre son **inventaire** — toutes les unités présentes.
+
+### 17.5 Observations
+
+Photo possible partout, **imposée par l’interface en cas de contamination**. Sélecteur de **gravité à trois niveaux** (faible / moyen / critique). Une observation dédiée « maturité récolte » est attendue en fructification.
+
+### 17.6 Récolte
+
+Saisie **par unité** à chaque flush : poids, qualité, et pertes **avec leur cause**. En cas de mélange de plusieurs unités dans un produit final, l’UI doit permettre de saisir les **proportions**.

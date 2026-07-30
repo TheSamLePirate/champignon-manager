@@ -463,17 +463,17 @@ const PROCESSES = [
       inoc:{stage:"Substrat", tone:"stSubstrat", desc:"Création des ballots de substrat à partir du grain.", f:{"Saisie":"Poids substrat, souche, parent grain, date","QR":"Étiquette par ballot ("+tbd+")"}},
       inc1:{stage:"Incubation 1", tone:"stSubstrat", desc:"Première période de colonisation.", f:{"Durée":tbd,"Température":tbd,"Observations":"Colonisation, contamination"}},
       inc2:{stage:"Incubation 2", tone:"stSubstrat", desc:"Deuxième période — séparation à confirmer.", f:{"Durée":tbd,"Différence inc.1":tbd}},
-      inc3:{stage:"Incubation 3", tone:"stSubstrat", desc:"Fin de colonisation avant fructification (parfois optionnelle).", f:{"Durée":tbd,"Obligatoire ?":tbd}},
+      inc3:{stage:"Incubation 3", tone:"stSubstrat", desc:"Fin de colonisation avant fructification.", f:{"Durée":tbd,"Obligatoire ?":"NON — optionnelle, pas pour toutes les espèces (30/07/2026)","Passage":"à l'observation visuelle, validé par une personne"}},
       colc:{stage:"Contrôle", tone:"stDecision", desc:"Le substrat est-il prêt à fructifier ?", f:{"Oui":"→ choc / déclenchement","Contamination":"→ compost / rebut"}},
       choc:{stage:"Fructification", tone:"stFruct", desc:"Déclenchement de la fructification.", f:{"Leviers":"Température, humidité, lumière, aération, ouverture — "+tbd}},
       fr1:{stage:"Fructification 1", tone:"stFruct", desc:"Apparition des primordia.", f:{"Durée":tbd,"Observations":"Primordia, humidité de surface"}},
       fr2:{stage:"Fructification 2", tone:"stFruct", desc:"Maturation avant récolte.", f:{"Critère récolte":"Taille / forme du chapeau — "+tbd}},
       matc:{stage:"Contrôle", tone:"stDecision", desc:"Maturité atteinte pour récolter ?", f:{"Prêt":"→ récolte flush 1"}},
-      fl1:{stage:"Récolte", tone:"stRecolte", desc:"Première vague de récolte.", f:{"Mesure":"Poids brut / net / pertes par unité","Qualité":"Grade, calibre — "+tbd,"Après":"Repos / relance"}},
-      fl2:{stage:"Récolte", tone:"stRecolte", desc:"Deuxième flush (pas systématique).", f:{"Délai flush 1→2":tbd}},
-      fl3:{stage:"Récolte", tone:"stRecolte", desc:"Troisième flush, souvent optionnel selon rendement.", f:{"Décision":"Vaut le coût / l'espace ? — "+tbd}},
-      fin:{stage:"Fin de cycle", tone:"stProcess", desc:"L'unité ne produit plus.", f:{"Statuts":"Terminé, compost, rebut, contaminé","Tâche":"Nettoyage chambre / rack"}},
-      produit:{stage:"Produit final", tone:"stProduit", desc:"Conditionnement des récoltes.", f:{"Origine":"Une ou plusieurs récoltes (proportions si mélange)"}},
+      fl1:{stage:"Récolte", tone:"stRecolte", desc:"Première vague de récolte.", f:{"Mesure":"poids PAR UNITÉ à chaque flush","Aussi noté":"qualité + pertes AVEC LEUR CAUSE (30/07/2026)","Décision de récolter":"observation visuelle + validation humaine","Après":"repos, fructification 2, ou directement flush 2 — les trois existent"}},
+      fl2:{stage:"Récolte", tone:"stRecolte", desc:"Deuxième flush — systématique.", f:{"Toutes les unités ?":"OUI (30/07/2026)","Qualité":"différente du flush 1","Poids":"par unité, même méthode","Délai flush 1→2":tbd}},
+      fl3:{stage:"Récolte", tone:"stRecolte", desc:"Troisième flush — optionnel, pas systématique.", f:{"Fréquence":"optionnel (30/07/2026)","Poids":"mesuré par unité également","Décision d'arrêt":"observation visuelle + validation humaine","Rentabilité":tbd}},
+      fin:{stage:"Fin de cycle", tone:"stProcess", desc:"L'unité ne produit plus.", f:{"Statuts":"terminé, compost, rebut, contaminé — suffisants (30/07/2026)","Poids final":"mesuré","Raison de fin":"notée","Emplacement":"reste occupé jusqu'au nettoyage","Tâche":"nettoyage créée automatiquement"}},
+      produit:{stage:"Produit final", tone:"stProduit", desc:"Conditionnement des récoltes.", f:{"Origine":"une ou plusieurs récoltes","Mélange":"autorisé, avec conservation des PROPORTIONS EXACTES (30/07/2026)","QR":"les produits finaux ont leur propre QR"}},
       compost:{stage:"Rebut", tone:"stDanger", desc:"Sortie du flux (compost / rebut).", f:{"Raison":"Fin normale, contamination, rendement faible"}}
     }
   },
@@ -518,7 +518,7 @@ const PROCESSES = [
     id:"moteur", glyph:"⚙", accent:"--st-decision", status:"ok",
     title:"Moteur de process",
     short:"Sous-process · durées · alarmes · versions",
-    desc:"Confirmé le 30/07/2026. On compose des process entiers ou des sous-process réutilisables, appliqués à une unité, un lot ou une sélection. Chaque étape porte une durée cible et des alarmes réglables — qui alertent, jamais ne bloquent : la décision humaine prime.",
+    desc:"Confirmé le 30/07/2026. On compose des process entiers ou des sous-process réutilisables, appliqués à une unité, un lot ou une sélection. Chaque étape porte une durée cible et des alarmes réglables — qui alertent, jamais ne bloquent. Le passage se décide à l'observation visuelle : la durée n'est qu'un rappel, jamais un déclencheur.",
     mermaid:`flowchart TB
   subgraph DEF["Définition — par le cultivateur seul"]
     direction LR
@@ -542,7 +542,7 @@ const PROCESSES = [
     suite["Étape suivante"]:::stFruct
     et --> av --> dep --> crit
     et --> hum
-    hum -->|"valide"| suite
+    hum -->|"observation visuelle → valide"| suite
     hum -. "saute / refait / revient en arrière" .-> et
   end
   pr --> cible --> et
@@ -561,11 +561,11 @@ const PROCESSES = [
       sp2:{stage:"Sous-process", tone:"stProcess", desc:"Bloc commun à toutes les espèces.", f:{"Exemple":"préparation labo, quarantaine","Portée":"partagé entre process"}},
       pr:{stage:"Process", tone:"stProcess", desc:"Process complet composé de phases, d'étapes et de sous-process.", f:{"Phases":"grande période (incubation)","Étapes":"moment précis (incubation 1/2/3)","Moteur":"identique pour toutes les espèces — seule la config change"}},
       cible:{stage:"Cible", tone:"stSubstrat", desc:"Un process ou sous-process s'applique à n'importe quelle granularité.", f:{"Cibles":"une unité · un lot entier · une sélection filtrée","En cours de route":"un lot peut changer de process","Filtres":"enregistrables comme favoris"}},
-      et:{stage:"Étape", tone:"stFruct", desc:"Chaque étape porte une durée cible.", f:{"Durée":tbd,"Alarmes":"réglables étape par étape","Sans alarme":"possible sur certaines étapes"}},
+      et:{stage:"Étape", tone:"stFruct", desc:"Chaque étape porte une durée cible — mais elle ne déclenche jamais le passage.", f:{"Durée":tbd,"Rôle de la durée":"calcul des alarmes uniquement — jamais une condition de passage","Alarmes":"réglables étape par étape","Sans alarme":"possible sur certaines étapes"}},
       av:{stage:"Alarme", tone:"stDecision", desc:"Rappel avant la fin prévue.", f:{"Exemple":"J-1","Seuil":tbd}},
       dep:{stage:"Alarme", tone:"stRecolte", desc:"Dépassement de la durée cible.", f:{"Effet":"prévenir · créer une tâche · marquer l'unité en retard","Ne fait jamais":"bloquer l'unité","Acquittement":"reportable, avec trace de qui et quand"}},
       crit:{stage:"Alarme", tone:"stDanger", desc:"Second seuil de retard.", f:{"Seuil":tbd,"Non retenu":"rappel périodique · rappel en milieu d'étape"}},
-      hum:{stage:"Décision", tone:"stDecision", desc:"Le passage à l'étape suivante est toujours validé par une personne.", f:{"Principe":"l'app propose et alerte, l'humain valide","Libertés":"une étape peut être sautée, refaite ou remise en arrière","Automatisme":"aucun avancement automatique"}},
+      hum:{stage:"Décision", tone:"stDecision", desc:"Le passage se décide à l'OBSERVATION VISUELLE, validée par une personne.", f:{"Déclencheur":"l'œil, pas la durée (30/07/2026)","Principe":"l'app alerte, l'humain valide","Libertés":"une étape peut être sautée, refaite ou remise en arrière","Automatisme":"aucun — ni job planifié, ni état « prêt » calculé depuis une date"}},
       v1:{stage:"Version", tone:"stProcess", desc:"Version de process appliquée à une unité.", f:{"À enregistrer":"la version doit être figée sur l'unité et dans les événements"}},
       basc:{stage:"Migration", tone:"stDecision", desc:"Modifier un process fait basculer les unités déjà lancées.", f:{"Confirmation":"explicite (« êtes-vous sûr »)","Portée":"toutes les unités en cours"}},
       comp:{stage:"Analyse", tone:"stDanger", desc:"Comparer les résultats entre deux versions de process.", f:{"⚠ Contradiction":"si toutes les unités basculent, il ne reste aucune population témoin à comparer","Pistes":"exclure une sélection de la bascule, ou ne comparer que l'historique déjà produit","À trancher":"avant de coder le moteur — voir doc 04 §15.3"}}

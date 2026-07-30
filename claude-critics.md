@@ -243,7 +243,7 @@ Cette découpe respecte l'intention « outil de production, pas démo » **tout 
 
 Source : `docs/champignon-reponses-cultivateur-2026-07-30.json`.
 
-### 9.1 Le chiffre à retenir : 84 / 188
+### 9.1 Le chiffre à retenir : 84 / 188 en 1ʳᵉ passe, **139 / 188 après la 2ᵉ** (voir §9.6)
 
 L'export affiche **« 188 répondues, 100 % »**. C'est faux : **104 questions ne contiennent ni texte ni case cochée** — elles ont été marquées répondues en masse (bouton « Marquer visibles répondues »). Le formulaire `16` a été corrigé pour recalculer le statut à partir du contenu réel, et le questionnaire `15` marque ces questions `⏳ SANS RÉPONSE`.
 

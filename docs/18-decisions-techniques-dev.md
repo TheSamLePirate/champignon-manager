@@ -413,3 +413,34 @@ Le formulaire n’a pas rempli cette partie. Proposition cohérente avec les ré
 - Tailscale / URL / HTTPS : **stratégie close** (Tailscale confirmé, HTTPS via `serve`, URL MagicDNS `ts.net`) — reste à fixer le hostname exact au déploiement.
 - Politique concrète de sauvegarde : fréquence, destination, rétention.
 - Niveau réel de couverture de test atteignable au MVP.
+
+## Mise à jour 2026-07-30 — ce que les réponses cultivateur changent
+
+Les décisions techniques ci-dessus (17/06/2026) restent valides. Les réponses du cultivateur du 30/07/2026 en **précisent trois** et en **rouvrent une**.
+
+### Confirmées
+
+| Décision dev | Confirmation cultivateur |
+| --- | --- |
+| Auth MVP : rôle `admin` unique | « Qui peut créer ou modifier un process ? » → **« moi »**. Un seul auteur. |
+| État courant + événements immuables | « Annuler ou corriger une action » → oui, donc **événement de compensation**, jamais de suppression. |
+| Suppression logique uniquement | Confirmé : conservation et archivage sont **réversibles**, rien ne disparaît. |
+
+### Allégées
+
+Deux réponses **réduisent le périmètre technique** :
+
+1. **Pas de moteur de transition temporelle.** Le passage d’étape se fait à l’observation visuelle ; la durée n’est qu’un rappel. Aucun job d’avancement, aucun état « prêt » calculé depuis une date.
+2. **Pas de configuration d’actions par étape.** La liste d’actions est globale, filtrée par pertinence de stade — l’éditeur de process n’a pas à la gérer.
+
+C’est le premier allègement réel depuis le cadrage initial.
+
+### Rouverte — versioning de process
+
+La question « versioning et migration d’un process déjà utilisé par des lots », listée comme ouverte, reçoit **deux réponses incompatibles** : les unités en cours **basculent** sur la nouvelle version (avec confirmation), **et** le cultivateur veut **comparer deux versions**. Si tout bascule, il ne reste aucune population témoin.
+
+À trancher avant de coder le moteur — voir `04-processus-configurable.md` §15.3. Dans les deux options envisagées, la **version appliquée doit être figée sur l’unité et dans les événements**.
+
+### Toujours bloquant
+
+Le seed du premier process reste **inexécutable** : aucune valeur de durée, température, humidité ou seuil n’a été fournie. La recommandation « seed data avant éditeur visuel » tient, mais le seed n’a rien à contenir aujourd’hui.

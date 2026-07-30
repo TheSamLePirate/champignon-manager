@@ -591,3 +591,54 @@ Collections après MVP :
 - Format final des `publicCode`.
 - Règles de mélange de récoltes dans un produit final.
 - Accès possible aux données Inkbird Wi‑Fi : API locale, cloud, scraping, passerelle tierce ou saisie manuelle uniquement.
+
+## 13. Mise à jour 2026-07-30 — impact des réponses cultivateur
+
+Détail des réponses : `14-questions-ouvertes.md` §18. Conséquences sur les collections.
+
+### 13.1 `cultureUnits` — champs à ajouter
+
+| Champ | Raison |
+| --- | --- |
+| `parentId` **nullable** | Une unité peut naître **sans ascendant**, à n’importe quel stade (substrat reçu déjà inoculé). Ne pas rendre le parent obligatoire. |
+| `lineageType` | `clone` \| `transfer` \| `division` \| `conservation_exit` — la sortie de conservation crée un nouveau maillon. |
+| `generation` | Compteur **informatif, sans plafond** : aucune limite de génération n’est imposée. |
+| `processTemplateId` + `processVersion` | La version appliquée doit être **figée sur l’unité**, sinon la comparaison entre versions est impossible. |
+| `state` | Ajouter `reserve` (conservation) et `archived`, **tous deux réversibles**. Distincts de `terminated`. |
+| `location` | Objet `{ roomId, shelf, level, position }` — le suivi descend **jusqu’à la position**. |
+| `locationHistory` | Une unité **change plusieurs fois de chambre** : l’emplacement est historisé, pas une propriété stable. |
+
+### 13.2 `harvests` — récolte
+
+Chaque flush enregistre **par unité** : `weight`, `quality`, et `losses[] { weight, cause }` — les pertes sont notées **avec leur cause**.
+
+### 13.3 `finalProducts` — mélanges pondérés
+
+Une récolte peut être mélangée avec d’autres. Les **proportions exactes doivent être conservées** : le lien produit → unités d’origine est une liste **pondérée**, pas un simple tableau d’identifiants.
+
+```
+sources: [ { harvestId, unitId, weight, share } ]
+```
+
+### 13.4 `observations`
+
+- `photoUrl` optionnel partout, **obligatoire quand le type est « contamination »** (contrainte applicative, pas seulement UI) ;
+- `severity` : `low` \| `medium` \| `critical` ;
+- **pas de liste d’observations par étape** : la liste est globale, filtrée par pertinence de stade à l’affichage.
+
+### 13.5 `savedFilters` — nouvelle collection
+
+Les filtres de sélection doivent être **enregistrables comme favoris** : `{ userId, name, criteria }`, les critères pouvant combiner n’importe quels paramètres (lignée, génération, type de lien, stade, chambre, retard…).
+
+### 13.6 `events` — annulation
+
+Toute action doit pouvoir être **annulée ou corrigée**. Dans un modèle à événements immuables, cela impose un **événement de compensation** (`reversedByEventId` / `reversesEventId`), jamais une suppression.
+
+### 13.7 Ce que le modèle n’a PAS à porter
+
+- **Aucune transition temporelle.** Le passage d’étape se fait à l’observation visuelle, validé par une personne. La durée cible ne sert qu’aux alarmes : pas d’état « prêt à passer » calculé depuis une date, pas de job d’avancement.
+- **Aucune liste d’actions par étape** dans `processTemplates` : au plus des règles de pertinence par stade.
+
+### 13.8 Toujours indéterminé
+
+Aucune **valeur** n’a été fournie (durées, températures, humidité, ratios, seuils). Les champs de configuration existent, mais **aucun jeu de données d’amorçage** ne peut être écrit aujourd’hui.
