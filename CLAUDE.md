@@ -61,6 +61,7 @@ Détail et nuances : `docs/18-decisions-techniques-dev.md`.
 | `17-formulaire-questions-dev.html` | Formulaire interactif décisions développeur. |
 | `18-decisions-techniques-dev.md` | Synthèse des décisions développeur (répondant : Sam). |
 | `19-atlas-process-flux.html` | **Atlas visuel interactif** des process (Mermaid data-driven). |
+| `20-modele-process-par-defaut.md` / `.json` | **Modèle de process pré-rempli et modifiable** livré au premier démarrage. Chaque valeur porte une `provenance` : `cultivator` (réponse réelle) ou `invented` (inventée pour éviter le champ vide — n'engage rien). |
 | `champignon-reponses-dev-sam-2026-06-17.json` | Export brut des réponses dev — **archive horodatée, ne pas réécrire**. |
 | `champignon-reponses-cultivateur-2026-07-30.json` | Export brut des réponses cultivateur — **archive horodatée, ne pas réécrire**. Attention : son `summary` annonce 100 %, mais 104 des 188 questions sont vides. |
 | `../claude-critics.md` | Revue critique du cadrage (P0/P1/P2, risques, re-scoping MVP). À tenir à jour. |

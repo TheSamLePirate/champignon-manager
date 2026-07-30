@@ -1,0 +1,258 @@
+{
+  "schema": "champignon-manager.process-template.v1",
+  "templateVersion": "1.0.0",
+  "createdAt": "2026-07-31",
+  "name": "Modèle générique — du spore à l'assiette",
+  "description": "Modèle de process pré-rempli et MODIFIABLE, proposé au premier démarrage pour éviter l'écran vide. Les valeurs marquées provenance=\"invented\" sont des points de départ arbitraires à ajuster ; celles marquées provenance=\"cultivator\" viennent des réponses réelles du 30/07/2026.",
+  "editable": true,
+  "isDefault": true,
+  "speciesScope": "any",
+  "notes": [
+    "Les subdivisions incubation 1/2/3 et fructification 1/2 ont été VOLONTAIREMENT SUPPRIMÉES : le cultivateur a répondu « pas de différence ». Elles restent créables à la main.",
+    "Aucune durée n'est un déclencheur : le passage d'étape se fait à l'observation visuelle, validé par une personne. Les durées ne servent qu'aux alarmes.",
+    "Les actions et observations ne sont pas listées par étape : la liste est globale, filtrée par pertinence de stade."
+  ],
+
+  "stages": ["origine", "gelose", "liquid_culture", "grain", "substrate", "fruiting"],
+
+  "endStatuses": [
+    { "id": "termine", "label": "Terminé", "provenance": "cultivator" },
+    { "id": "compost", "label": "Compost", "provenance": "cultivator" },
+    { "id": "rebut", "label": "Rebut", "provenance": "cultivator" },
+    { "id": "contamine", "label": "Contaminé", "terminalForProduction": true, "provenance": "cultivator" }
+  ],
+
+  "observationSeverities": [
+    { "id": "low", "label": "Faible" },
+    { "id": "medium", "label": "Moyen" },
+    { "id": "critical", "label": "Critique" }
+  ],
+
+  "observations": [
+    { "id": "contamination", "label": "Contamination", "photoRequired": true, "provenance": "cultivator" },
+    { "id": "odeur", "label": "Odeur anormale", "provenance": "cultivator" },
+    { "id": "couleur_suspecte", "label": "Couleur suspecte", "provenance": "cultivator" },
+    { "id": "humidite_visuelle", "label": "Humidité visuelle", "provenance": "cultivator" },
+    { "id": "taille", "label": "Taille", "provenance": "cultivator" },
+    { "id": "couleur", "label": "Couleur", "provenance": "cultivator" },
+    { "id": "colonisation", "label": "Colonisation", "provenance": "cultivator" },
+    { "id": "primordia", "label": "Primordia visibles", "provenance": "cultivator" },
+    { "id": "maturite_recolte", "label": "Maturité récolte", "provenance": "cultivator" },
+    { "id": "dessechement", "label": "Dessèchement", "provenance": "cultivator" },
+    { "id": "exces_eau", "label": "Excès d'eau", "provenance": "cultivator" },
+    { "id": "deformation", "label": "Déformation", "provenance": "cultivator" }
+  ],
+
+  "actions": [
+    "voir_fiche", "voir_lignee", "avancer_etape", "observation", "mesure_pesee",
+    "deplacer", "cloner", "transferer", "diviser", "mettre_en_conservation",
+    "appliquer_sous_process", "recolter", "declarer_contamination",
+    "terminer", "archiver", "reimprimer_qr"
+  ],
+
+  "defaultAlarms": {
+    "provenance": "invented",
+    "reminderBeforeEndDays": 1,
+    "overdueAtTargetEnd": true,
+    "criticalOverduePercent": 50,
+    "periodicReminder": false,
+    "midStepCheck": false
+  },
+
+  "steps": [
+    {
+      "id": "gelose",
+      "label": "Gélose",
+      "stage": "gelose",
+      "optional": true,
+      "targetDurationDays": { "value": 12, "min": 10, "max": 14, "provenance": "invented" },
+      "conditions": {
+        "temperatureC": { "min": 22, "max": 24, "provenance": "invented" },
+        "humidityPercent": null,
+        "light": "obscurite",
+        "sterile": true
+      },
+      "suggestedObservations": ["colonisation", "contamination", "couleur_suspecte"],
+      "transitionRule": "observation_visuelle_validee_humain",
+      "next": ["liquid_culture", "grain"]
+    },
+    {
+      "id": "culture_liquide",
+      "label": "Culture liquide (LC)",
+      "stage": "liquid_culture",
+      "optional": true,
+      "targetDurationDays": { "value": 10, "min": 7, "max": 14, "provenance": "invented" },
+      "conditions": {
+        "temperatureC": { "min": 22, "max": 24, "provenance": "invented" },
+        "humidityPercent": null,
+        "light": "obscurite",
+        "sterile": true,
+        "agitation": true
+      },
+      "suggestedObservations": ["contamination", "couleur_suspecte", "odeur"],
+      "transitionRule": "observation_visuelle_validee_humain",
+      "next": ["grain"]
+    },
+    {
+      "id": "grain",
+      "label": "Ballot de grain",
+      "stage": "grain",
+      "optional": true,
+      "targetDurationDays": { "value": 18, "min": 14, "max": 21, "provenance": "invented" },
+      "conditions": {
+        "temperatureC": { "min": 24, "max": 24, "provenance": "invented" },
+        "humidityPercent": null,
+        "light": "obscurite",
+        "sterile": true
+      },
+      "suggestedObservations": ["colonisation", "contamination"],
+      "transitionRule": "observation_visuelle_validee_humain",
+      "next": ["inoculation_substrat"]
+    },
+    {
+      "id": "inoculation_substrat",
+      "label": "Inoculation du substrat",
+      "stage": "substrate",
+      "instantaneous": true,
+      "targetDurationDays": null,
+      "procedure": [
+        "vérification du grain",
+        "transfert du grain sur le substrat",
+        "scellage du sac",
+        "mise en incubation"
+      ],
+      "captureOnEntry": [
+        { "field": "poidsSubstratTotal", "unit": "g", "required": true, "provenance": "cultivator" },
+        { "field": "controleQualite", "values": ["aspect", "odeur", "propreté", "température"], "provenance": "cultivator" }
+      ],
+      "label_print": { "qrPerUnit": true, "textFields": ["nom", "type", "date"], "provenance": "cultivator" },
+      "provenance": "cultivator",
+      "next": ["incubation"]
+    },
+    {
+      "id": "incubation",
+      "label": "Incubation",
+      "stage": "substrate",
+      "targetDurationDays": { "value": 21, "min": 14, "max": 21, "provenance": "cultivator" },
+      "conditions": {
+        "temperatureC": { "min": 24, "max": 24, "provenance": "cultivator" },
+        "humidityPercent": { "controlled": false, "provenance": "cultivator" },
+        "light": "obscurite",
+        "co2Relevant": false,
+        "provenance": "cultivator"
+      },
+      "suggestedObservations": ["colonisation", "contamination", "couleur", "odeur", "humidite_visuelle"],
+      "transitionRule": "observation_visuelle_validee_humain",
+      "provenance": "cultivator",
+      "next": ["fructification"]
+    },
+    {
+      "id": "fructification",
+      "label": "Fructification",
+      "stage": "fruiting",
+      "trigger": {
+        "actions": ["ouverture du sac / bloc", "passage en lumière", "montée en humidité", "baisse de température"],
+        "provenance": "cultivator"
+      },
+      "targetDurationDays": { "value": 6, "min": 5, "max": 8, "provenance": "invented" },
+      "firstSignsAfterDays": { "value": 3, "min": 2, "max": 3, "provenance": "cultivator" },
+      "conditions": {
+        "temperatureC": { "min": 18, "max": 24, "provenance": "cultivator" },
+        "humidityPercent": { "min": 90, "max": 90, "provenance": "cultivator" },
+        "light": "lumiere",
+        "provenance": "cultivator"
+      },
+      "rooms": { "count": 2, "provenance": "cultivator" },
+      "suggestedObservations": ["primordia", "humidite_visuelle", "couleur", "maturite_recolte", "contamination", "dessechement", "exces_eau", "deformation"],
+      "transitionRule": "observation_visuelle_validee_humain",
+      "next": ["flush_1"]
+    },
+    {
+      "id": "flush_1",
+      "label": "Récolte — flush 1",
+      "stage": "fruiting",
+      "harvest": true,
+      "targetDurationDays": { "value": 2, "min": 1, "max": 3, "provenance": "invented" },
+      "capture": [
+        { "field": "poids", "unit": "g", "perUnit": true, "required": true, "provenance": "cultivator" },
+        { "field": "qualite", "required": true, "provenance": "cultivator" },
+        { "field": "pertes", "withCause": true, "provenance": "cultivator" }
+      ],
+      "transitionRule": "observation_visuelle_validee_humain",
+      "next": ["repos", "fructification", "flush_2"]
+    },
+    {
+      "id": "repos",
+      "label": "Repos entre flushs",
+      "stage": "fruiting",
+      "optional": true,
+      "targetDurationDays": { "value": 10, "min": 7, "max": 14, "provenance": "invented" },
+      "conditions": { "sameAs": "fructification", "provenance": "invented" },
+      "next": ["flush_2", "flush_3", "fin_de_cycle"]
+    },
+    {
+      "id": "flush_2",
+      "label": "Récolte — flush 2",
+      "stage": "fruiting",
+      "harvest": true,
+      "systematic": true,
+      "sameConditionsAs": "flush_1",
+      "qualityDiffersFromPrevious": true,
+      "targetDurationDays": { "value": 2, "min": 1, "max": 3, "provenance": "invented" },
+      "capture": [
+        { "field": "poids", "unit": "g", "perUnit": true, "required": true, "provenance": "cultivator" },
+        { "field": "qualite", "required": true, "provenance": "cultivator" },
+        { "field": "pertes", "withCause": true, "provenance": "cultivator" }
+      ],
+      "provenance": "cultivator",
+      "next": ["repos", "fructification", "flush_3", "fin_de_cycle"]
+    },
+    {
+      "id": "flush_3",
+      "label": "Récolte — flush 3",
+      "stage": "fruiting",
+      "harvest": true,
+      "optional": true,
+      "worthTheSpace": true,
+      "sameConditionsAs": "flush_1",
+      "targetDurationDays": { "value": 2, "min": 1, "max": 3, "provenance": "invented" },
+      "capture": [
+        { "field": "poids", "unit": "g", "perUnit": true, "required": true, "provenance": "cultivator" },
+        { "field": "qualite", "required": true, "provenance": "cultivator" },
+        { "field": "pertes", "withCause": true, "provenance": "cultivator" }
+      ],
+      "provenance": "cultivator",
+      "next": ["fin_de_cycle"]
+    },
+    {
+      "id": "fin_de_cycle",
+      "label": "Fin de cycle",
+      "stage": "substrate",
+      "terminal": true,
+      "capture": [
+        { "field": "poidsFinal", "unit": "g", "required": true, "provenance": "cultivator" },
+        { "field": "raisonDeFin", "required": true, "provenance": "cultivator" }
+      ],
+      "locationOccupiedUntilCleaning": true,
+      "cleaningAlert": true,
+      "provenance": "cultivator"
+    }
+  ],
+
+  "conservation": {
+    "availableAtAnyStage": true,
+    "methods": ["frigo", "dormance ambiante", "contenant"],
+    "maxDurationDays": { "value": 180, "provenance": "invented" },
+    "exitCreatesNewUnit": true,
+    "provenance": "cultivator"
+  },
+
+  "lineage": {
+    "clone": { "allowedAtEveryStage": true, "generationLimit": null },
+    "transfer": { "allowedAtEveryStage": true },
+    "division": { "allowedAtEveryStage": true },
+    "merge": { "allowed": false, "provenance": "cultivator" },
+    "entryPoint": "any_stage",
+    "parentRequired": false
+  }
+}

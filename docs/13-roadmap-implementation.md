@@ -265,3 +265,5 @@ Une tranche verticale fine reste la bonne approche, mais elle doit désormais in
 Au premier démarrage, tout est vide. Il faudra saisir un process complet, les chambres, les espèces et les seuils avant que l'outil ne serve à quoi que ce soit. C'est le moment classique d'abandon d'un outil de traçabilité.
 
 **À prévoir dans le MVP** : un modèle de process pré-rempli et **modifiable**, présenté explicitement comme un exemple à adapter. Ce n'est pas un seed métier — c'est un anti-écran-vide.
+
+✅ **Fait** : ce modèle existe — [`20-modele-process-par-defaut.md`](./20-modele-process-par-defaut.md) et son JSON. 6 étapes, valeurs réelles du cultivateur là où elles existent, valeurs inventées explicitement marquées ailleurs.

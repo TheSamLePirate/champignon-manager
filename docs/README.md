@@ -53,6 +53,8 @@ Permettre à un utilisateur sur site de suivre toute la chaîne de culture :
 | [16-formulaire-reponses-cultivateur.html](./16-formulaire-reponses-cultivateur.html) | Formulaire HTML autonome avec autosauvegarde, import/export JSON et export Markdown. |
 | [17-formulaire-questions-dev.html](./17-formulaire-questions-dev.html) | Formulaire HTML autonome pour les décisions développeur : architecture, API, DB, QR, déploiement. |
 | [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md) | Synthèse des réponses développeur et décisions techniques retenues. |
+| [20-modele-process-par-defaut.md](./20-modele-process-par-defaut.md) | **Modèle de process pré-rempli et modifiable** proposé au premier démarrage — anti-écran-vide. Chaque valeur porte sa provenance (réponse réelle / inventée). |
+| [20-modele-process-par-defaut.json](./20-modele-process-par-defaut.json) | Le même modèle, prêt à charger. |
 | [19-atlas-process-flux.html](./19-atlas-process-flux.html) | Atlas visuel **interactif** des process et flux métier (chaîne de propagation, laboratoire, substrat, **moteur de process**, lignée, traçabilité, états). Diagrammes data-driven (Mermaid), éditables. |
 | [index.html](./index.html) | Page d'accueil publique (GitHub Pages) : état du cadrage, outils interactifs, index documentaire. |
 | [champignon-reponses-cultivateur-2026-07-30.json](./champignon-reponses-cultivateur-2026-07-30.json) | Export brut des réponses cultivateur — **archive horodatée, ne pas réécrire**. Son `summary` annonce 100 %, mais 104 des 188 questions étaient vides. |

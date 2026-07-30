@@ -351,6 +351,8 @@ Conséquences pour l'implémentation :
 
 Un **modèle de process pré-rempli et modifiable** doit être proposé au premier lancement : phases et étapes types, durées d'exemple clairement signalées comme telles. L'objectif n'est pas de deviner le métier, mais d'éviter que la première utilisation commence par une page blanche et un formulaire de création vide.
 
+> Le modèle concret correspondant est défini dans [`20-modele-process-par-defaut.md`](./20-modele-process-par-defaut.md) (+ JSON).
+
 ## 18. Le process réel (export v8 du 30/07/2026) — 6 étapes, pas 13
 
 Les réponses détaillées par étape révèlent que **les subdivisions 1/2/3 n'ont aucune réalité métier** :
