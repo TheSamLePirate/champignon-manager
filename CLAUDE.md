@@ -62,6 +62,7 @@ Détail et nuances : `docs/18-decisions-techniques-dev.md`.
 | `18-decisions-techniques-dev.md` | Synthèse des décisions développeur (répondant : Sam). |
 | `19-atlas-process-flux.html` | **Atlas visuel interactif** des process (Mermaid data-driven). |
 | `champignon-reponses-dev-sam-2026-06-17.json` | Export brut des réponses dev — **archive horodatée, ne pas réécrire**. |
+| `champignon-reponses-cultivateur-2026-07-30.json` | Export brut des réponses cultivateur — **archive horodatée, ne pas réécrire**. Attention : son `summary` annonce 100 %, mais 104 des 188 questions sont vides. |
 | `../claude-critics.md` | Revue critique du cadrage (P0/P1/P2, risques, re-scoping MVP). À tenir à jour. |
 
 ## Outils interactifs — comment ils marchent
@@ -74,12 +75,30 @@ Ce sont des fichiers **HTML autonomes**, **data-driven** (donc faciles à modifi
 
 ## Ce qui dépend encore du cultivateur (Julien)
 
-Ne pas figer tant que non répondu (cf. `docs/14` §16-17 et `claude-critics.md` P0-1/P0-3) :
-- jusqu'où remonter la traçabilité (spore / gélose / LC) et QR à partir de quel stade ;
-- durées, conditions (T°/humidité), observations **par stade et par espèce** ;
-- liste réelle des espèces ; un process par espèce ou un seul multi-stade ;
-- ratios de multiplication clone/transfert ; nombre max de générations ;
-- vocabulaire exact, produits finaux, contenu des étiquettes, niveau de détail des emplacements.
+**Mise à jour 2026-07-30** — réponses reçues (`docs/champignon-reponses-cultivateur-2026-07-30.json`). Détail : `docs/14` §18, `claude-critics.md` §9.
+
+⚠️ L'export annonce « 100 % / 188 répondues » mais **seules 84 questions contiennent réellement une réponse** ; 104 avaient été marquées répondues en masse, sans contenu.
+
+**Structure figée — ne plus rediscuter :**
+- traçabilité jusqu'aux spores / souche reçue ; QR sur **chaque unité dès le début** ;
+- départ possible à **n'importe quel stade** (une unité peut naître sans ascendant) ;
+- clonage à tous les stades, **sans limite de génération** ;
+- **parent = lien de parenté détaillé de bout en bout**, pas une session d'inoculation ;
+- conservation possible partout ; **sortie de conservation = nouvelle unité** ; archivage **réversible** ;
+- étapes **sautables, refaisables, réversibles** ; changement de process en cours de route autorisé ;
+- modification d'un process → **bascule des unités en cours** après confirmation ;
+- process créé/modifié par **une seule personne** (cohérent avec l'auth `admin` unique) ;
+- vocabulaire : gélose/boîte de Pétri, culture liquide/LC, ballot de grain, ballot de substrat, bloc, sac, pain.
+
+**Toujours manquant — bloque le seed du premier process :**
+- **aucune valeur chiffrée** : durées, T°, humidité, ratios, seuils d'alarme, pour aucun stade ;
+- liste réelle des espèces (réponse actuelle : « tout type de champignon, configurable ») ;
+- chambres et emplacements réels, mesures et fréquences, observations terrain ;
+- récoltes (unité de poids, qualité, mélanges), contenu des étiquettes, conduite en cas de contamination.
+
+**Contradiction à arbitrer** : bascule totale des unités sur la nouvelle version de process **vs** comparaison entre deux versions — les deux ont été demandés (cf. `docs/04` §15.3).
+
+**Prochain livrable à demander** : le seul tableau §20 du questionnaire (durée / alarme / T° / humidité par stade) pour **une seule espèce**. C'est le minimum qui débloque une implémentation.
 
 Dans les docs, marquer ces points **« à confirmer »** plutôt que d'inventer des valeurs.
 

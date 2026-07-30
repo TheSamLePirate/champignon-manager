@@ -125,3 +125,15 @@ Pour une première version locale :
 - nombre d’utilisateurs ;
 - extension des rôles après le MVP ;
 - accès depuis l’extérieur : **via Tailscale (confirmé)**.
+
+## Mise à jour 2026-07-30 — droits sur les process
+
+Réponse du cultivateur à « Qui a le droit de créer ou modifier un process ? » : **« moi »**.
+
+Conséquences :
+
+- l’édition de process reste réservée à **une seule personne**, ce qui confirme le choix d’un rôle `admin` unique au MVP (cf. `18-decisions-techniques-dev.md`) ;
+- les autres utilisateurs, s’ils existent un jour, font avancer les unités sur le terrain sans toucher à la configuration ;
+- la modification d’un process ayant un effet immédiat sur les unités en cours (bascule de version), ce droit unique est aussi une protection : une seule main peut déplacer la production entière.
+
+⏳ Reste ouvert : nombre réel d’utilisateurs, droit de correction d’une saisie erronée, droit de réimpression QR.

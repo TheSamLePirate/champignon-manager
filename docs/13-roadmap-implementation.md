@@ -219,3 +219,27 @@ Commencer avec un process pleurote configuré dans la base (espèce configurable
 Décision développeur : viser un éditeur de process complet dès le MVP. Si la complexité devient trop élevée, garder le modèle configurable complet mais livrer d’abord une interface admin simplifiée.
 
 Synthèse complète des réponses développeur : [18-decisions-techniques-dev.md](./18-decisions-techniques-dev.md).
+
+## Mise à jour 2026-07-30 — impact des réponses cultivateur
+
+Source : `champignon-reponses-cultivateur-2026-07-30.json`. Détail : `14-questions-ouvertes.md` §18.
+
+### Ce qui débloque la roadmap
+
+Le **modèle de domaine est figé** (unité multi-stade, lignée détaillée, conservation/archivage réversibles, pas de limite de génération). Les phases qui dépendaient de P0-3 peuvent démarrer.
+
+### Ce qui reste bloqué
+
+Le **seed du premier process est impossible en l'état** : aucune durée, température, humidité, ni seuil d'alarme n'a été fourni. Toutes les questions de valeur ont reçu la réponse « configurable ».
+
+**Prérequis minimal avant Phase 1** : obtenir le tableau §20 du questionnaire (15 lignes × durée cible / alarme / T° / humidité / observation clé) pour **une seule espèce**. C'est le plus petit livrable qui permet d'écrire un seed réaliste.
+
+### Ce qui alourdit le moteur de process
+
+Trois réponses élargissent le périmètre du moteur — à intégrer dans l'estimation :
+
+1. **étapes sautables, refaisables et réversibles** → graphe d'états, pas séquence ;
+2. **changement de process en cours de route** sur un lot déjà lancé ;
+3. **versioning avec bascule** des unités en cours + comparaison entre versions (contradiction à arbitrer, cf. `04` §15.3).
+
+Ces trois points renforcent la recommandation de `claude-critics.md` : **seed data d'abord, éditeur visuel plus tard**.

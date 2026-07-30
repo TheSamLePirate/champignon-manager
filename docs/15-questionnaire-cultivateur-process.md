@@ -8,9 +8,17 @@ But : comprendre précisément comment se passe la culture sur le terrain pour q
 
 L’application devra permettre de suivre chaque unité avec un QR code, depuis l’inoculation ou la réception jusqu’aux récoltes, avec les poids, les chambres, les conditions et les statistiques.
 
+> **Mise à jour 2026-07-30 — réponses du cultivateur intégrées.** Source : `champignon-reponses-cultivateur-2026-07-30.json`. Les réponses sont recopiées dans les blocs `Réponse` de ce document.
+>
+> **État réel : 84 questions renseignées sur 188.** L’export annonçait « 100 % / 188 répondues », mais **104 questions ne contiennent ni texte ni case cochée** — elles ont été marquées répondues en masse. Elles portent ici la mention `⏳ SANS RÉPONSE au 30/07/2026`, et le formulaire les a repassées en « À répondre ».
+>
+> **Ce qui est acquis** : les 10 principes de cadrage (§2.1, validés sans réserve) et les décisions de structure — départ possible à n’importe quel stade, clonage partout, pas de limite de générations, réactivation d’une unité conservée = nouvelle unité, bascule des lots sur la nouvelle version de process avec confirmation, un seul auteur de process.
+>
+> **Ce qui manque toujours** — et c’est le chemin critique : **toutes les valeurs chiffrées**. Aucune durée, aucune température, aucune humidité, aucun ratio, aucun seuil d’alarme, aucune liste d’espèces réelle. Les sections 9 (détail par étape), 10 (chambres), 11 (mesures), 12 (observations), 14 (récoltes), 18 (cas particuliers) et le tableau §20 sont entièrement vides.
+
 ## 2. Ce que nous avons compris pour l’instant
 
-À confirmer ou corriger :
+À confirmer ou corriger (les principes structurants, eux, sont déjà validés — voir §2.1) :
 
 - Il y a plusieurs espèces de champignons (pleurote, shiitake, etc.), configurables — pas seulement des pleurotes.
 - Chaque unité de culture doit avoir une traçabilité complète par QR code.
@@ -36,6 +44,39 @@ L’application devra permettre de suivre chaque unité avec un QR code, depuis 
   - par espèce/variété.
 - L’objectif final est aussi de produire des statistiques détaillées.
 
+### 2.1 Principes de cadrage — ✅ validés par le cultivateur (2026-07-30)
+
+Ces dix principes ont été proposés côté produit puis **acceptés en bloc par le cultivateur, sans réserve ni objection**. Ils sont donc **acquis** et fondent l’architecture de l’application : ils ne sont plus à rediscuter, sauf décision explicite.
+
+1. **Chaque phase produit ses propres unités.** Une unité, c’est tout objet physique manipulé : souche, gélose, culture liquide, ballot de grain, sac de substrat, ballot inoculé, bac, caisse. Toutes sont traquées et monitorées.
+2. **Toute unité peut être divisée**, à n’importe quel stade, chaque enfant recevant son propre QR.
+3. **Après une division ou un transfert, le parent est au choix conservé actif ou archivé en historique** — les deux cas doivent exister.
+4. **Le clonage est possible à chaque stade.**
+5. **Toute unité peut être mise en conservation**, à n’importe quel stade.
+6. **Chaque unité a son propre QR code, dès le début** de la chaîne.
+7. **Le process est entièrement configurable** : on peut créer des process entiers ou des **sous-process réutilisables**, et les appliquer à des lots. Le moteur doit pouvoir tout faire, pour n’importe quel champignon ; seule la configuration change selon l’espèce/variété.
+8. **Chaque phase/étape porte une durée**, avec des **alarmes de durée réglables dans le process**.
+9. **Les décisions humaines agissent et priment** : l’application propose et alerte, l’opérateur valide.
+10. **Sélection multi-critères totale** : on doit pouvoir sélectionner des unités selon n’importe quel paramètre (parenté, clone, session d’inoculation, stade, chambre, espèce, dates, génération…) et combiner les critères.
+
+Corollaires : **traçabilité totale** de l’origine au produit final, et **toutes les statistiques possibles** doivent être calculables.
+
+⏳ **Ce que ces principes ne disent pas** — et qui reste à obtenir du cultivateur, c’est maintenant le seul chemin critique :
+
+- les **durées réelles** par stade et par espèce, et les **seuils d’alarme** associés ;
+- les **conditions réelles** (température, humidité, lumière, aération) par stade et par espèce ;
+- la **liste réelle des espèces et variétés** cultivées ;
+- les **ratios de multiplication** (1 gélose → combien de LC, etc.) et les limites de génération ;
+- le **vocabulaire exact** employé sur le terrain, stade par stade ;
+- les **priorités d’affichage** : quelles actions après un scan, quelles stats au quotidien ;
+- **ce qui devient trop lourd à saisir sur le terrain** malgré le principe de traçabilité totale.
+
+Réponse du cultivateur (2026-07-30) :
+
+```text
+Les 10 principes sont acceptés, sans réserve ni objection.
+```
+
 ## 3. Comment répondre
 
 Répondre simplement, même avec des phrases courtes.
@@ -58,18 +99,20 @@ Dans l’app, une “unité” est l’objet physique que l’on suit avec un QR
 
 Questions :
 
-1. Comment appelles-tu naturellement une unité ?
-   - ballot ?
-   - bloc ?
-   - sac ?
-   - pain ?
-   - substrat ?
+1. Comment appelles-tu naturellement une unité, à chaque stade ?
+
+Le mot change probablement selon le stade — donne ton vocabulaire pour chacun :
+   - gélose / boîte de Pétri ?
+   - culture liquide / LC ?
+   - ballot de grain ?
+   - ballot, bloc, sac, pain, substrat ?
+   - bac, caisse ?
    - autre ?
 
 Réponse :
 
 ```text
-
+gélose/boîte de Pétri, culture liquide/LC, ballot de grain, ballot de substrat, bloc, sac, pain
 ```
 
 2. Une unité correspond à quoi physiquement ?
@@ -79,28 +122,50 @@ Réponse :
    - une caisse ?
    - autre ?
 
+> ✅ **Validé (30/07/2026)** : une unité = tout objet physique manipulé, à n’importe quelle phase — souche, gélose, culture liquide, ballot de grain, sac de substrat, ballot inoculé, bac, caisse. Basiquement, chaque phase produit ses propres unités, toutes traquées et monitorées.
+>
+> ⏳ **Reste à préciser** : les contenants réels utilisés et leurs tailles typiques.
+
 Réponse :
 
 ```text
-
+Une unité = tout objet physique manipulé, à n’importe quelle phase — souche, gélose, culture liquide, ballot de grain, sac de substrat, ballot inoculé, bac, caisse. Basiquement, chaque phase produit ses propres unités, toutes traquées et monitorées.
 ```
 
 3. Est-ce que l’unité peut être divisée physiquement en plusieurs enfants ?
 
 Exemple : un parent donne plusieurs sous-unités, chacune avec son QR code.
 
+> ✅ **Validé (30/07/2026)** : oui, à chaque fois — toute unité peut être divisée, à n’importe quel stade, chaque enfant recevant son propre QR.
+>
+> ⏳ **Reste à préciser** : à quels stades la division est réellement pratiquée, en combien de morceaux, et si le poids de chaque enfant doit être saisi.
+
 Réponse :
 
 ```text
-
+Oui, à chaque fois — toute unité peut être divisée, à n’importe quel stade, chaque enfant recevant son propre QR.
 ```
 
 4. Si une unité est divisée, est-ce que le parent continue à exister, ou est-ce qu’il devient seulement un historique ?
 
+> ✅ **Validé (30/07/2026)** : les deux cas doivent exister, au choix au moment de l’opération — parent conservé actif (culture mère, réserve) ou parent basculé en historique (immobile mais consultable et relié à ses enfants).
+>
+> ⏳ **Reste à préciser** : le comportement par défaut souhaité, stade par stade.
+
 Réponse :
 
 ```text
+Les deux cas doivent exister, au choix au moment de l’opération — parent conservé actif (culture mère, réserve) ou parent basculé en historique (immobile mais consultable et relié à ses enfants).
+```
 
+5. Toutes les unités doivent-elles être suivies avec le même niveau de détail ?
+
+Le principe retenu est la traçabilité totale, mais la saisie doit rester tenable. Où est-ce que ça devient trop lourd ?
+
+Réponse :
+
+```text
+Le principe retenu est la traçabilité totale : chaque unité est traquée et monitorée, à tous les stades.
 ```
 
 ## 5. Espèces, variétés et souches (multi-espèces, configurable)
@@ -116,35 +181,47 @@ Exemples possibles : pleurote gris, pleurote jaune, pleurote rose, pleurote du p
 Réponse :
 
 ```text
-
+Tout type de champignon, configurable dans l app
 ```
 
 2. Pour chaque espèce/variété, est-ce que le process change ?
 
 Exemples : durée d’incubation différente, température différente, humidité différente, nombre de flushs différent.
 
+> ✅ **Validé (30/07/2026)** : ce qui change d’une variété à l’autre est la **configuration** (durées, T°, humidité, nombre de flushs, seuils d’alarme), pas le moteur — le process de l’app doit pouvoir tout faire, pour n’importe quel champignon. Rien n’est codé en dur pour le pleurote.
+>
+> ⏳ **Reste à préciser** : les valeurs réelles, variété par variété.
+
 Réponse :
 
 ```text
-
+Ce qui change d’une variété à l’autre, c’est la configuration (durées, températures, humidité, nombre de flushs, seuils d’alarme), pas le moteur : le process de l’app doit pouvoir tout faire, pour n’importe quel champignon. Rien n’est codé en dur pour le pleurote.
 ```
 
 3. Est-ce que tu veux suivre la souche précise, le fournisseur, ou seulement le type de champignon ?
 
+> ✅ **Validé (30/07/2026)** : traçabilité totale — espèce, variété, souche précise, fournisseur/origine, et lignée complète (de quelle souche et de quelle génération descend chaque unité).
+>
+> ⏳ **Reste à préciser** : les identifiants utilisés pour nommer une souche.
+
 Réponse :
 
 ```text
-
+Traçabilité totale : espèce, variété, souche précise et fournisseur/origine, avec la lignée complète (de quelle souche et de quelle génération descend chaque unité).
 ```
 
 4. Quelles statistiques veux-tu comparer par espèce/variété ?
 
 Exemples : rendement total, rendement par flush, durée d’incubation, taux de contamination, poids moyen par unité.
 
+> ✅ **Validé (30/07/2026)** : toutes les statistiques possibles doivent être calculables.
+>
+> ⏳ **Reste à préciser — c’est ça l’information utile** : les 3 ou 4 chiffres à regarder tous les jours en ouvrant l’app.
+
 Réponse :
 
 ```text
-
+Toutes les statistiques possibles doivent être calculables : rendement total et par flush, poids moyen par unité, rendement par kg de substrat, durée réelle de chaque stade, taux de contamination, pertes, ratios de multiplication, comparaison par souche et par génération.
 ```
 
 ## 6. Départ du process : inoculation ou réception
@@ -160,7 +237,7 @@ Questions :
 Réponse :
 
 ```text
-
+Tout est possible, Spores/gélose, culture liquide, grain, ou directement substrat, meme parfois des unités déjà prêtes
 ```
 
 2. Est-ce que certaines unités arrivent déjà inoculées ?
@@ -168,7 +245,7 @@ Réponse :
 Réponse :
 
 ```text
-
+oui, c 'est possible
 ```
 
 3. Quelles informations faut-il enregistrer à l’inoculation ?
@@ -178,15 +255,19 @@ Exemples : date, heure, espèce, souche, poids substrat, poids spawn, taux d’i
 Réponse :
 
 ```text
-
+tout ca
 ```
 
 4. Est-ce que le QR code doit être imprimé au moment de l’inoculation ou plus tard ?
 
+> ✅ **Validé (30/07/2026)** : le QR existe **dès le début** — il est créé en même temps que l’unité, au premier stade de la chaîne, pas au moment du substrat.
+>
+> ⏳ **Reste à préciser** : quand l’étiquette est physiquement imprimée et collée.
+
 Réponse :
 
 ```text
-
+Le QR existe dès le début : il est créé en même temps que l’unité, dès le premier stade de la chaîne, et non au moment du substrat.
 ```
 
 5. Est-ce qu’une inoculation crée plusieurs unités en même temps ?
@@ -196,7 +277,7 @@ Exemple : une session d’inoculation produit 30 sacs.
 Réponse :
 
 ```text
-
+oui
 ```
 
 6. Si oui, veux-tu pouvoir sélectionner toutes les unités d’une même session d’inoculation ?
@@ -204,7 +285,7 @@ Réponse :
 Réponse :
 
 ```text
-
+oui
 ```
 
 ## 7. Parent, enfants et lots groupés
@@ -227,7 +308,7 @@ Questions :
 Réponse :
 
 ```text
-
+lien de parenté détaillé depuis le debut a la fin
 ```
 
 2. Les enfants sont-ils les unités physiques avec QR code ?
@@ -235,7 +316,7 @@ Réponse :
 Réponse :
 
 ```text
-
+oui
 ```
 
 3. Dois-tu parfois faire avancer tous les enfants d’un même parent en même temps ?
@@ -245,7 +326,7 @@ Exemple : passer tous les sacs inoculés le même jour en incubation 2.
 Réponse :
 
 ```text
-
+oui
 ```
 
 4. Dois-tu parfois faire avancer seulement une partie des enfants ?
@@ -255,27 +336,52 @@ Exemple : seulement ceux d’une chambre, ou seulement ceux qui sont prêts.
 Réponse :
 
 ```text
-
+oui
 ```
 
 5. Quels filtres sont indispensables pour sélectionner des unités en masse ?
 
+> ✅ **Validé (30/07/2026)** : sélection multi-critères totale — on doit pouvoir sélectionner des unités selon n’importe quel paramètre et **combiner** les critères.
+>
+> ⏳ **Reste à préciser** : les 3 ou 4 sélections faites tous les jours, à mettre en raccourci.
+
 Coche ou complète :
 
-- [ ] parent ;
-- [ ] date d’inoculation ;
-- [ ] espèce/variété ;
-- [ ] souche ;
-- [ ] chambre ;
-- [ ] phase ;
-- [ ] incubation 1/2/3 ;
-- [ ] statut sanitaire ;
+- [x] parent direct ;
+- [x] lignée complète (tous les descendants d’une unité) ;
+- [x] type de lien (clone / transfert / division) ;
+- [x] génération ;
+- [x] session d’inoculation ;
+- [x] date d’inoculation ;
+- [x] date de transfert ;
+- [x] espèce/variété ;
+- [x] souche ;
+- [x] chambre ;
+- [x] emplacement (rack, niveau) ;
+- [x] stade ;
+- [x] phase ;
+- [x] incubation 1/2/3 ;
+- [x] process appliqué ;
+- [x] statut sanitaire ;
+- [x] statut de conservation (mère, réserve, archivé) ;
+- [x] opérateur ;
+- [x] retard sur la durée cible ;
 - [ ] autre.
 
 Réponse :
 
 ```text
+On doit pouvoir sélectionner des unités selon n’importe quel paramètre — parenté, clone, inoculation, stade, chambre, espèce, dates… — et combiner plusieurs critères en même temps.
+```
 
+6. Y a-t-il des sélections que tu refais tout le temps ?
+
+Elles pourront être enregistrées comme filtres favoris. Exemple : « tout ce qui est en incubation dans la chambre 2 », « tout ce qui vient de la souche X ».
+
+Réponse :
+
+```text
+oui, filtres configurables
 ```
 
 ## 8. Process global à décrire
@@ -285,6 +391,10 @@ Merci de décrire le process réel, même approximatif.
 > Mise à jour 2026-06-17 : le process couvre toute la chaîne **« du spore à l’assiette »** — origine (spores / culture mère) → gélose → culture liquide (LC) → grain → substrat → fructification. À chaque stade : **clone** (cultures secondaires de même type) et **transfert/repiquage** vers le stade suivant. Les questions détaillées par stade amont (gélose, LC, grain) sont dans le formulaire `16-formulaire-reponses-cultivateur.html`.
 
 ### 8.1 Liste des phases / stades
+
+> ✅ **Validé (30/07/2026)** : cette liste n’est qu’un point de départ pleurote. Le process est **entièrement configurable** dans l’app (phases, étapes, ordre, boucles de flush) — rien n’est figé.
+>
+> ⏳ **Reste à préciser** : ce qui manque, ce qui ne colle pas, et les noms réellement utilisés.
 
 Est-ce que cette liste est correcte ?
 
@@ -305,7 +415,7 @@ Est-ce que cette liste est correcte ?
 Réponse / correction :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 8.2 Différence entre phase et étape
@@ -320,7 +430,7 @@ Question : cette distinction est-elle utile pour toi ?
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 8.3 Passage d’une étape à l’autre
@@ -333,13 +443,249 @@ Pour chaque étape, il faut comprendre si le passage est basé sur :
 - une décision humaine ;
 - une règle fixe.
 
+> ✅ **Validé (30/07/2026)** : les deux à la fois — chaque phase/étape porte une **durée cible** qui déclenche des **alarmes réglables**, mais la **décision humaine agit et prime** : c’est l’opérateur qui valide le passage.
+>
+> ⏳ **Reste à préciser** : les étapes où la durée seule suffirait, et celles où c’est toujours l’œil qui décide.
+
 Réponse générale :
 
 ```text
-
+Les deux à la fois — chaque phase/étape porte une **durée cible** qui déclenche des **alarmes réglables**, mais la **décision humaine agit et prime** : c’est l’opérateur qui valide le passage.
 ```
 
+### 8.4 Process configurable, sous-process et alarmes de durée
+
+Cadrage retenu : dans l’application, on doit pouvoir créer des **process entiers** ou des **sous-process réutilisables**, et les appliquer à des lots. Chaque phase/étape porte une durée avec des alarmes réglables.
+
+Questions :
+
+1. Un « sous-process » réutilisable, ça correspondrait à quoi chez toi ?
+
+Un sous-process est un bloc d’étapes réutilisé à plusieurs endroits. Exemples : un bloc « cycle de flush » (repos → fructification → récolte) rejoué 2 ou 3 fois ; un bloc « préparation labo » commun à toutes les espèces ; un bloc « quarantaine ».
+
+Réponse :
+
+```text
+L’app doit permettre de créer des process entiers ET des sous-process réutilisables, puis de les appliquer à des lots.
+```
+
+2. Applique-t-on un process à une unité, à un lot, ou aux deux ?
+
+> ✅ **Validé (30/07/2026)** : aux deux — un process ou un sous-process doit pouvoir s’appliquer à une unité seule, à un lot entier, ou à une sélection filtrée.
+
+Réponse :
+
+```text
+Aux deux : un process ou un sous-process doit pouvoir s’appliquer à une unité seule, à un lot entier, ou à une sélection filtrée d’unités.
+```
+
+3. Un lot peut-il changer de process en cours de route ?
+
+Exemple : basculer en milieu d’incubation une partie des unités sur un autre sous-process (relance, quarantaine, test).
+
+Réponse :
+
+```text
+Oui, possible
+```
+
+4. Chaque phase/étape a-t-elle une durée cible chez toi ?
+
+> ✅ **Validé (30/07/2026)** : oui — chaque phase/étape porte une durée, et les alarmes sont réglables directement dans le process.
+>
+> ⏳ **Reste à préciser** : les durées réelles par stade et par espèce (c’est le gros du travail restant).
+
+Réponse :
+
+```text
+Oui, chaque phase/étape porte une durée, et les alarmes de durée sont réglables directement dans le process.
+```
+
+5. Quelles alarmes de durée veux-tu pouvoir régler par étape ?
+
+- [x] rappel avant la fin prévue (ex : J-1) ;
+- [x] alerte quand la durée cible est dépassée ;
+- [x] 2ᵉ seuil : retard critique ;
+- [ ] rappel périodique tant que l’étape n’est pas terminée ;
+- [ ] rappel de contrôle en milieu d’étape ;
+- [x] aucune alarme sur certaines étapes ;
+- [ ] autre.
+
+Réponse :
+
+```text
+Les alarmes doivent être réglables étape par étape dans le process : délai, seuil, répétition.
+```
+
+6. Que doit faire l’app quand la durée cible est dépassée ?
+
+> ✅ **Validé (30/07/2026)** : prévenir, créer une tâche, marquer l’unité en retard — mais **jamais bloquer**.
+>
+> ⏳ **Reste à préciser** : qui est prévenu et par quel canal.
+
+Réponse :
+
+```text
+Prévenir et créer une tâche, marquer l’unité en retard — mais jamais bloquer : les décisions humaines priment.
+```
+
+7. Le passage à l’étape suivante doit-il être automatique une fois la durée atteinte, ou toujours validé par une personne ?
+
+> ✅ **Validé (30/07/2026)** : toujours validé par une personne.
+>
+> ⏳ **Reste à préciser** : existe-t-il des étapes purement mécaniques où l’automatisme serait acceptable ?
+
+Réponse :
+
+```text
+Toujours validé par une personne : les décisions humaines agissent, l’app ne fait que proposer et alerter.
+```
+
+8. Une étape peut-elle être sautée, refaite ou remise en arrière ?
+
+Réponse :
+
+```text
+oui, possiblement
+```
+
+9. Si un process est modifié, que deviennent les unités déjà lancées avec l’ancienne version ?
+
+Important pour ne pas fausser les statistiques comparatives.
+
+Réponse :
+
+```text
+elles basculent sur la nouvelle, avec un message clair (êtes vous sur)
+```
+
+10. Veux-tu comparer les résultats entre deux versions d’un process ?
+
+Réponse :
+
+```text
+oui
+```
+
+11. Qui a le droit de créer ou modifier un process ?
+
+Réponse :
+
+```text
+moi
+```
+
+### 8.5 Conservation, cultures mères et archivage
+
+Cadrage retenu : chaque unité, à n’importe quel stade, peut être mise en conservation ; et après une division ou un transfert, le parent peut être gardé actif ou basculé en historique.
+
+Questions :
+
+1. Quelles unités mets-tu réellement en conservation, et à quel stade ?
+
+> ✅ **Validé (30/07/2026)** : en théorie toutes.
+>
+> ⏳ **Reste à préciser** : ce qui est réellement conservé, et ce qui n’a aucun sens à conserver.
+
+Réponse :
+
+```text
+En théorie toutes : la conservation doit être possible pour chaque unité, à chaque stade.
+```
+
+2. Comment conserves-tu une unité ?
+
+Frigo, congélation, huile minérale, dormance à température ambiante, contenant, température, durée maximale.
+
+Réponse :
+
+```text
+Frigo, dormance à température ambiante, contenant, configurable
+```
+
+3. Une unité en conservation doit-elle disparaître des listes de travail du jour ?
+
+> ✅ **Validé (30/07/2026)** : elle passe en état « en réserve » — hors tâches et hors alarmes de durée courantes, mais toujours scannable, retrouvable et reliée à sa lignée.
+
+Réponse :
+
+```text
+Une unité conservée passe dans un état « en réserve » — elle sort des tâches et des alarmes de durée courantes, mais reste scannable, retrouvable et reliée à sa lignée.
+```
+
+4. Quand tu réactives une unité conservée, est-ce la même unité ou une nouvelle ?
+
+Reprise de la même unité (même QR), ou clone créé à la sortie de conservation ? Important pour la lignée et les statistiques.
+
+Réponse :
+
+```text
+une nouvelle
+```
+
+5. Après une division ou un transfert, le parent est-il gardé actif ou archivé — et qui décide ?
+
+> ✅ **Validé (30/07/2026)** : les deux au choix, au moment de l’opération.
+>
+> ⏳ **Reste à préciser** : le comportement par défaut par stade, pour éviter une question à chaque manipulation.
+
+Réponse :
+
+```text
+Les deux doivent être possibles, au choix au moment de l’opération : parent conservé (il continue à vivre) ou parent mis en historique (il ne bouge plus mais reste consultable).
+```
+
+6. Faut-il une durée maximale de conservation avec alarme ?
+
+Exemple : alerter au bout de X mois pour repiquer une culture mère avant qu’elle ne s’épuise.
+
+Réponse :
+
+```text
+Oui, la conservation est une étape comme une autre, donc elle peut porter une durée cible et une alarme réglable.
+```
+
+7. Une unité archivée en historique peut-elle être réactivée ?
+
+Réponse :
+
+```text
+oui
+```
+
+### 8.6 Stades amont (gélose, LC, grain) — réponses du 30/07/2026
+
+Ces questions ne figurent que dans le formulaire `16`. Réponses recopiées ici pour garder la trace.
+
+| Question | Réponse |
+| --- | --- |
+| D’où part une gélose ? | Spores, clone de tissu, gélose reçue/achetée — **tout est possible** |
+| Combien de géloses secondaires par gélose ? | Ça dépend — **configurable** |
+| Conditions et durée gélose | **Configurable** |
+| Observations gélose | Colonisation, contamination (moisissure, bactérie), couleur, vitesse, anomalies |
+| Passage gélose → LC/grain | Critère visuel, durée, **décision humaine** |
+| Infos à saisir gélose | Souche, espèce, origine, date, opérateur, génération, n° de boîte |
+| Actions app gélose | Cloner, transférer en LC, observer contamination, marquer culture mère, imprimer QR, jeter |
+| Démarrage d’une LC | Ça dépend — **tout est possible** |
+| Clone LC → LC | Oui |
+| Conditions et durée LC | **Configurable** |
+| Observations LC | Croissance, trouble, contamination, odeur, vitesse |
+| Ratio LC → grain | **Configurable** |
+| Infos à saisir LC | Volume, souche, origine (gélose mère), date, opérateur, génération |
+| Actions app LC | Cloner, transférer vers grain, observer contamination, imprimer QR, jeter |
+| Inoculation du grain | **Tout est possible** |
+| Clone grain → grain | Oui |
+| Conditions et durée grain | Température, durée, secouage, stérilité |
+| Observations grain | Taux de colonisation, contamination, uniformité, vitesse |
+| Ratio grain → substrat | **Configurable** |
+| Infos et poids grain | **Configurable** |
+| Actions app grain | Cloner, transférer vers substrat, observer contamination, imprimer QR, jeter |
+
+⏳ **Aucune valeur chiffrée n’a été donnée** pour ces stades : les durées, températures et ratios sont tous renvoyés à « configurable ». Il faudra des valeurs par défaut réelles pour amorcer le premier process.
+
 ## 9. Détail par étape
+
+⏳ **Section entièrement sans réponse au 30/07/2026.** C’est le plus gros trou : aucune durée, température, humidité ni critère de passage n’a été fourni pour les incubations, fructifications, flushs et fin de cycle.
 
 Remplir autant que possible. Si tu ne sais pas précisément, mettre une fourchette.
 
@@ -360,7 +706,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.2 Incubation 1
@@ -381,7 +727,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.3 Incubation 2
@@ -401,7 +747,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.4 Incubation 3
@@ -421,7 +767,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.5 Fructification 1
@@ -445,7 +791,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.6 Fructification 2
@@ -465,7 +811,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.7 Récolte flush 1
@@ -485,7 +831,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.8 Récolte flush 2
@@ -502,7 +848,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.9 Récolte flush 3
@@ -518,7 +864,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ### 9.10 Fin de cycle
@@ -539,7 +885,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ## 10. Conditions de culture par chambre
@@ -559,7 +905,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 2. Faut-il suivre seulement la chambre, ou aussi l’étagère/le niveau/la position ?
@@ -567,7 +913,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 3. Quelles conditions cibles par chambre ?
@@ -584,7 +930,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 5. Veux-tu scanner le QR d’une chambre pour voir toutes les unités présentes ?
@@ -592,7 +938,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ## 11. Mesures à saisir ou récupérer
@@ -606,7 +952,7 @@ Exemples : température, humidité, poids, nombre de sacs, contamination.
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 2. À quelle fréquence ?
@@ -614,7 +960,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 3. Quelles mesures sont liées à une unité et lesquelles sont liées à une chambre ?
@@ -624,7 +970,7 @@ Exemple : poids = unité ; température = chambre.
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 4. Les appareils Inkbird doivent-ils seulement servir d’historique, ou aussi déclencher des alertes ?
@@ -632,7 +978,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 5. Quelles valeurs veux-tu voir dans les statistiques ?
@@ -640,7 +986,19 @@ Réponse :
 Réponse :
 
 ```text
+⏳ SANS RÉPONSE au 30/07/2026
+```
 
+6. Doit-on pouvoir suivre des mesures sur n’importe quelle unité, à n’importe quel stade ?
+
+> ✅ **Validé (30/07/2026)** : oui — chaque unité est traquée et monitorée, quel que soit son stade.
+>
+> ⏳ **Reste à préciser** : les mesures qui ont un sens à chaque stade, pour ne pas proposer des champs inutiles sur l’iPhone.
+
+Réponse :
+
+```text
+Oui — chaque unité est traquée et monitorée, quel que soit son stade.
 ```
 
 ## 12. Observations terrain
@@ -656,7 +1014,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 2. Quelles observations doivent être proposées selon l’étape ?
@@ -666,7 +1024,7 @@ Exemple : en incubation, contamination/colonisation ; en fructification, maturit
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 3. Faut-il pouvoir prendre une photo à chaque observation ?
@@ -674,7 +1032,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 4. Pour quelles observations la photo devrait-elle être obligatoire ?
@@ -682,7 +1040,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 5. Faut-il une notion de gravité ?
@@ -692,7 +1050,7 @@ Exemple : faible, moyen, critique.
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ## 13. Actions à faire depuis l’iPhone
@@ -703,34 +1061,49 @@ Questions :
 
 1. Quelles actions veux-tu absolument après scan d’une unité ?
 
+> ✅ **Validé (30/07/2026)** : toutes ces actions doivent exister, puisque cloner, diviser, conserver et archiver sont possibles à chaque stade.
+>
+> ⏳ **Reste à préciser — c’est ça l’information utile** : les 3 ou 4 actions à mettre en gros boutons juste après le scan ; le reste ira dans un menu secondaire.
+
 Coche ou complète :
 
-- [ ] voir fiche ;
-- [ ] avancer à l’étape suivante ;
-- [ ] ajouter observation ;
-- [ ] ajouter mesure ;
-- [ ] déplacer chambre ;
-- [ ] récolter ;
-- [ ] déclarer contamination ;
-- [ ] mettre en pause ;
-- [ ] terminer / compost ;
-- [ ] réimprimer QR ;
+- [x] voir fiche ;
+- [x] voir la lignée (parents et enfants) ;
+- [x] avancer à l’étape suivante ;
+- [x] ajouter observation ;
+- [x] ajouter mesure / peser ;
+- [x] déplacer chambre ;
+- [x] cloner ;
+- [x] transférer au stade suivant ;
+- [x] diviser en plusieurs unités ;
+- [x] mettre en conservation ;
+- [x] appliquer un sous-process ;
+- [x] récolter ;
+- [x] déclarer contamination ;
+- [x] mettre en pause ;
+- [x] terminer / compost ;
+- [x] archiver en historique ;
+- [x] réimprimer QR ;
 - [ ] autre.
 
 Réponse :
 
 ```text
-
+Toutes ces actions doivent exister, puisque cloner, diviser, conserver et archiver sont possibles à chaque stade.
 ```
 
 2. Quelles actions veux-tu faire en masse sur plusieurs unités ?
 
-Exemples : déplacer 40 unités en chambre fructification, passer toutes les unités du parent X en incubation 2.
+Exemples : déplacer 40 unités en chambre fructification, passer toutes les unités du parent X en incubation 2, appliquer un sous-process à tout un lot.
+
+> ✅ **Validé (30/07/2026)** : toute action doit pouvoir s’appliquer à une sélection d’unités, y compris l’application d’un process ou d’un sous-process entier à un lot.
+>
+> ⏳ **Reste à préciser** : les actions de masse réellement pratiquées, et celles qui seraient dangereuses en masse.
 
 Réponse :
 
 ```text
-
+Toute action doit pouvoir s’appliquer à une sélection d’unités, y compris l’application d’un process ou d’un sous-process entier à un lot.
 ```
 
 3. Faut-il une validation avant action en masse ?
@@ -738,7 +1111,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 4. Faut-il pouvoir annuler ou corriger une action ?
@@ -746,7 +1119,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ## 14. Récoltes et poids par unité
@@ -758,7 +1131,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 2. Quelle unité de poids utilises-tu ? grammes ou kilogrammes ?
@@ -766,7 +1139,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 3. Faut-il enregistrer :
@@ -780,7 +1153,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 4. La récolte d’une unité peut-elle être mélangée avec celle d’une autre unité ?
@@ -788,7 +1161,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 5. Si oui, faut-il garder les proportions exactes ?
@@ -796,7 +1169,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 6. Quels indicateurs de rendement veux-tu ?
@@ -806,7 +1179,7 @@ Exemples : poids total par unité, rendement par flush, rendement par kg de subs
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ## 15. Statistiques souhaitées
@@ -817,25 +1190,34 @@ Questions :
 
 1. Quelles stats veux-tu voir en premier ?
 
+> ✅ **Validé (30/07/2026)** : toutes les statistiques possibles doivent être calculables, puisque la traçabilité est totale. **L’important ici n’est donc pas de tout cocher**, mais de dire lesquelles seraient regardées tous les jours.
+
 Coche ou complète :
 
 - [ ] rendement total par unité ;
 - [ ] rendement par flush ;
+- [ ] rendement par kg de substrat ;
 - [ ] rendement par espèce/variété ;
+- [ ] rendement par souche ;
+- [ ] rendement par génération ;
 - [ ] rendement par date d’inoculation ;
 - [ ] rendement par parent/session ;
 - [ ] rendement par chambre ;
+- [ ] durée réelle par étape vs durée cible ;
 - [ ] durée moyenne incubation ;
 - [ ] durée moyenne fructification ;
 - [ ] taux de contamination ;
+- [ ] taux de réussite par type de lien (clone / transfert / division) ;
+- [ ] ratios de multiplication réels ;
 - [ ] pertes ;
 - [ ] comparaison entre conditions température/humidité ;
+- [ ] comparaison entre versions de process ;
 - [ ] autre.
 
 Réponse :
 
 ```text
-
+Toutes les statistiques possibles doivent être calculables, puisque la traçabilité est totale.
 ```
 
 2. Veux-tu comparer les enfants d’un même parent entre eux ?
@@ -843,7 +1225,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 3. Veux-tu comparer les performances entre chambres ?
@@ -851,7 +1233,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 4. Veux-tu exporter les données en CSV/Excel ?
@@ -859,7 +1241,21 @@ Réponse :
 Réponse :
 
 ```text
+⏳ SANS RÉPONSE au 30/07/2026
+```
 
+5. Veux-tu des statistiques sur la lignée et les générations ?
+
+Exemple : cette souche perd-elle en vigueur après 5 repiquages ? Les clones font-ils aussi bien que les transferts ?
+
+> ✅ **Validé (30/07/2026)** : oui — la traçabilité totale permet de comparer par souche, par génération et par type de lien.
+>
+> ⏳ **Reste à préciser** : les questions concrètes auxquelles ces chiffres doivent répondre.
+
+Réponse :
+
+```text
+Oui — la traçabilité totale permet de comparer par souche, par génération et par type de lien (clone / transfert / division).
 ```
 
 ## 16. Alertes et tâches
@@ -870,10 +1266,14 @@ Questions :
 
 Exemples : incubation trop longue, humidité trop basse, contamination, récolte prête, chambre hors température.
 
+> ✅ **Validé (30/07/2026)** : base retenue — dépassement de la durée cible d’une étape (alarme réglable dans le process), contamination déclarée, récolte prête, chambre hors consigne, fin de durée de conservation.
+>
+> ⏳ **Reste à préciser** : les seuils réels, et ce qui dérangerait pour rien.
+
 Réponse :
 
 ```text
-
+Le dépassement de la durée cible d’une étape (alarme réglable dans le process), la contamination déclarée, la récolte prête, la chambre hors consigne, et la fin de durée de conservation.
 ```
 
 2. Faut-il des tâches automatiques ?
@@ -883,7 +1283,7 @@ Exemples : “vérifier incubation”, “récolter aujourd’hui”, “nettoye
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 3. Les alertes doivent-elles être visibles seulement dans l’app ou aussi envoyées ailleurs ?
@@ -891,7 +1291,19 @@ Réponse :
 Réponse :
 
 ```text
+⏳ SANS RÉPONSE au 30/07/2026
+```
 
+4. Une alerte doit-elle pouvoir être ignorée ou reportée ?
+
+Exemple : « je sais, c’est normal, rappelle-moi dans 3 jours ».
+
+> ✅ **Validé (30/07/2026)** : oui — puisque la décision humaine prime, une alarme doit pouvoir être acquittée ou reportée sans bloquer l’unité, en gardant la trace de qui l’a fait et quand.
+
+Réponse :
+
+```text
+Oui : puisque la décision humaine prime, une alarme doit pouvoir être acquittée ou reportée sans bloquer l’unité — en gardant la trace de qui l’a fait et quand.
 ```
 
 ## 17. QR code et étiquettes
@@ -900,10 +1312,14 @@ Questions :
 
 1. Quelles unités doivent avoir un QR ?
 
+> ✅ **Validé (30/07/2026)** : chaque unité a son propre QR code, à tous les stades et dès le début — plus les chambres, les récoltes et les produits finaux.
+>
+> ⏳ **Reste à préciser** : le format et le support d’étiquette utilisables sur les petits objets (boîte de Pétri, bocal de LC) et en milieu humide ou stérilisé.
+
 Réponse :
 
 ```text
-
+Chaque unité a son propre QR code, à tous les stades et dès le début — plus les chambres, les récoltes et les produits finaux.
 ```
 
 2. Que doit afficher l’étiquette en texte lisible ?
@@ -913,7 +1329,7 @@ Exemples : code unité, espèce, date inoculation, parent, chambre, phase.
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 3. Faut-il un QR pour les chambres ?
@@ -921,7 +1337,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 4. Faut-il un QR pour les récoltes ou produits finaux ?
@@ -929,7 +1345,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 5. Que faire si un QR est abîmé ou perdu ?
@@ -937,7 +1353,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ## 18. Cas particuliers et problèmes
@@ -949,7 +1365,7 @@ Questions :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 2. Est-ce qu’une unité contaminée peut encore produire ?
@@ -957,7 +1373,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 3. Que fais-tu si une unité est en retard ?
@@ -965,7 +1381,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 4. Que fais-tu si une unité est déplacée sans scan ?
@@ -973,7 +1389,7 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 5. Y a-t-il des cas où il faut regrouper/fusionner des unités ?
@@ -981,10 +1397,12 @@ Réponse :
 Réponse :
 
 ```text
-
+⏳ SANS RÉPONSE au 30/07/2026
 ```
 
 ## 19. Résumé à produire après réponse
+
+Les points 1 à 14 restent à extraire du terrain. Les **principes structurants** (§2.1), eux, sont déjà acquis — ils n’ont plus besoin d’être confirmés.
 
 Après remplissage, on devra pouvoir extraire :
 
@@ -992,29 +1410,35 @@ Après remplissage, on devra pouvoir extraire :
 2. la liste des espèces/variétés ;
 3. le process exact avec phases et étapes ;
 4. les conditions cibles par étape et par chambre ;
-5. les actions disponibles par étape ;
-6. les observations disponibles par étape ;
-7. les données à saisir à l’inoculation ;
-8. les données à saisir à chaque récolte ;
-9. les règles de sélection en masse ;
-10. les statistiques prioritaires.
+5. **les durées cibles et les seuils d’alarme par étape et par espèce** ;
+6. **les sous-process réutilisables identifiés** ;
+7. les actions disponibles par étape ;
+8. les observations disponibles par étape ;
+9. les données à saisir à l’inoculation ;
+10. les données à saisir à chaque récolte ;
+11. **les règles de conservation et d’archivage des parents (défaut par stade)** ;
+12. les règles de sélection en masse ;
+13. les statistiques prioritaires ;
+14. **la liste des points où la traçabilité totale devient trop lourde à saisir sur le terrain**.
 
 ## 20. Version simplifiée du process à confirmer
 
-Table de synthèse à remplir :
+Table de synthèse à remplir. Les colonnes « Durée cible » et « Alarme si dépassement » alimenteront directement les alarmes réglables du process.
 
-| Ordre | Stade / étape | Durée typique | Température | Humidité | Observation clé | Action suivante (clone / transfert) |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | Gélose | | | | contamination / colonisation | clone gélose ou transfert LC |
-| 2 | Culture liquide (LC) | | | | trouble / contamination | clone LC ou transfert grain |
-| 3 | Grain (ballot) | | | | colonisation / contamination | clone grain ou transfert substrat |
-| 4 | Inoculation substrat | | | | | incubation 1 |
-| 5 | Incubation 1 | | | | | |
-| 6 | Incubation 2 | | | | | |
-| 7 | Incubation 3 | | | | | |
-| 8 | Fructification 1 | | | | | |
-| 9 | Fructification 2 | | | | | |
-| 10 | Récolte flush 1 | | | | poids par unité | |
-| 11 | Récolte flush 2 | | | | poids par unité | |
-| 12 | Récolte flush 3 | | | | poids par unité | |
-| 13 | Fin de cycle | | | | | |
+| Ordre | Stade / étape | Durée cible | Alarme si dépassement | Température | Humidité | Observation clé | Action suivante (clone / transfert) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Origine (spores / souche reçue) | | | | | viabilité | transfert gélose |
+| 2 | Gélose | | | | | contamination / colonisation | clone gélose ou transfert LC |
+| 3 | Culture liquide (LC) | | | | | trouble / contamination | clone LC ou transfert grain |
+| 4 | Grain (ballot) | | | | | colonisation / contamination | clone grain ou transfert substrat |
+| 5 | Inoculation substrat | | | | | | incubation 1 |
+| 6 | Incubation 1 | | | | | | |
+| 7 | Incubation 2 | | | | | | |
+| 8 | Incubation 3 | | | | | | |
+| 9 | Fructification 1 | | | | | | |
+| 10 | Fructification 2 | | | | | | |
+| 11 | Récolte flush 1 | | | | | poids par unité | |
+| 12 | Récolte flush 2 | | | | | poids par unité | |
+| 13 | Récolte flush 3 | | | | | poids par unité | |
+| 14 | Conservation (optionnel, à tout stade) | | | | | viabilité | réactivation ou clone |
+| 15 | Fin de cycle | | | | | | |

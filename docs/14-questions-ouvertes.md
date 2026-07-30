@@ -217,3 +217,56 @@ Conséquences (déjà prévues par le modèle) :
 - liste des espèces réellement cultivées au départ ;
 - la chaîne gélose→LC→grain→substrat est-elle identique pour toutes les espèces ?
 - différences de durées/conditions/substrat par espèce.
+
+## 18. Mise à jour cultivateur — 2026-07-30 : réponses reçues
+
+Source : `champignon-reponses-cultivateur-2026-07-30.json` (formulaire `16`).
+
+⚠️ **L’export annonce « 188/188, 100 % » mais seules 84 questions contiennent réellement une réponse.** Les 104 autres ont été marquées répondues en masse sans texte ni case cochée. Le formulaire les a repassées en « À répondre ».
+
+### 18.1 Questions désormais closes
+
+| Sujet | Décision |
+| --- | --- |
+| Vocabulaire par stade | gélose / boîte de Pétri, culture liquide / LC, ballot de grain, ballot de substrat, bloc, sac, pain. Nommer les stades « au plus simple et clair ». |
+| Espèces gérées | **Toutes**, configurables dans l’app. Le pleurote n’est plus la référence unique. |
+| Point de départ du process | **N’importe quel stade** : spores, gélose, LC, grain ou directement substrat — y compris des unités reçues déjà prêtes. |
+| Traçabilité amont | Jusqu’à l’empreinte de spores **ou** la souche achetée/reçue. |
+| Clonage | À **tous** les stades, y compris souche → souche et division substrat. |
+| Générations de clone | **Aucune limite** imposée. |
+| Ratios de multiplication | Tous à suivre ; les valeurs sont configurables. |
+| Conservation | Frigo, dormance à température ambiante, contenant — **configurable**. |
+| Réactivation d’une unité conservée | Crée une **nouvelle unité** (donc un nouveau maillon de lignée), pas une reprise de l’ancienne. |
+| Unité archivée en historique | **Réactivable**. |
+| Parent | Pas de « parent = session » : c’est un **lien de parenté détaillé du début à la fin** (lignée complète). |
+| Avancement groupé | Tous les enfants d’un parent, ou seulement une partie — les deux. |
+| Filtres | Filtres **configurables et enregistrables** comme favoris. |
+| Phase vs étape | Distinction retenue : phase = grande période, étape = moment précis (incubation 1/2/3). |
+| Changement de process en cours | **Autorisé** sur un lot déjà lancé. |
+| Étape sautée / refaite / retour arrière | **Autorisés**. |
+| Modification d’un process | Les unités déjà lancées **basculent sur la nouvelle version**, avec confirmation explicite (« êtes-vous sûr »). |
+| Comparaison de versions de process | Oui — impose donc de conserver la version appliquée à chaque unité. |
+| Droit de créer/modifier un process | **Une seule personne** (le cultivateur). Cohérent avec l’auth MVP `admin` unique. |
+| Alarmes de durée | Rappel avant échéance, alerte au dépassement, 2ᵉ seuil critique, et possibilité de désactiver sur certaines étapes. |
+
+Ces réponses closent les questions §1.4, §1.5, §2.4, §2.7, §5.6, §13.4 ci-dessus, ainsi que les questions ouvertes du §16 (jusqu’où remonter, cultures mères, générations, ratios, QR dès la gélose) et une partie du §17 (chaîne identique pour toutes les espèces).
+
+### 18.2 Contradiction à arbitrer
+
+**Versioning de process.** Le §15 listait « versioning et migration d’un process déjà utilisé par des lots » comme question technique ouverte. La réponse — bascule automatique sur la nouvelle version — **entre en tension avec la demande de comparer deux versions** : si tout bascule, il ne reste aucune population sur l’ancienne version à comparer. À trancher : bascule par défaut mais possibilité de figer une sélection sur l’ancienne version, ou comparaison portant uniquement sur l’historique déjà produit.
+
+### 18.3 Ce qui reste bloquant
+
+**Aucune valeur chiffrée n’a été fournie.** Tout ce qui concerne le terrain est absent :
+
+- durées, températures, humidité, lumière, aération : **pour tous les stades** ;
+- critères de passage d’étape (§9 du questionnaire : entièrement vide) ;
+- chambres et emplacements réels, conditions cibles (§10 : vide) ;
+- mesures manuelles et fréquences (§11 : vide) ;
+- observations terrain et gravité (§12 : vide) ;
+- récoltes : unité de poids, qualité, calibre, mélanges (§14 : vide) ;
+- contenu des étiquettes, gestion d’un QR perdu (§17 : vide) ;
+- conduite en cas de contamination, retard, fusion (§18 : vide) ;
+- tableau de synthèse §20 : vide.
+
+Le mot « configurable » revient à chaque question de valeur. C’est cohérent avec le cadrage, mais **une application configurable a quand même besoin de valeurs par défaut** pour être utilisable le premier jour. Sans elles, aucun process ne peut être amorcé en *seed data*.

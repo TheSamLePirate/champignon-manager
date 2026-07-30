@@ -309,3 +309,30 @@ Inclut :
 - Les données configurables doivent être séparées des données opérationnelles.
 - Les identifiants techniques ne doivent pas être les seuls identifiants visibles : prévoir des codes lisibles.
 - Les entités scannables doivent être résolues par un registre QR central.
+
+## 6. Réponses cultivateur — 2026-07-30 : conséquences sur le modèle
+
+Source : `champignon-reponses-cultivateur-2026-07-30.json`.
+
+### 6.1 Lignée
+
+- **Aucune limite de génération** n’est imposée : le compteur `generation` reste informatif, sans plafond bloquant.
+- Le **parent** n’est pas une session d’inoculation mais un **lien de parenté détaillé du début à la fin**. Le modèle doit donc porter la lignée sur l’unité elle-même (parent direct + type de lien), et non sur un objet « session » intermédiaire. Une session d’inoculation reste utile comme *étiquette de regroupement*, pas comme parent.
+- Le clonage est possible **à tous les stades**, y compris `souche → souche` et division au stade substrat.
+- Le point d’entrée peut être **n’importe quel stade** : une unité peut naître sans parent, à n’importe quel niveau de la chaîne (y compris substrat reçu déjà inoculé). Le modèle ne doit donc pas exiger d’ascendant.
+
+### 6.2 Conservation et archivage
+
+- Toute unité peut passer en **conservation** (« en réserve ») à n’importe quel stade. Modalités : frigo, dormance à température ambiante, contenant — **configurable**.
+- **La réactivation d’une unité conservée crée une nouvelle unité**, reliée à la conservée par un lien de lignée. Ce n’est pas un changement d’état de l’unité d’origine.
+- Une unité **archivée en historique peut être réactivée**. L’archivage est donc un état réversible, pas une fin de vie.
+
+Conséquence : `conservation` et `archivage` sont deux états distincts de l’unité, tous deux réversibles, et la sortie de conservation est un **événement générateur d’unité** au même titre qu’un clone.
+
+### 6.3 Version de process
+
+Chaque unité doit porter la **version du process** qui lui est appliquée, et cette version doit être figée dans les événements. La modification d’un process fait basculer les unités en cours sur la nouvelle version (après confirmation), mais la comparaison entre versions exige de savoir sous quelle version chaque résultat a été produit. Voir `04-processus-configurable.md` §15.3 pour la tension à arbitrer.
+
+### 6.4 Filtres persistés
+
+Les filtres de sélection doivent être **enregistrables comme favoris** : prévoir une entité de filtre sauvegardé (critères combinés + nom), rattachée à l’utilisateur.
