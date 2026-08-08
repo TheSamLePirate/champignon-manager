@@ -18,7 +18,13 @@ import { assembleServer } from './server.js';
  */
 const port = Number(process.env['PORT'] ?? 3000);
 const webRoot = process.env['CHAMPI_WEB_ROOT'] ?? './apps/web/dist';
-const { app } = await assembleServer();
+
+// Amorçage : sans process, l'application ne peut créer aucune unité, et aucune
+// valeur chiffrée n'a été fournie par le cultivateur. On installe donc le
+// modèle de `docs/20` à la première mise en service — et jamais ensuite, dès
+// qu'un process existe. `CHAMPI_SEED=false` désactive pour une base pilotée
+// entièrement par import.
+const { app, seed } = await assembleServer({ seed: process.env['CHAMPI_SEED'] !== 'false' });
 
 // Le front est servi par le même serveur que l'API : une seule origine, donc
 // pas de CORS, un seul certificat Tailscale, et le contexte sécurisé exigé par
@@ -30,3 +36,10 @@ serve({ fetch: app.fetch, port, hostname: '0.0.0.0' });
 
 console.log(`Champignon Manager écoute sur http://0.0.0.0:${String(port)}`);
 console.log(`Découverte de l'API : http://0.0.0.0:${String(port)}/api/_discover`);
+
+if (seed !== undefined) {
+  console.log(`Amorçage : ${seed.reason}`);
+  if (seed.seeded) {
+    console.log(`⚠️  ${seed.disclaimer}`);
+  }
+}

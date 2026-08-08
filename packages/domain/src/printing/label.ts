@@ -49,8 +49,10 @@ export function formatLabelDate(iso: string): Result<string> {
       }),
     );
   }
-  const [, year = '', month = '', day = ''] = match;
-  return ok(`${day}/${month}/${year}`);
+  // L'expression n'a servi qu'à valider la forme : on découpe ensuite par
+  // position. Les groupes capturés se lisent `string | undefined` et
+  // imposaient des replis (`year = ''`) qu'aucun chemin ne peut atteindre.
+  return ok(`${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`);
 }
 
 /**

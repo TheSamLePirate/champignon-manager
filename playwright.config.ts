@@ -50,7 +50,13 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'bun run build && node packages/api/dist/server.mjs',
+      // Le nettoyage fait partie de la **commande du serveur**, pas d'un
+      // `globalSetup` : Playwright lance le serveur avant le setup global, et
+      // le serveur amorce son modèle de process au démarrage. Vider la base
+      // après lui aurait effacé ce que le scénario de premier démarrage vient
+      // vérifier.
+      command:
+        'node scripts/reinitialiser-base-e2e.mjs && bun run build && node packages/api/dist/server.mjs',
       port: 3100,
       env: {
         PORT: '3100',

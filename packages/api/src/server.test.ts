@@ -59,6 +59,29 @@ describe('assembleServer', () => {
   });
 
   /**
+   * Mise en service. Sans amorçage, une base neuve ne permet **aucune** action :
+   * pas de process, donc pas d'unité. Avec, l'application est utilisable dès le
+   * premier démarrage — c'est l'objet du lot 12.
+   */
+  it('n’amorce rien par défaut : un test pose ses propres données', async () => {
+    server = await assembleServer({ dbName: TEST_DB });
+
+    expect(server.seed).toBeUndefined();
+    const response = await server.app.request('/api/process-templates');
+    expect(((await response.json()) as { data: unknown[] }).data).toEqual([]);
+  });
+
+  it('installe le modèle par défaut quand on le demande', async () => {
+    server = await assembleServer({ dbName: TEST_DB, seed: true });
+
+    expect(server.seed?.seeded).toBe(true);
+    const response = await server.app.request('/api/process-templates');
+    const templates = ((await response.json()) as { data: { name: string }[] }).data;
+    expect(templates).toHaveLength(1);
+    expect(templates[0]?.name).toMatch(/à ajuster/);
+  });
+
+  /**
    * Le point le plus important de l'assemblage : le graphe vient de la version
    * **épinglée** à l'unité, jamais de la version courante du modèle. C'est ce
    * qui garantit qu'une publication ne déplace aucune unité en cours.

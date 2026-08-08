@@ -2,16 +2,43 @@
 
 > Guide de travail pour ce dépôt. Lis-le avant toute intervention.
 
-## ⚠️ Règle d'or : on ne code PAS encore
+## État du dépôt — la tranche verticale est écrite
 
-Ce dépôt est en phase de **cadrage** : comprendre le process métier réel et **architecturer** l'application. Il ne contient **aucun code applicatif** — uniquement des documents de spécification (`docs/`), une revue critique (`claude-critics.md`) et des outils HTML autonomes d'aide au cadrage.
+> **La phase de cadrage est close** (feu vert du 08/08/2026). Les douze lots de
+> `docs/22` sont livrés. Le dépôt contient désormais une application complète
+> **et** ses documents de cadrage, qui restent la référence métier.
 
-**Avant d'écrire la moindre ligne de code applicatif, il faut :**
-1. obtenir les réponses du **cultivateur** (le process métier n'est pas encore figé) ;
-2. valider le **modèle métier** et les décisions structurantes ;
-3. y être explicitement invité.
+| Où | Quoi |
+| --- | --- |
+| `packages/contracts` | Schémas Zod — la source unique des types |
+| `packages/domain` | **Cœur pur** : aucune I/O, aucune horloge, aucun aléa (le lint l'interdit) |
+| `packages/persistence` | MongoDB (driver natif), toutes les écritures transactionnelles |
+| `packages/api` | Hono, catalogue d'opérations, amorçage du premier démarrage |
+| `packages/cli` | `champi` — **la** surface d'agent (pas de serveur MCP) |
+| `packages/printing` | File d'impression, transport injecté |
+| `apps/web` | React 19 + Vite, scanner QR, éditeur de process graphique |
+| `e2e/` | 117 scénarios Playwright : API, CLI, Chrome, WebKit/iPhone |
+| `docs/`, `claude-critics.md` | Cadrage métier — **toujours la référence**, à tenir à jour |
+| `SUIVI-IMPLEMENTATION.md` | Journal de construction et **27 déviations** au plan |
+| `docs/23-mise-en-service.md` | Déploiement Pi, Tailscale, sauvegarde, recette terrain |
 
-Tant que ce n'est pas le cas : on **enrichit, clarifie et garde cohérents les documents**. On ne crée pas d'`apps/`, de `package.json`, de squelette de code.
+**Contraintes non négociables du code** (elles portent la qualité, ne les affaiblis pas) :
+
+- **100 % de couverture**, seuils Vitest stricts. Une ligne non couverte se
+  **supprime**, elle ne se masque pas — `c8 ignore`, `.skip` et `.only` sont
+  refusés par le lint. Ce seuil a débusqué neuf replis morts, dont quatre
+  auraient corrompu des données en silence (D-10, D-19, D-21, D-24).
+- **Score de mutation ≥ 90 %** sur `domain` et `contracts` : c'est ce qui
+  empêche le 100 % d'être une métrique vanité.
+- **Le domaine reste pur.** L'horloge, l'aléa et le réseau n'existent qu'à
+  l'assemblage (`packages/api/src/server.ts`).
+- **Les tests d'intégration tournent contre un vrai MongoDB**, jamais un mock.
+- **Le serveur tourne sous Node, pas sous Bun** (le driver MongoDB ne charge pas
+  sous Bun 1.3 — D-13). Bun reste l'outil de build, de workspaces et de tests.
+- **MongoDB écoute sur 27018**, pas 27017 (D-6).
+
+Avant de proposer une évolution : lire `SUIVI-IMPLEMENTATION.md`. Beaucoup de
+choix qui paraissent perfectibles y sont documentés avec leur raison.
 
 ## Le produit (en une phrase)
 
@@ -70,6 +97,7 @@ Détail et nuances : `docs/18-decisions-techniques-dev.md` (réponses brutes) et
 | `20-modele-process-par-defaut.md` / `.json` | **Modèle de process pré-rempli et modifiable** livré au premier démarrage. Chaque valeur porte une `provenance` : `cultivator` (réponse réelle) ou `invented` (inventée pour éviter le champ vide — n'engage rien). |
 | `21-decisions-avant-code.md` | **Décisions finales du 08/08/2026** (répondant : Olivier). Clôt les derniers points bloquants. **Prime sur les documents antérieurs en cas de divergence.** |
 | `22-tranche-verticale-mvp.md` | **Périmètre, architecture, qualité et estimation de la tranche 1.** Ce qu'on construit et dans quel ordre. À lire avant toute proposition d'implémentation. |
+| `23-mise-en-service.md` | **Déploiement chez le cultivateur** : Raspberry Pi, `tailscale serve`, amorçage du premier démarrage, sauvegarde vérifiée, restauration, recette terrain en neuf points. |
 | `champignon-reponses-dev-sam-2026-06-17.json` | Export brut des réponses dev — **archive horodatée, ne pas réécrire**. |
 | `champignon-reponses-cultivateur-2026-07-30.json` | Export brut des réponses cultivateur — **archive horodatée, ne pas réécrire**. Attention : son `summary` annonce 100 %, mais 104 des 188 questions sont vides. |
 | `../claude-critics.md` | Revue critique du cadrage (P0/P1/P2, risques, re-scoping MVP). À tenir à jour. |
@@ -129,8 +157,9 @@ Dans les docs, marquer ces points **« à confirmer »** plutôt que d'inventer 
 - **Cohérence** : une décision change souvent plusieurs docs. Après une modif structurante, propager (ex. un nouveau champ du modèle touche `05`, `07`, `08`…) et mettre à jour `claude-critics.md` si un risque évolue.
 - **Vérifier les HTML** : après édition d'un fichier `.html`, valider le JS — `awk '/<script[^>]*>/{f=1;next}/<\/script>/{f=0}f' fichier.html > /tmp/x.mjs && node --check /tmp/x.mjs`.
 - **Ne pas réécrire** les exports JSON horodatés (ce sont des archives de réponses).
-- **Git** : travailler sur une branche `docs/...` (pas `main` directement) ; ne committer/pusher que sur demande explicite. Ne pas committer `.DS_Store`.
-- **MVP réaliste** : `claude-critics.md` recommande une **tranche verticale fine** (un seul stade de bout en bout, process en *seed data* plutôt qu'éditeur visuel complet) avant d'élargir. En tenir compte dans toute proposition d'implémentation future.
+- **Git** : travailler sur une branche (`docs/...` pour le cadrage, `feat/...` pour le code), pas sur `main` directement ; ne committer/pusher que sur demande explicite. Ne pas committer `.DS_Store`.
+- **Avant de déclarer quelque chose fait** : l'exécuter. La pile de production a été **réellement démarrée**, la sauvegarde **réellement restaurée**, l'image **réellement construite** — chaque fois, cela a révélé quelque chose (D-23, D-26). Un fichier de configuration jamais lancé n'est qu'une intention.
+- **Les réserves se disent en clair.** Le rapport d'audit porte six limites assumées. Ne pas les diluer : ce qui n'a pas été vérifié doit être annonçable comme tel.
 
 ## Prochaines étapes logiques
 
@@ -139,6 +168,7 @@ Dans les docs, marquer ces points **« à confirmer »** plutôt que d'inventer 
 1. ✅ ~~Faire remplir le questionnaire cultivateur~~ — 186/188, le reste est de la configuration.
 2. ✅ ~~Figer le modèle métier~~ — unité/stades/lignée arrêtés ; modèle de process par défaut dans `docs/20`.
 3. ✅ ~~Dé-risquer l'impression Nimbot B21~~ — **testée, fonctionne**.
-4. ✅ ~~Définir la tranche verticale MVP et estimer la charge~~ — **`docs/22`**, 12 lots, **62–78 jours-dev**. Exigences : éditeur de process **graphique**, 100 % de couverture + mutation, E2E + rapport d'audit, application **pilotable à 100 % par un LLM** (API + MCP + CLI).
-5. Spikes restants, non bloquants : scanner QR iOS via Tailscale HTTPS (lot 6) ; compatibilité Bun (lot 1).
-6. **Sur demande explicite**, créer le squelette de l'application — commencer par le lot 1 de `docs/22` §8.
+4. ✅ ~~Définir la tranche verticale MVP et estimer la charge~~ — **`docs/22`**, 12 lots. Exigences : éditeur de process **graphique**, 100 % de couverture + mutation, E2E + rapport d'audit, application **pilotable à 100 % par un LLM** (API + CLI ; le serveur MCP a été écarté — D-20).
+5. ✅ ~~Écrire la tranche verticale~~ — **les douze lots sont livrés.** 1044 tests, 117 scénarios E2E, 100 % de couverture, 92,23 % de mutation, rapport d'audit publié en CI.
+6. **Ce qui reste ne s'écrit pas ici : ça se vérifie à la ferme.** Dérouler la recette de `docs/23` §7 — scan caméra sur **iPhone réel**, impression **B21 branchée**, budgets de performance rejoués **sur le Pi** (`CHAMPI_PERF_FACTOR`). Ce sont les trois réserves du rapport d'audit ; aucune ne se lève depuis une machine de développement.
+7. Ensuite seulement, élargir : stockage des photos (seul le `photoId` est enregistré aujourd'hui), stades amont au-delà du modèle par défaut, alarmes.

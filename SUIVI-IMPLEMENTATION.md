@@ -17,8 +17,8 @@
 | 8 | Récolte → produit → traçabilité | 4–5 j | ✅ **terminé** |
 | 9 | Éditeur de process graphique | 11–15 j | ✅ **terminé** |
 | 10 | CLI + parité de surface | 4–5 j | ✅ **terminé** *(MCP écarté)* |
-| 11 | E2E, rapport d'audit, mutation, perfs Pi | 7–9 j | 🟡 **E2E faits, rapport et perfs Pi à venir** |
-| 12 | Intégration, déploiement Pi, mise en service | 4–5 j | ⬜ |
+| 11 | E2E, rapport d'audit, mutation, perfs Pi | 7–9 j | ⚠️ **terminé, perfs non mesurées sur Pi** |
+| 12 | Intégration, déploiement Pi, mise en service | 4–5 j | ⚠️ **terminé, recette Pi à dérouler** |
 
 Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec déviation
 
@@ -26,10 +26,11 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **1033** |
-| Scénarios end-to-end | — | **95** (API, CLI, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **1044** |
+| Scénarios end-to-end | — | **117** (API, CLI, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
-| Score de mutation global | ≥ 90 % | **91,78 %** |
+| Score de mutation global | ≥ 90 % | **92,23 %** |
+| Mutants sans couverture | 0 | **0** (voir D-24) |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
 | Score de mutation `contracts` | ≥ 90 % | ⚠️ **84,97 %** (voir D-4) |
 | Avertissements lint | 0 | **0** |
@@ -77,6 +78,56 @@ avancement d'unité, récoltes, rejeu du journal.
 | Pas de fusion de lignée | `lineageRelation` épinglé à 4 valeurs, test qui vérifie l'absence de `merge` |
 | Proportions exactes | `validateProductOrigins()` avec tolérance flottante |
 | Reconstructible depuis les événements | `replayUnit()` + `diffReplayAgainstStored()` + `checkJournalIntegrity()` |
+
+### 2026-08-08 — Lot 11 terminé
+
+Accessibilité mesurée, performances mesurées, rapport d'audit publié en CI.
+
+- **Accessibilité** : axe-core sur Chrome **et** WebKit/iPhone. Zéro violation
+  WCAG 2.2 AA sur l'accueil, la fiche d'unité et un état d'erreur. Les deux
+  critères AAA retenus pour la chambre — contraste 7:1 (l'écran est vu à travers
+  la condensation) et cibles de 44 px (on vise avec des gants) — sont vérifiés,
+  pas déclarés.
+- **Performances** : budgets mesurés qui **échouent** au dépassement. Fiche
+  d'unité 2,8 ms (budget 400), journal 3,9 ms (600), audit 4,2 ms (800),
+  découverte 3,2 ms (400), avancement 5,9 ms (800). Marges larges — mais sur
+  Mac. `CHAMPI_PERF_FACTOR` permet de rejouer la suite sur le Pi.
+- **Rapport d'audit** : `scripts/rapport-audit.mjs` **agrège**, il ne recalcule
+  rien. Il lit la couverture, la mutation et les résultats E2E produits par les
+  trois travaux de CI, et rend un verdict par section. 12 promesses, chacune
+  citant le test qui la prouve ; 4 réserves assumées. Publié en artefact, avec
+  90 jours de rétention.
+
+Deux défauts trouvés ici : le rapport se flattait de 0,46 point (D-22) et les
+campagnes E2E se contaminaient (D-23).
+
+### 2026-08-08 — Lot 12 terminé
+
+Mise en service. Ce lot ne se contente pas de fichiers : **tout a été exécuté**.
+
+- **Image de production** construite et démarrée (`docker-compose.prod.yml`).
+  Les deux conteneurs passent `healthy` ; le contrôle de santé interroge
+  `/api/health`, pas le processus, pour qu'un serveur vivant mais coupé de
+  MongoDB soit signalé. L'image est `linux/arm64`, l'architecture du Pi.
+- **Amorçage au premier démarrage** : sans process, aucune unité n'est
+  créable — et le cultivateur n'a fourni **aucune valeur chiffrée**. Le serveur
+  installe donc le modèle de `docs/20`, publié, avec sa `provenance` par étape
+  et son avertissement. Inerte dès qu'un process existe : vérifié par
+  redémarrage réel, et par quatre scénarios E2E.
+- **Sauvegarde** : `scripts/sauvegarde.mjs`. Parti pris — **une sauvegarde non
+  vérifiée ne compte pas** : `sauvegarder` enchaîne sur une restauration réelle
+  dans une base jetable et recompte chaque collection. Vérifié sur 2 884
+  documents réels, puis sur la base de production. `restaurer` refuse d'écrire
+  dans une base non vide : mêler deux histoires de traçabilité serait
+  irréversible.
+- **`docs/23-mise-en-service.md`** : prérequis, `tailscale serve` et la raison
+  technique du HTTPS (Safari iOS refuse la caméra hors contexte sécurisé), ACL
+  Tailscale comme **seul** contrôle d'accès, cron de sauvegarde, procédure de
+  restauration, pilotage par le CLI, et une recette de mise en service en neuf
+  points vérifiables.
+
+Trois de ces neuf points ne peuvent pas être vérifiés hors de la ferme : ils
+sont listés en D-27 et en réserves du rapport d'audit.
 
 ---
 
@@ -405,9 +456,114 @@ Motif désormais établi sur tout le projet : **les gardes défensives sur des
 expressions totales sont systématiquement du bruit, et parfois un mensonge**.
 Le seuil à 100 % les fait apparaître ; un seuil à 95 % les laisserait passer.
 
+### D-22 — Le rapport d'audit se flattait de 0,46 point
+
+Le rapport calculait le score de mutation sur `tués / (tués + survivants +
+expirations)` — en **omettant les mutants `NoCoverage`**, que Stryker compte au
+dénominateur. Résultat : 92,24 % annoncé contre 91,78 % mesuré.
+
+L'écart est petit, la faute ne l'est pas : **un rapport d'audit qui s'arrange
+avec sa propre mesure ne vaut rien**, et personne n'aurait recoupé. Corrigé pour
+adopter la formule de Stryker, et les mutants sans couverture sont désormais
+affichés en clair dans le rapport.
+
+Trouvé en comparant la sortie de Stryker à celle du rapport, par acquit de
+conscience — pas par un test. C'est une limite du dispositif : le rapport n'est
+vérifié par rien.
+
+### D-23 — Les campagnes E2E se contaminaient entre elles
+
+La base `champignon_e2e` n'était jamais vidée. Au moment de la découverte elle
+contenait **463 process** accumulés sur tous les lancements précédents. Deux
+conséquences :
+
+- le scénario de **premier démarrage** était invérifiable — le serveur n'amorce
+  son modèle que sur une base vierge ;
+- le budget de performance « liste avec 50+ unités » mesurait en réalité une
+  base de plusieurs centaines d'unités, donc pas ce qu'il prétendait mesurer.
+
+La remise à zéro est faite dans la **commande du serveur** et non dans un
+`globalSetup` : Playwright lance le serveur **avant** le setup global — vérifié,
+la première tentative a échoué exactement ainsi. Vider la base après le
+démarrage effaçait le modèle amorcé que le scénario venait vérifier.
+
+### D-24 — Six mutants sans couverture, et deux replis dangereux de plus
+
+Le passage à la formule honnête (D-22) a rendu visibles **6 mutants
+`NoCoverage`**, tous sur des valeurs de repli de déstructuration de `RegExp` :
+`year = '0'`, `month = ''`, `day = ''`. Inatteignables — si l'expression a filé,
+les groupes existent — mais `year = '0'` aurait produit **l'année 0** dans un
+code public si elle l'avait été.
+
+Même famille que D-10, D-19 et D-21. Remplacés par un découpage **par position**
+sur la chaîne déjà validée, qui est total. Score de mutation : 91,78 % → **92,23
+% avec zéro mutant sans couverture** — l'amélioration vient de la suppression de
+code mort, pas d'un ajustement de mesure.
+
+### D-25 — L'amorçage prend un graphe en paramètre
+
+`seedDefaultProcess` accepte un graphe plutôt que de refermer
+`defaultProcessGraph()` à l'intérieur. Motif : la garde « refuser de publier un
+graphe invalide » serait sinon **inatteignable** — le modèle par défaut est
+valide par construction, et un test du domaine le vérifie déjà.
+
+Plutôt que de garder une garde morte ou de la supprimer, on a rendu la fonction
+honnête sur ce qu'elle fait : elle valide ce qu'on lui donne. Effet de bord
+utile — amorcer une ferme avec un modèle importé devient possible sans code
+supplémentaire.
+
+### D-26 — La pile de production a été démarrée pour de vrai
+
+Un `Dockerfile` jamais bâti n'est qu'une intention. L'image a été construite et
+la pile `docker-compose.prod.yml` **réellement démarrée** avant d'être déclarée
+faite. Trois enseignements :
+
+1. **Le replica set de développement n'est pas joignable depuis un conteneur.**
+   Il s'annonce sur `localhost:27018` ; un client dans un autre conteneur suit
+   cette adresse et échoue. La compose de production initialise le sien sur
+   `mongo:27018` — la vérification l'a confirmé, elle n'était pas théorique.
+2. **L'image produite est `linux/arm64`**, l'architecture du Raspberry Pi 64
+   bits, la machine de développement étant elle-même arm64. La construction sur
+   l'architecture cible est donc vérifiée ; la tenue **sur le matériel** du Pi ne
+   l'est pas.
+3. Amorçage, santé, front statique et **CLI embarqué dans l'image** ont été
+   vérifiés sur la pile de production, redémarrage compris (l'amorçage reste
+   inerte : « La base contient déjà 1 process : rien n'a été touché »).
+
+### D-27 — ⚠️ Ce que la mise en service ne prouve toujours pas
+
+Trois points restent ouverts, et le rapport d'audit les porte en réserves :
+
+- **les budgets de performance n'ont pas tourné sur un Raspberry Pi** (D11 de
+  `claude-critics.md`). Les mesures sur Mac disent seulement que le code n'est
+  pas absurdement lent. La suite accepte `CHAMPI_PERF_FACTOR` pour être rejouée
+  sur le Pi — c'est prêt, ce n'est pas fait ;
+- **le scan caméra n'a jamais tourné sur un iPhone réel** (D-11). WebKit émulé
+  attrape les régressions de mise en page, pas l'accès `getUserMedia` ;
+- **l'impression Nimbot B21 n'est pas branchée.** Le cultivateur a validé le
+  matériel ; le transport BLE reste un faux en attendant.
+
+Ces trois points forment la **recette de mise en service** de `docs/23` §7 : ils
+se lèvent sur place, pas ici.
+
 ---
 
 ## Prochaine étape
+
+**La tranche verticale est complète.** Les douze lots sont livrés, la CI produit
+son rapport d'audit, la production se déploie et se sauvegarde.
+
+Ce qui reste n'est pas du code mais de la **mise en service sur place** :
+dérouler la recette de `docs/23` §7 chez le cultivateur — scan caméra sur
+iPhone réel, impression B21 branchée, budgets de performance rejoués sur le Pi
+avec `CHAMPI_PERF_FACTOR`. Les trois réserves du rapport d'audit se lèvent là,
+et nulle part ailleurs.
+
+Ensuite seulement, élargir : stockage des photos (aujourd'hui seul le `photoId`
+est enregistré), stades amont (gélose, culture liquide, grain) au-delà de leur
+présence dans le modèle par défaut, et alarmes.
+
+*(Le lot 11 est terminé : voir ci-dessous.)*
 
 **Lot 11 — Rapport d'audit et perfs.** Rapport d'audit automatisé publié en CI
 (couverture, mutation, E2E, traçabilité, parité, accessibilité, contrat API) et

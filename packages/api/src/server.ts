@@ -9,6 +9,7 @@ import {
 import { InMemoryTransport, PrintQueue, type PrintTransport } from '@champi/printing';
 import type { Hono } from 'hono';
 import { createApp, ensureApiIndexes } from './app.js';
+import { seedDefaultProcess, type SeedOutcome } from './seed.js';
 
 /**
  * Assemblage du serveur.
@@ -23,12 +24,23 @@ export interface ServerOptions {
   readonly dbName?: string;
   /** Transport d'impression. Le faux transport sert au développement et aux E2E. */
   readonly transport?: PrintTransport;
+  /**
+   * Installe le modèle de process par défaut si la base est vierge.
+   *
+   * Faux par défaut : un test doit poser lui-même ses données, sinon il
+   * vérifierait un état qu'il n'a pas construit. Le point d'entrée de
+   * production, lui, l'active — c'est ce qui évite l'écran vide à la mise en
+   * service.
+   */
+  readonly seed?: boolean;
 }
 
 export interface AssembledServer {
   readonly app: Hono;
   readonly connection: MongoConnection;
   readonly transport: PrintTransport;
+  /** Résultat de l'amorçage, à journaliser au démarrage. */
+  readonly seed: SeedOutcome | undefined;
   close(): Promise<void>;
 }
 
@@ -68,10 +80,22 @@ export async function assembleServer(options: ServerOptions = {}): Promise<Assem
     },
   });
 
+  // Après les index, jamais avant : l'amorçage s'appuie sur l'unicité du nom
+  // de process pour renoncer proprement si un autre démarrage l'a devancé.
+  const seed =
+    options.seed === true
+      ? await seedDefaultProcess({
+          processes,
+          newId: () => crypto.randomUUID(),
+          now: () => new Date().toISOString(),
+        })
+      : undefined;
+
   return {
     app,
     connection,
     transport,
+    seed,
     close: () => connection.close(),
   };
 }

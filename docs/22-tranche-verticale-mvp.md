@@ -384,6 +384,10 @@ Unité : **jour-dev** = une journée de travail concentrée, un développeur exp
 | 10 | CLI | 4–5 | CLI, parité de surface, aide découvrable. *(Serveur MCP écarté le 08/08/2026.)* |
 | 11 | E2E + audit | 7–9 | 5 scénarios, rapport d'audit, mutation à 90 %, perfs sur Pi |
 | 12 | Intégration, mise en service | 4–5 | Déploiement Pi, sauvegardes, documentation, recette terrain |
+
+> **Livré.** Les douze lots sont écrits. L'avancement réel, les écarts au plan et
+> leurs raisons sont dans [`SUIVI-IMPLEMENTATION.md`](../SUIVI-IMPLEMENTATION.md) ;
+> la mise en service est décrite dans [`23-mise-en-service.md`](./23-mise-en-service.md).
 | | **Total** | **62–78** | **≈ 13 à 16 semaines en solo** |
 
 ### 8.1 Ce que coûtent les exigences fortes

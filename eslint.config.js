@@ -22,6 +22,7 @@ export default tseslint.config(
       '**/reports/**',
       '**/.stryker-tmp/**',
       'docs/**',
+      'scripts/**',
     ],
   },
   js.configs.recommended,

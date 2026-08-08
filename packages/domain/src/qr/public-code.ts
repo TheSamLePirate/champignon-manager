@@ -96,9 +96,17 @@ export function parsePublicCode(code: string): Result<ParsedPublicCode> {
       }),
     );
   }
-  // Les trois groupes existent dès lors que l'expression a filé.
-  const [, prefix = '', year = '0', sequence = '0'] = match;
-  return ok({ prefix, year: Number(year), sequence: Number(sequence) });
+  // Découpage par position plutôt que par groupes capturés : les groupes se
+  // lisent `string | undefined`, ce qui obligeait à des valeurs de repli
+  // (`year = '0'`) qu'aucun chemin ne peut atteindre — et qui, si elles
+  // l'étaient, produiraient silencieusement l'année 0. Ici tout est total.
+  const premierTiret = code.indexOf('-');
+  const secondTiret = code.indexOf('-', premierTiret + 1);
+  return ok({
+    prefix: code.slice(0, premierTiret),
+    year: Number(code.slice(premierTiret + 1, secondTiret)),
+    sequence: Number(code.slice(secondTiret + 1)),
+  });
 }
 
 /** Une référence ressemble-t-elle à un code public plutôt qu'à un identifiant technique ? */

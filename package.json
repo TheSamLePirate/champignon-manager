@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Gestion et tra\u00e7abilit\u00e9 de la culture de champignons, du spore \u00e0 l'assiette.",
+  "description": "Gestion et traçabilité de la culture de champignons, du spore à l'assiette.",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -23,7 +23,7 @@
     "test:mutation": "stryker run",
     "db:up": "docker compose -f docker/docker-compose.yml up -d --wait",
     "db:down": "docker compose -f docker/docker-compose.yml down -v",
-    "verify": "bun run format:check && bun run lint && bun run typecheck && bun run test:coverage && bun run test:mutation",
+    "verify": "bun run format:check && bun run lint && bun run typecheck && bun run test:coverage && bun run test:mutation && bun run e2e && bun run audit",
     "clean": "rm -rf node_modules coverage reports **/dist **/*.tsbuildinfo",
     "api:dev": "bun run --filter '@champi/api' dev",
     "api:start": "bun run --filter '@champi/api' start",
@@ -31,9 +31,15 @@
     "e2e": "playwright test",
     "build": "bun run --filter '@champi/web' build && bun run --filter '@champi/api' build:server && bun run --filter '@champi/cli' build",
     "start": "node packages/api/dist/server.mjs",
-    "e2e:report": "playwright show-report reports/e2e"
+    "e2e:report": "playwright show-report reports/e2e",
+    "audit": "node scripts/rapport-audit.mjs",
+    "sauvegarde": "node scripts/sauvegarde.mjs sauvegarder",
+    "prod:up": "docker compose -f docker/docker-compose.prod.yml up -d --build",
+    "prod:down": "docker compose -f docker/docker-compose.prod.yml down",
+    "prod:logs": "docker compose -f docker/docker-compose.prod.yml logs -f app"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^9.18.0",
     "@playwright/test": "^1.62.1",
     "@stryker-mutator/core": "^9.6.1",
