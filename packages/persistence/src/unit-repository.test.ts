@@ -80,7 +80,12 @@ function advanceEvent(id: string, toStepId: string, occurredAt: string): DomainE
     recordedAt: occurredAt,
     source: 'manual',
     unitId: 'u-1',
-    payload: { fromStepId: 'inoculation', toStepId, followedNominalPath: true },
+    payload: {
+      fromStepId: 'inoculation',
+      toStepId,
+      toStage: 'substrate',
+      followedNominalPath: true,
+    },
   };
 }
 

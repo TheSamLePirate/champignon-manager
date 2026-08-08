@@ -201,7 +201,7 @@ describe('domainEventSchema', () => {
       recordedAt: '2026-08-02T08:00:00.000Z',
       source: 'manual',
       unitId: 'u-1',
-      payload: { fromStepId: 'a', toStepId: 'b', followedNominalPath: true },
+      payload: { fromStepId: 'a', toStepId: 'b', toStage: 'substrate', followedNominalPath: true },
     });
     expect(result.success).toBe(true);
   });

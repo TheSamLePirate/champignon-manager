@@ -105,6 +105,10 @@ export function replayUnit(events: readonly DomainEvent[]): Result<ReplayedUnitS
         state = {
           ...state,
           currentStepId: event.payload.toStepId,
+          // Le stade suit l'étape : sans cette ligne, une unité passée en
+          // fructification resterait « substrate » au rejeu, et l'audit
+          // signalerait — à juste titre — une divergence.
+          stage: event.payload.toStage,
           currentStepEnteredAt: event.occurredAt,
         };
         break;

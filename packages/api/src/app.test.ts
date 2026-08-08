@@ -1,6 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { CultureUnit, DomainEvent, ProcessGraph } from '@champi/contracts';
-import { connect, QrRepository, UnitRepository, type MongoConnection } from '@champi/persistence';
+import {
+  connect,
+  ProcessRepository,
+  QrRepository,
+  UnitRepository,
+  type MongoConnection,
+} from '@champi/persistence';
 import { InMemoryTransport, PrintQueue } from '@champi/printing';
 import type { Hono } from 'hono';
 import { createApp, ensureApiIndexes } from './app.js';
@@ -19,6 +25,7 @@ const NOW = '2026-08-22T09:00:00.000Z';
 let connection: MongoConnection;
 let repository: UnitRepository;
 let qr: QrRepository;
+let processes: ProcessRepository;
 let transport: InMemoryTransport;
 let app: Hono;
 let idCounter = 0;
@@ -118,14 +125,17 @@ beforeAll(async () => {
   connection = await connect(undefined, TEST_DB);
   repository = new UnitRepository(connection);
   qr = new QrRepository(connection);
+  processes = new ProcessRepository(connection);
   transport = new InMemoryTransport();
   await repository.ensureIndexes();
   await qr.ensureIndexes();
+  await processes.ensureIndexes();
   await ensureApiIndexes(connection);
   app = createApp({
     connection,
     units: repository,
     qr,
+    processes,
     printQueue: new PrintQueue(transport),
     now: () => NOW,
     newId: () => `evt-${String(++idCounter)}`,
@@ -147,6 +157,7 @@ beforeEach(async () => {
     connection,
     units: repository,
     qr,
+    processes,
     printQueue: new PrintQueue(transport),
     now: () => NOW,
     newId: () => `evt-${String(++idCounter)}`,
@@ -157,6 +168,13 @@ beforeEach(async () => {
   await connection.db.collection('events').deleteMany({});
   await connection.db.collection('idempotencyKeys').deleteMany({});
   await connection.db.collection('qrRegistry').deleteMany({});
+  // Le compteur démarre au-dessus du code de la fixture (SUB-2026-0001) :
+  // sans cela, la première unité créée par l'API réclamerait le même code.
+  await connection.db
+    .collection('counters')
+    .replaceOne({ _id: 'publicCode:SUB:2026' as never }, { sequence: 5000 }, { upsert: true });
+  await connection.db.collection('processTemplates').deleteMany({});
+  await connection.db.collection('processVersions').deleteMany({});
   await repository.create(makeUnit(), birthEvent());
 });
 
@@ -842,6 +860,7 @@ describe('dépendances défaillantes', () => {
       connection,
       units: repository,
       qr,
+      processes,
       printQueue: new PrintQueue(transport),
       now: () => NOW,
       newId: () => `evt-${String(++idCounter)}`,
@@ -887,5 +906,515 @@ describe('dépendances défaillantes', () => {
     expect(response.status).toBe(400);
     expect(body.error.path).toBe('date');
     expect(transport.printed).toHaveLength(0);
+  });
+});
+
+describe('process — création et versions', () => {
+  const simpleGraph = {
+    steps: [
+      { id: 'a', name: 'Étape A', stage: 'substrate' },
+      { id: 'b', name: 'Étape B', stage: 'fruiting' },
+    ],
+    transitions: [{ from: 'a', to: 'b' }],
+  };
+
+  function uniqueProcess(overrides: Record<string, unknown> = {}) {
+    return { name: `Process ${String(Math.random())}`, graph: simpleGraph, ...overrides };
+  }
+
+  it('crée un modèle et sa première version en brouillon', async () => {
+    const response = await post('/api/process-templates', uniqueProcess());
+    const body = (await response.json()) as {
+      data: {
+        template: { id: string; speciesScope: string; currentVersionId: string };
+        version: { id: string; versionNumber: number; status: string };
+      };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.version.versionNumber).toBe(1);
+    expect(body.data.version.status).toBe('draft');
+    // La portée par défaut est « toute espèce » (docs/20 §6).
+    expect(body.data.template.speciesScope).toBe('any');
+    expect(body.data.template.currentVersionId).toBe(body.data.version.id);
+  });
+
+  it('accepte une portée limitée à une espèce', async () => {
+    const response = await post('/api/process-templates', uniqueProcess({ speciesScope: 'sp-1' }));
+    const body = (await response.json()) as { data: { template: { speciesScope: string } } };
+    expect(body.data.template.speciesScope).toBe('sp-1');
+  });
+
+  it('refuse un corps invalide en décrivant la forme attendue', async () => {
+    const response = await post('/api/process-templates', { name: 'Sans graphe' });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.hint).toContain('graph');
+    expect(body.error.path).toBe('graph');
+  });
+
+  it('refuse un graphe incohérent avant même de l’enregistrer', async () => {
+    const response = await post(
+      '/api/process-templates',
+      uniqueProcess({
+        graph: {
+          steps: [{ id: 'a', name: 'A', stage: 'substrate' }],
+          transitions: [{ from: 'a', to: 'fantome' }],
+        },
+      }),
+    );
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe('PROCESS_GRAPH_INVALID');
+    expect(body.error.message).toContain('fantome');
+  });
+
+  it('refuse deux modèles de même nom', async () => {
+    const payload = uniqueProcess({ name: 'Nom unique test' });
+    await post('/api/process-templates', payload);
+    const duplicate = await post('/api/process-templates', payload);
+    expect(duplicate.status).toBe(409);
+  });
+
+  it('décrit sans créer en dryRun', async () => {
+    const before = (
+      (await (await app.request('/api/process-templates')).json()) as { data: unknown[] }
+    ).data.length;
+    const response = await post('/api/process-templates?dryRun=true', uniqueProcess());
+    const body = (await response.json()) as { dryRun: boolean; data: { wouldCreate: string } };
+
+    expect(body.dryRun).toBe(true);
+    expect(body.data.wouldCreate).toBeTruthy();
+    const after = (
+      (await (await app.request('/api/process-templates')).json()) as { data: unknown[] }
+    ).data.length;
+    expect(after).toBe(before);
+  });
+
+  it('liste les modèles et leurs versions', async () => {
+    const created = await post('/api/process-templates', uniqueProcess());
+    const createdBody = (await created.json()) as { data: { template: { id: string } } };
+
+    const templates = await app.request('/api/process-templates');
+    expect(((await templates.json()) as { data: unknown[] }).data.length).toBeGreaterThan(0);
+
+    const versions = await app.request(
+      `/api/process-templates/${createdBody.data.template.id}/versions`,
+    );
+    expect(((await versions.json()) as { data: unknown[] }).data).toHaveLength(1);
+  });
+
+  it('renvoie 404 pour une version inconnue, en disant où chercher', async () => {
+    const response = await app.request('/api/process-versions/inexistante');
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(404);
+    expect(body.error.hint).toContain('/api/process-templates');
+  });
+
+  it('publie une version et annonce qu’aucune unité n’est déplacée', async () => {
+    const created = await post('/api/process-templates', uniqueProcess());
+    const versionId = ((await created.json()) as { data: { version: { id: string } } }).data.version
+      .id;
+
+    const response = await post(`/api/process-versions/${versionId}/publish`, {});
+    const body = (await response.json()) as { data: { status: string }; note: string };
+
+    expect(body.data.status).toBe('published');
+    // Décision docs/21 §2 : la réponse le dit explicitement.
+    expect(body.note).toContain('Aucune unité en cours');
+  });
+
+  it('refuse de republier', async () => {
+    const created = await post('/api/process-templates', uniqueProcess());
+    const versionId = ((await created.json()) as { data: { version: { id: string } } }).data.version
+      .id;
+
+    await post(`/api/process-versions/${versionId}/publish`, {});
+    const again = await post(`/api/process-versions/${versionId}/publish`, {});
+    expect(again.status).toBe(409);
+  });
+
+  it('refuse de publier une version inconnue', async () => {
+    expect((await post('/api/process-versions/inexistante/publish', {})).status).toBe(404);
+  });
+
+  it('décrit la publication en dryRun sans geler la version', async () => {
+    const created = await post('/api/process-templates', uniqueProcess());
+    const versionId = ((await created.json()) as { data: { version: { id: string } } }).data.version
+      .id;
+
+    const dry = await post(`/api/process-versions/${versionId}/publish?dryRun=true`, {});
+    expect(((await dry.json()) as { dryRun: boolean }).dryRun).toBe(true);
+
+    const still = await app.request(`/api/process-versions/${versionId}`);
+    expect(((await still.json()) as { data: { status: string } }).data.status).toBe('draft');
+  });
+
+  it('modifie le graphe d’un brouillon', async () => {
+    const created = await post('/api/process-templates', uniqueProcess());
+    const versionId = ((await created.json()) as { data: { version: { id: string } } }).data.version
+      .id;
+
+    const response = await post(`/api/process-versions/${versionId}/graph`, {
+      steps: [{ id: 'seule', name: 'Seule', stage: 'substrate' }],
+      transitions: [],
+    });
+    const body = (await response.json()) as { data: { graph: { steps: unknown[] } } };
+    expect(response.status).toBe(200);
+    expect(body.data.graph.steps).toHaveLength(1);
+  });
+
+  it('refuse de modifier une version publiée', async () => {
+    const created = await post('/api/process-templates', uniqueProcess());
+    const versionId = ((await created.json()) as { data: { version: { id: string } } }).data.version
+      .id;
+    await post(`/api/process-versions/${versionId}/publish`, {});
+
+    const response = await post(`/api/process-versions/${versionId}/graph`, {
+      steps: [{ id: 'x', name: 'X', stage: 'substrate' }],
+      transitions: [],
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe('VERSION_PUBLISHED_IMMUTABLE');
+  });
+
+  it('refuse un graphe mal formé', async () => {
+    const created = await post('/api/process-templates', uniqueProcess());
+    const versionId = ((await created.json()) as { data: { version: { id: string } } }).data.version
+      .id;
+
+    const response = await post(`/api/process-versions/${versionId}/graph`, { steps: 'non' });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.hint).toContain('steps');
+  });
+
+  it('refuse de modifier le graphe d’une version inconnue', async () => {
+    const response = await post('/api/process-versions/inexistante/graph', {
+      steps: [],
+      transitions: [],
+    });
+    expect(response.status).toBe(404);
+  });
+
+  it('ouvre un brouillon à partir d’une version publiée', async () => {
+    const created = await post('/api/process-templates', uniqueProcess());
+    const versionId = ((await created.json()) as { data: { version: { id: string } } }).data.version
+      .id;
+    await post(`/api/process-versions/${versionId}/publish`, {});
+
+    const response = await post(`/api/process-versions/${versionId}/draft`, {});
+    const body = (await response.json()) as {
+      data: { versionNumber: number; status: string; publishedAt?: string };
+    };
+    expect(body.data.versionNumber).toBe(2);
+    expect(body.data.status).toBe('draft');
+    expect(body.data.publishedAt).toBeUndefined();
+  });
+
+  it('refuse d’ouvrir un brouillon d’une version inconnue', async () => {
+    expect((await post('/api/process-versions/inexistante/draft', {})).status).toBe(404);
+  });
+});
+
+describe('création d’unité', () => {
+  it('attribue un code public dérivé du stade', async () => {
+    const response = await post('/api/units', {
+      name: 'Nouveau bloc',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+    });
+    const body = (await response.json()) as {
+      data: { unit: { publicCode: string; lineageRelation: string }; event: { type: string } };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.unit.publicCode).toMatch(/^SUB-\d{4}-\d{4,6}$/);
+    // Sans ascendant, la relation de lignée est « origin ».
+    expect(body.data.unit.lineageRelation).toBe('origin');
+    expect(body.data.event.type).toBe('unit.created');
+  });
+
+  it('marque une unité issue d’un parent comme transfert', async () => {
+    const response = await post('/api/units', {
+      name: 'Enfant',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+      parentUnitId: 'u-1',
+    });
+    const body = (await response.json()) as { data: { unit: { lineageRelation: string } } };
+    expect(body.data.unit.lineageRelation).toBe('transfer');
+  });
+
+  it('conserve le poids de substrat, dénominateur du rendement', async () => {
+    const response = await post('/api/units', {
+      name: 'Pesé',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+      substrateWeight: { value: 7, unit: 'kg', kind: 'substrate' },
+    });
+    const body = (await response.json()) as {
+      data: { unit: { substrateWeight: { value: number } } };
+    };
+    expect(body.data.unit.substrateWeight.value).toBe(7);
+  });
+
+  it('refuse un corps invalide en décrivant la forme attendue', async () => {
+    const response = await post('/api/units', { name: 'Sans stade' });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.hint).toContain('processVersionId');
+  });
+
+  it('refuse une version de process inexistante', async () => {
+    const response = await post('/api/units', {
+      name: 'Orpheline',
+      stage: 'substrate',
+      processVersionId: 'pv-absente',
+      stepId: 'inoculation',
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(404);
+    expect(body.error.hint).toContain('publie un process');
+    expect(body.error.path).toBe('processVersionId');
+  });
+
+  it('refuse une étape absente du process, en listant les valides', async () => {
+    const response = await post('/api/units', {
+      name: 'Mauvaise étape',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'flush_9',
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe('STEP_NOT_IN_PROCESS');
+    expect(body.error.hint).toContain('inoculation');
+    expect(body.error.path).toBe('stepId');
+  });
+
+  it('décrit sans créer en dryRun', async () => {
+    const response = await post('/api/units?dryRun=true', {
+      name: 'Fantôme',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+    });
+    const body = (await response.json()) as {
+      dryRun: boolean;
+      data: { wouldCreate: { name: string } };
+    };
+    expect(body.dryRun).toBe(true);
+    expect(body.data.wouldCreate.name).toBe('Fantôme');
+
+    const list = await app.request('/api/units?stage=substrate');
+    // Seule l'unité du `beforeEach` existe.
+    expect(((await list.json()) as { data: unknown[] }).data).toHaveLength(1);
+  });
+
+  /** Sans idempotence, un retry créerait une unité fantôme et un second QR. */
+  it('est idempotente', async () => {
+    const payload = {
+      name: 'Rejouée',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+    };
+    const headers = { 'Idempotency-Key': 'creation-1' };
+
+    const first = await post('/api/units', payload, headers);
+    const retry = await post('/api/units', payload, headers);
+
+    const firstBody = (await first.json()) as { data: { unit: { publicCode: string } } };
+    const retryBody = (await retry.json()) as { data: { unit: { publicCode: string } } };
+    expect(retry.headers.get('Idempotent-Replay')).toBe('true');
+    expect(retryBody.data.unit.publicCode).toBe(firstBody.data.unit.publicCode);
+  });
+
+  it('refuse une clé d’idempotence réutilisée pour une autre unité', async () => {
+    const headers = { 'Idempotency-Key': 'creation-2' };
+    await post(
+      '/api/units',
+      { name: 'A', stage: 'substrate', processVersionId: 'pv-1', stepId: 'inoculation' },
+      headers,
+    );
+    const different = await post(
+      '/api/units',
+      { name: 'B', stage: 'substrate', processVersionId: 'pv-1', stepId: 'inoculation' },
+      headers,
+    );
+    expect(different.status).toBe(409);
+  });
+});
+
+/**
+ * Gardes de propagation d'erreur.
+ *
+ * Ces branches ne sont pas atteignables par la porte d'entrée normale : les
+ * préconditions de chaque route les rendent inutiles *en théorie*. Elles
+ * existent parce que la couche du dessous rend un `Result` — et ce sont elles
+ * qui parleront à l'utilisateur le jour où cette couche lâchera vraiment.
+ * On les exerce donc avec des dépôts défaillants.
+ */
+describe('propagation des échecs de la couche de persistance', () => {
+  const boom = {
+    ok: false as const,
+    error: { code: 'CONFLICT' as const, message: 'Dépôt indisponible.', hint: 'Réessaie.' },
+  };
+
+  function appWithBroken(overrides: Record<string, unknown>): Hono {
+    return createApp({
+      connection,
+      units: repository,
+      qr,
+      processes,
+      printQueue: new PrintQueue(transport),
+      now: () => NOW,
+      newId: () => `evt-${String(++idCounter)}`,
+      randomBytes: seededBytes,
+      graphForVersion: (versionId) => Promise.resolve(versionId === 'pv-1' ? graph : null),
+      ...overrides,
+    });
+  }
+
+  const simpleGraph = {
+    steps: [{ id: 'a', name: 'A', stage: 'substrate' }],
+    transitions: [],
+  };
+
+  async function postTo(target: Hono, path: string, body: unknown): Promise<Response> {
+    return target.request(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  it('remonte un échec d’enregistrement de version à la création du process', async () => {
+    const broken = appWithBroken({
+      processes: {
+        saveTemplate: () => Promise.resolve({ ok: true, value: { id: 't', name: 'n' } }),
+        saveVersion: () => Promise.resolve(boom),
+      },
+    });
+    const response = await postTo(broken, '/api/process-templates', {
+      name: 'Échec version',
+      graph: simpleGraph,
+    });
+    expect(response.status).toBe(409);
+  });
+
+  it('remonte un échec d’enregistrement à la publication', async () => {
+    const broken = appWithBroken({
+      processes: {
+        findVersion: () =>
+          Promise.resolve({
+            id: 'v',
+            templateId: 't',
+            versionNumber: 1,
+            status: 'draft',
+            graph: simpleGraph,
+          }),
+        saveVersion: () => Promise.resolve(boom),
+      },
+    });
+    expect((await postTo(broken, '/api/process-versions/v/publish', {})).status).toBe(409);
+  });
+
+  it('remonte un échec d’enregistrement à l’ouverture d’un brouillon', async () => {
+    const broken = appWithBroken({
+      processes: {
+        findVersion: () =>
+          Promise.resolve({
+            id: 'v',
+            templateId: 't',
+            versionNumber: 1,
+            status: 'published',
+            graph: simpleGraph,
+          }),
+        nextVersionNumber: () => Promise.resolve(2),
+        saveVersion: () => Promise.resolve(boom),
+      },
+    });
+    expect((await postTo(broken, '/api/process-versions/v/draft', {})).status).toBe(409);
+  });
+
+  it('remonte un échec d’enregistrement à la modification du graphe', async () => {
+    const broken = appWithBroken({
+      processes: {
+        findVersion: () =>
+          Promise.resolve({
+            id: 'v',
+            templateId: 't',
+            versionNumber: 1,
+            status: 'draft',
+            graph: simpleGraph,
+          }),
+        saveVersion: () => Promise.resolve(boom),
+      },
+    });
+    const response = await postTo(broken, '/api/process-versions/v/graph', simpleGraph);
+    expect(response.status).toBe(409);
+  });
+
+  it('remonte un échec d’attribution de code public', async () => {
+    const broken = appWithBroken({
+      qr: {
+        allocatePublicCode: () =>
+          Promise.resolve({
+            ok: false,
+            error: {
+              code: 'VALIDATION_FAILED',
+              message: 'Séquence épuisée.',
+              hint: 'Élargis le format.',
+            },
+          }),
+      },
+    });
+    const response = await postTo(broken, '/api/units', {
+      name: 'Sans code',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+    });
+    const body = (await response.json()) as { error: { message: string } };
+    expect(response.status).toBe(400);
+    expect(body.error.message).toContain('Séquence épuisée');
+  });
+
+  it('remonte un échec de création d’unité', async () => {
+    const broken = appWithBroken({
+      units: {
+        create: () => Promise.resolve(boom),
+        countByStage: () => Promise.resolve({}),
+      },
+    });
+    const response = await postTo(broken, '/api/units', {
+      name: 'Non créée',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+    });
+    expect(response.status).toBe(409);
   });
 });

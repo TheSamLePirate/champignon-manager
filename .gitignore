@@ -30,3 +30,6 @@ test-results/
 # Données locales
 data/
 *.log
+
+# Playwright
+test-results/

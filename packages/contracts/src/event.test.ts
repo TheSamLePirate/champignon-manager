@@ -27,7 +27,12 @@ const validPayloads: Record<DomainEventType, Record<string, unknown>> = {
     stepId: 'inoculation',
     parentUnitId: null,
   },
-  'unit.step_advanced': { fromStepId: 'a', toStepId: 'b', followedNominalPath: true },
+  'unit.step_advanced': {
+    fromStepId: 'a',
+    toStepId: 'b',
+    toStage: 'substrate',
+    followedNominalPath: true,
+  },
   'unit.moved': { to: { roomId: 'r-1' } },
   'unit.observed': { kind: 'contamination', severity: 'critical' },
   'unit.measured': { metric: 'temperature_c', numericValue: 24 },
@@ -94,7 +99,7 @@ describe('domainEventSchema — enveloppe', () => {
 describe('domainEventSchema — charges utiles obligatoires', () => {
   const requiredFields: Record<DomainEventType, readonly string[]> = {
     'unit.created': ['stage', 'processVersionId', 'stepId', 'parentUnitId'],
-    'unit.step_advanced': ['fromStepId', 'toStepId', 'followedNominalPath'],
+    'unit.step_advanced': ['fromStepId', 'toStepId', 'toStage', 'followedNominalPath'],
     'unit.moved': ['to'],
     'unit.observed': ['kind', 'severity'],
     'unit.measured': ['metric'],

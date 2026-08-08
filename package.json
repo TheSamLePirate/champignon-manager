@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Gestion et traçabilité de la culture de champignons, du spore à l'assiette.",
+  "description": "Gestion et tra\u00e7abilit\u00e9 de la culture de champignons, du spore \u00e0 l'assiette.",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -24,10 +24,18 @@
     "db:up": "docker compose -f docker/docker-compose.yml up -d --wait",
     "db:down": "docker compose -f docker/docker-compose.yml down -v",
     "verify": "bun run format:check && bun run lint && bun run typecheck && bun run test:coverage && bun run test:mutation",
-    "clean": "rm -rf node_modules coverage reports **/dist **/*.tsbuildinfo"
+    "clean": "rm -rf node_modules coverage reports **/dist **/*.tsbuildinfo",
+    "api:dev": "bun run --filter '@champi/api' dev",
+    "api:start": "bun run --filter '@champi/api' start",
+    "web:dev": "bun run --filter '@champi/web' dev",
+    "e2e": "playwright test",
+    "build": "bun run --filter '@champi/web' build && bun run --filter '@champi/api' build:server",
+    "start": "node packages/api/dist/server.mjs",
+    "e2e:report": "playwright show-report reports/e2e"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@playwright/test": "^1.62.1",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@testing-library/jest-dom": "^7.0.0",
@@ -48,6 +56,7 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.0",
     "@hono/zod-openapi": "^1.5.2",
     "hono": "^4.13.1",
     "mongodb": "^7.5.0",

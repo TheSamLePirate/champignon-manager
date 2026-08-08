@@ -28,6 +28,7 @@ export default defineConfig({
         '**/__fixtures__/**',
         '**/__testing__/**',
         '**/main.tsx',
+        '**/main.ts',
         '**/test-setup.ts',
       ],
       thresholds: {

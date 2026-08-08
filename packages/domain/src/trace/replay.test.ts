@@ -35,7 +35,12 @@ const advanced: DomainEvent = {
   occurredAt: '2026-08-02T08:00:00.000Z',
   recordedAt: '2026-08-02T08:00:00.000Z',
   unitId: 'unit-1',
-  payload: { fromStepId: 'inoculation', toStepId: 'incubation', followedNominalPath: true },
+  payload: {
+    fromStepId: 'inoculation',
+    toStepId: 'incubation',
+    toStage: 'substrate',
+    followedNominalPath: true,
+  },
 };
 
 const moved: DomainEvent = {
@@ -95,6 +100,59 @@ describe('replayUnit', () => {
     const result = replayUnit([created, advanced]);
     expect(result.ok && result.value.currentStepId).toBe('incubation');
     expect(result.ok && result.value.currentStepEnteredAt).toBe('2026-08-02T08:00:00.000Z');
+  });
+
+  /**
+   * Ce test manquait, et son absence a laissé passer un vrai défaut : le
+   * journal ne portait pas le stade atteint, donc une unité passée en
+   * fructification restait « substrate » au rejeu. C'est le test d'audit
+   * end-to-end qui l'a détecté — trop tard pour être confortable.
+   */
+  it('fait suivre le stade à l’étape', () => {
+    const toFruiting: DomainEvent = {
+      ...advanced,
+      id: 'e-fruct',
+      occurredAt: '2026-08-20T08:00:00.000Z',
+      recordedAt: '2026-08-20T08:00:00.000Z',
+      payload: {
+        fromStepId: 'incubation',
+        toStepId: 'fructification',
+        toStage: 'fruiting',
+        followedNominalPath: true,
+      },
+    };
+    const result = replayUnit([created, toFruiting]);
+    expect(result.ok && result.value.stage).toBe('fruiting');
+    expect(result.ok && result.value.currentStepId).toBe('fructification');
+  });
+
+  it('revient au stade précédent lors d’un retour en arrière', () => {
+    const toFruiting: DomainEvent = {
+      ...advanced,
+      id: 'e-a',
+      occurredAt: '2026-08-20T08:00:00.000Z',
+      recordedAt: '2026-08-20T08:00:00.000Z',
+      payload: {
+        fromStepId: 'incubation',
+        toStepId: 'fructification',
+        toStage: 'fruiting',
+        followedNominalPath: true,
+      },
+    };
+    const back: DomainEvent = {
+      ...advanced,
+      id: 'e-b',
+      occurredAt: '2026-08-21T08:00:00.000Z',
+      recordedAt: '2026-08-21T08:00:00.000Z',
+      payload: {
+        fromStepId: 'fructification',
+        toStepId: 'incubation',
+        toStage: 'substrate',
+        followedNominalPath: false,
+      },
+    };
+    const result = replayUnit([created, toFruiting, back]);
+    expect(result.ok && result.value.stage).toBe('substrate');
   });
 
   it('applique un déplacement', () => {

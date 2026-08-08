@@ -4,21 +4,33 @@ import {
   appError,
   domainEventSchema,
   listHint,
+  processGraphSchema,
   stageSchema,
   type CultureUnit,
   type DomainEvent,
   type ProcessGraph,
+  type ProcessVersion,
 } from '@champi/contracts';
 import {
   advanceUnit,
   buildUnitLabel,
   checkJournalIntegrity,
   diffReplayAgainstStored,
+  draftFromVersion,
+  editVersionGraph,
   nominalNextSteps,
+  prefixForStage,
+  publishVersion,
   replayUnit,
+  validateProcessGraph,
   validateTokenFormat,
 } from '@champi/domain';
-import type { MongoConnection, QrRepository, UnitRepository } from '@champi/persistence';
+import type {
+  MongoConnection,
+  ProcessRepository,
+  QrRepository,
+  UnitRepository,
+} from '@champi/persistence';
 import type { PrintQueue } from '@champi/printing';
 import { errorBody, statusForError } from './errors.js';
 import { IdempotencyStore } from './idempotency.js';
@@ -39,6 +51,7 @@ export interface AppDependencies {
   readonly connection: MongoConnection;
   readonly units: UnitRepository;
   readonly qr: QrRepository;
+  readonly processes: ProcessRepository;
   readonly printQueue: PrintQueue;
   /** Horloge injectée : aucune lecture d'horloge ambiante dans la logique. */
   readonly now: () => string;
@@ -57,6 +70,27 @@ const advanceBodySchema = z.object({
 
 const printBodySchema = z.object({
   copies: z.number().optional(),
+});
+
+const createProcessBodySchema = z.object({
+  name: z.string().min(1),
+  speciesScope: z.union([z.literal('any'), z.string().min(1)]).default('any'),
+  graph: processGraphSchema,
+});
+
+const createUnitBodySchema = z.object({
+  name: z.string().min(1),
+  stage: stageSchema,
+  processVersionId: z.string().min(1),
+  stepId: z.string().min(1),
+  parentUnitId: z.string().min(1).nullable().default(null),
+  substrateWeight: z
+    .object({
+      value: z.number().finite().nonnegative(),
+      unit: z.enum(['g', 'kg', 'piece', 'tray', 'L', 'mL']),
+      kind: z.literal('substrate'),
+    })
+    .optional(),
 });
 
 /** `?dryRun=true` — décrit l'effet sans l'appliquer. */
@@ -156,6 +190,305 @@ export function createApp(deps: AppDependencies): Hono {
           'GET /api/units/:code/audit — renvoie les divergences détectées.',
       },
     });
+  });
+
+  // --- Process ---
+
+  app.get('/api/process-templates', async (c) =>
+    c.json({ data: await deps.processes.listTemplates() }),
+  );
+
+  app.get('/api/process-versions/:id', async (c) => {
+    const version = await deps.processes.findVersion(c.req.param('id'));
+    if (version === null) {
+      return c.json(
+        errorBody(
+          appError('NOT_FOUND', `La version « ${c.req.param('id')} » n'existe pas.`, {
+            hint: 'GET /api/process-templates liste les process, puis GET /api/process-templates/:id/versions leurs versions.',
+          }),
+        ),
+        404,
+      );
+    }
+    return c.json({ data: version });
+  });
+
+  app.get('/api/process-templates/:id/versions', async (c) =>
+    c.json({ data: await deps.processes.listVersions(c.req.param('id')) }),
+  );
+
+  /**
+   * Crée un process et sa première version, en brouillon.
+   *
+   * Le graphe est le **même JSON** que celui édité par le canvas graphique
+   * (docs/22 §3.1) : un agent peut donc écrire un process complet et le
+   * POSTer, l'éditeur l'affichera correctement.
+   */
+  app.post('/api/process-templates', async (c) => {
+    const rawBody: unknown = await c.req.json().catch(() => null);
+    const parsed = createProcessBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Corps de requête invalide.', {
+            hint: 'Attendu : { name: string, speciesScope?: "any" | string, graph: { steps: [...], transitions: [...] } }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    const validated = validateProcessGraph(parsed.data.graph);
+    if (!validated.ok) {
+      return c.json(errorBody(validated.error), statusForError(validated.error.code));
+    }
+
+    const templateId = deps.newId();
+    const versionId = deps.newId();
+
+    if (isDryRun(c.req.url)) {
+      return c.json({ dryRun: true, data: { wouldCreate: parsed.data.name } });
+    }
+
+    const template = await deps.processes.saveTemplate({
+      id: templateId,
+      name: parsed.data.name,
+      speciesScope: parsed.data.speciesScope,
+      currentVersionId: versionId,
+    });
+    if (!template.ok) {
+      return c.json(errorBody(template.error), statusForError(template.error.code));
+    }
+
+    const version: ProcessVersion = {
+      id: versionId,
+      templateId,
+      versionNumber: 1,
+      status: 'draft',
+      graph: parsed.data.graph,
+    };
+    const saved = await deps.processes.saveVersion(version);
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+
+    return c.json({ data: { template: template.value, version: saved.value } });
+  });
+
+  /**
+   * Publie une version. Le gel est définitif.
+   *
+   * ⚠️ Publier **n'affecte aucune unité en cours** (docs/21 §2) : la réponse le
+   * dit explicitement, pour qu'aucun appelant ne construise l'attente inverse.
+   */
+  app.post('/api/process-versions/:id/publish', async (c) => {
+    const version = await deps.processes.findVersion(c.req.param('id'));
+    if (version === null) {
+      return c.json(
+        errorBody(appError('NOT_FOUND', `La version « ${c.req.param('id')} » n'existe pas.`)),
+        404,
+      );
+    }
+
+    const published = publishVersion(version, deps.now());
+    if (!published.ok) {
+      return c.json(errorBody(published.error), statusForError(published.error.code));
+    }
+
+    if (isDryRun(c.req.url)) {
+      return c.json({ dryRun: true, data: { wouldPublish: published.value.versionNumber } });
+    }
+
+    const saved = await deps.processes.saveVersion(published.value);
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+    return c.json({
+      data: saved.value,
+      note: 'Aucune unité en cours n’est déplacée : chacune reste épinglée à sa version jusqu’à la fin de son cycle.',
+    });
+  });
+
+  /** Ouvre un brouillon à partir d'une version existante. */
+  app.post('/api/process-versions/:id/draft', async (c) => {
+    const version = await deps.processes.findVersion(c.req.param('id'));
+    if (version === null) {
+      return c.json(
+        errorBody(appError('NOT_FOUND', `La version « ${c.req.param('id')} » n'existe pas.`)),
+        404,
+      );
+    }
+
+    const nextNumber = await deps.processes.nextVersionNumber(version.templateId);
+    const draft = { ...draftFromVersion(version, deps.newId()), versionNumber: nextNumber };
+    const saved = await deps.processes.saveVersion(draft);
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+    return c.json({ data: saved.value });
+  });
+
+  /** Modifie le graphe d'un brouillon. Refusé sur une version publiée. */
+  app.post('/api/process-versions/:id/graph', async (c) => {
+    const version = await deps.processes.findVersion(c.req.param('id'));
+    if (version === null) {
+      return c.json(
+        errorBody(appError('NOT_FOUND', `La version « ${c.req.param('id')} » n'existe pas.`)),
+        404,
+      );
+    }
+
+    const rawBody: unknown = await c.req.json().catch(() => null);
+    const parsed = processGraphSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Graphe de process invalide.', {
+            hint: 'Attendu : { steps: [...], transitions: [...], layout?: {...} }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    const edited = editVersionGraph(version, parsed.data);
+    if (!edited.ok) {
+      return c.json(errorBody(edited.error), statusForError(edited.error.code));
+    }
+    const saved = await deps.processes.saveVersion(edited.value);
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+    return c.json({ data: saved.value });
+  });
+
+  // --- Unités ---
+
+  /**
+   * Crée une unité.
+   *
+   * `parentUnitId` est **nullable** : une unité peut naître à n'importe quel
+   * stade, sans ascendant (docs/14 §18.1). Le code public et le QR sont
+   * attribués par le serveur — les laisser au client ouvrirait la porte aux
+   * collisions.
+   */
+  app.post('/api/units', async (c) => {
+    const rawBody: unknown = await c.req.json().catch(() => null);
+    const parsed = createUnitBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Corps de requête invalide.', {
+            hint: 'Attendu : { name, stage, processVersionId, stepId, parentUnitId?, substrateWeight? }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    const graph = await deps.graphForVersion(parsed.data.processVersionId);
+    if (graph === null) {
+      return c.json(
+        errorBody(
+          appError(
+            'NOT_FOUND',
+            `La version de process « ${parsed.data.processVersionId} » n'existe pas.`,
+            {
+              hint: 'Crée et publie un process avant de créer des unités.',
+              path: 'processVersionId',
+            },
+          ),
+        ),
+        404,
+      );
+    }
+    if (!graph.steps.some((step) => step.id === parsed.data.stepId)) {
+      return c.json(
+        errorBody(
+          appError('STEP_NOT_IN_PROCESS', `L'étape « ${parsed.data.stepId} » n'existe pas.`, {
+            hint: listHint(
+              'Étapes disponibles',
+              graph.steps.map((s) => s.id),
+            ),
+            path: 'stepId',
+          }),
+        ),
+        422,
+      );
+    }
+
+    const key = c.req.header('Idempotency-Key');
+    if (key !== undefined) {
+      const seen = await idempotency.lookup(key, rawBody);
+      if (seen.kind === 'conflict') {
+        return c.json(seen.body, 409);
+      }
+      if (seen.kind === 'replay') {
+        c.header('Idempotent-Replay', 'true');
+        return c.json(seen.body as object, seen.status as 200);
+      }
+    }
+
+    const nowIso = deps.now();
+    const year = Number(nowIso.slice(0, 4));
+    const code = await deps.qr.allocatePublicCode(prefixForStage(parsed.data.stage), year);
+    if (!code.ok) {
+      return c.json(errorBody(code.error), statusForError(code.error.code));
+    }
+
+    const unit: CultureUnit = {
+      id: deps.newId(),
+      publicCode: code.value,
+      name: parsed.data.name,
+      stage: parsed.data.stage,
+      status: 'active',
+      parentUnitId: parsed.data.parentUnitId,
+      lineageRelation: parsed.data.parentUnitId === null ? 'origin' : 'transfer',
+      generation: 0,
+      processVersionId: parsed.data.processVersionId,
+      currentStepId: parsed.data.stepId,
+      currentStepEnteredAt: nowIso,
+      ...(parsed.data.substrateWeight !== undefined
+        ? { substrateWeight: parsed.data.substrateWeight }
+        : {}),
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      version: 0,
+    };
+
+    const event: DomainEvent = domainEventSchema.parse({
+      id: deps.newId(),
+      type: 'unit.created',
+      occurredAt: nowIso,
+      recordedAt: nowIso,
+      source: 'manual',
+      unitId: unit.id,
+      payload: {
+        stage: unit.stage,
+        processVersionId: unit.processVersionId,
+        stepId: unit.currentStepId,
+        parentUnitId: unit.parentUnitId,
+        ...(unit.substrateWeight !== undefined ? { substrateWeight: unit.substrateWeight } : {}),
+      },
+    });
+
+    if (isDryRun(c.req.url)) {
+      return c.json({ dryRun: true, data: { wouldCreate: unit, wouldRecord: event } });
+    }
+
+    const created = await deps.units.create(unit, event);
+    if (!created.ok) {
+      return c.json(errorBody(created.error), statusForError(created.error.code));
+    }
+
+    const body = { data: { unit: created.value, event } };
+    if (key !== undefined) {
+      await idempotency.remember(key, rawBody, 200, body);
+    }
+    return c.json(body);
   });
 
   app.get('/api/units', async (c) => {
@@ -490,6 +823,7 @@ export function createApp(deps: AppDependencies): Hono {
       payload: {
         fromStepId: outcome.value.fromStepId,
         toStepId: outcome.value.toStepId,
+        toStage: outcome.value.step.stage,
         followedNominalPath: outcome.value.followedNominalPath,
       },
     });

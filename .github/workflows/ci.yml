@@ -113,3 +113,63 @@ jobs:
       - name: Arrêter MongoDB
         if: always()
         run: bun run db:down
+
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Installer les dépendances
+        run: bun install --frozen-lockfile
+
+      - name: Installer les navigateurs
+        run: bunx playwright install --with-deps chromium webkit
+
+      # Les E2E tournent contre une vraie pile : serveur Node, MongoDB en
+      # replica set. C'est le seul niveau qui prouve que les couches tiennent
+      # ensemble (docs/22 §6.2).
+      - name: Démarrer MongoDB en replica set
+        run: bun run db:up
+
+      - name: Attendre que le replica set soit prêt
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec champi-mongo mongosh --quiet --port 27018 \
+                 --eval 'rs.status().ok' >/dev/null 2>&1; then
+              echo "Replica set prêt."; exit 0
+            fi
+            sleep 2
+          done
+          echo "Le replica set n'est pas devenu disponible."; exit 1
+
+      - name: Scénarios end-to-end
+        run: bun run e2e
+
+      - name: Publier le rapport E2E
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e
+          path: reports/e2e/
+          retention-days: 14
+
+      - name: Publier les traces d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-traces
+          path: test-results/
+          retention-days: 7
+
+      - name: Arrêter MongoDB
+        if: always()
+        run: bun run db:down

@@ -14,6 +14,11 @@
     "@champi/persistence": "workspace:*",
     "hono": "^4.13.1",
     "zod": "^3.24.0",
-    "@champi/printing": "workspace:*"
+    "@champi/printing": "workspace:*",
+    "@hono/node-server": "^2.1.0"
+  },
+  "scripts": {
+    "build:server": "bun build src/main.ts --target=node --outfile=dist/server.mjs",
+    "start": "node dist/server.mjs"
   }
 }

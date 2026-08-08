@@ -55,6 +55,16 @@ export const unitStepAdvancedEventSchema = z.object({
     fromStepId: idSchema,
     toStepId: idSchema,
     /**
+     * Stade atteint.
+     *
+     * ⚠️ Indispensable, et pas redondant : changer d'étape change le stade de
+     * l'unité (`incubation` → `fructification` fait passer de `substrate` à
+     * `fruiting`). Sans ce champ, le journal serait **lacunaire** et l'état ne
+     * serait pas reconstructible — ce qui viderait de sens la promesse de
+     * traçabilité. Ce manque a été détecté par le test d'audit end-to-end.
+     */
+    toStage: stageSchema,
+    /**
      * `false` quand la transition ne suit pas une arête du graphe nominal.
      * Les étapes sont sautables et réversibles : l'écart est enregistré, pas
      * interdit (docs/22 §3.3).
