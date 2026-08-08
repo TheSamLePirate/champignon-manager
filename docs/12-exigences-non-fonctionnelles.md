@@ -33,19 +33,23 @@ Cibles indicatives :
 
 ## 3. Sécurité
 
-Même en local, l’application gère des données de production.
+**Décision du 2026-08-08 (`21` §6) : aucune sécurité applicative au MVP.** L’unique frontière d’accès est le **tailnet Tailscale**.
 
-Exigences :
+❌ Retirées du MVP (exigences antérieures de ce document) :
 
-- authentification simple login/mot de passe au MVP ;
-- rôle `admin` unique au départ ;
-- permissions backend extensibles ;
-- sessions sécurisées même en local ;
-- mots de passe hashés ;
-- tokens QR non prédictibles ;
-- audit de toutes les actions importantes ;
-- accès imprimante et appareils réservé au backend ;
-- sauvegardes protégées.
+- authentification login/mot de passe ;
+- rôles et permissions backend ;
+- sessions, mots de passe hashés.
+
+✅ Exigences maintenues, car elles ne relèvent pas de l’authentification :
+
+- **tokens QR non prédictibles** — un token devinable exposerait les unités indépendamment du réseau ;
+- **journal d’événements horodaté et immuable** pour toute action importante (sans auteur) ;
+- **accès imprimante et appareils réservé au backend** ;
+- **sauvegardes protégées** ;
+- **ACL Tailscale** correctement configurées : c’est désormais le seul contrôle d’accès du système (voir §4).
+
+⚠️ **Conséquence à assumer** : tout appareil du tailnet a un accès total en lecture et en écriture, y compris à la configuration des process. Le durcissement de l’application est reporté au moment où une identité sera réintroduite (`02` §6.2).
 
 ## 4. Réseau (Tailscale confirmé)
 
@@ -221,11 +225,11 @@ Points clés :
 
 - **Validation obligatoire avant toute action en masse** : l’exécution en un seul appel non confirmé est interdite. Une action de masse touche potentiellement toute la production.
 - **Toute action doit être annulable ou corrigeable**, sans suppression de données (événement de compensation).
-- **Un seul auteur de process.** La modification d’un process fait basculer les unités en cours : ce droit unique est autant une protection qu’une simplification.
+- ~~**Un seul auteur de process.** La modification d’un process fait basculer les unités en cours : ce droit unique est autant une protection qu’une simplification.~~ → **Caduc au 2026-08-08** : il n’y a plus d’utilisateurs (`21` §6), donc plus de « droit » technique, et modifier un process **ne bascule plus** les unités en cours (`04` §15.3). L’argument de protection disparaît avec le risque qu’il couvrait.
 
 ### Alertes
 
-- Une alarme **ne bloque jamais** une unité — elle prévient, crée une tâche, marque un retard.
+- Une alarme **ne bloque jamais** une unité — elle prévient, crée une **alerte**, marque un retard. *(Pas de tâche générée — `21` §3.)*
 - Une alarme doit être **acquittable ou reportable**, avec trace de l’auteur et de l’horodatage.
 - Les appareils connectés (Inkbird) devront **déclencher des alertes**, pas seulement historiser.
 

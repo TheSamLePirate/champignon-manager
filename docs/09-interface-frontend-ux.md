@@ -88,7 +88,6 @@ Le dashboard doit afficher :
 - lots actifs par chambre ;
 - lots en retard ;
 - alertes ouvertes ;
-- tâches du jour ;
 - récoltes attendues ;
 - dernières récoltes ;
 - rendement par période ;
@@ -331,8 +330,9 @@ Décisions UX/frontend :
 - produits / stock ;
 - configuration process ;
 - rapports ;
-- settings imprimante ;
-- login minimal.
+- settings imprimante.
+
+❌ **Pas d’écran de login** (décision du 2026-08-08, `21` §6) : l’application s’ouvre directement sur le dashboard. Aucun écran de connexion, de profil ou de gestion d’utilisateurs.
 
 ## 17. Mise à jour 2026-07-30 — impact des réponses cultivateur
 

@@ -66,11 +66,30 @@ Tous les documents métier devraient avoir :
 | `_id` | Identifiant MongoDB. |
 | `publicCode` | Code lisible humain, stable, imprimable. |
 | `createdAt` | Date de création. |
-| `createdBy` | Utilisateur créateur. |
 | `updatedAt` | Dernière modification d’état courant. |
-| `updatedBy` | Utilisateur ou système responsable. |
 | `status` | Statut opérationnel. |
 | `siteId` | Site concerné si multi-site futur. |
+| `version` | **Verrou optimiste** — incrémenté à chaque écriture, comparé par l’API (`08` §2.1). |
+
+❌ **`createdBy` et `updatedBy` sont supprimés** (décision du 2026-08-08, `21` §6) : il n’y a pas d’utilisateurs. La trace de « quand » subsiste intégralement, celle de « qui » n’existe pas.
+
+### 3.1 Type `Quantity` — toute grandeur physique
+
+Décision du 2026-08-08 (`21` §4). **Aucune grandeur physique n’est stockée en nombre nu** :
+
+```text
+Quantity = {
+  value: number,
+  unit:  "g" | "kg" | "piece" | "tray" | "L" | "mL",
+  kind:  "substrate" | "harvest" | "product" | "inoculum"
+}
+```
+
+Règles :
+
+- **stockage canonique en grammes** pour toute masse ; l’unité de saisie est conservée pour l’affichage. Le cultivateur pèse en grammes (`q14_1`) ;
+- **aucune conversion implicite entre `kind` différents** — un rendement est un rapport explicite entre deux quantités nommées, jamais une soustraction de champs homonymes ;
+- ❌ **`currentQuantity` et `initialQuantity` sur `lots` sont supprimés** : ils mélangeaient masse de substrat (qui ne décroît pas), masse récoltée et pièces de produit fini. Trois grandeurs distinctes → trois champs distincts (`substrateWeight` sur l’unité, `weight` sur la récolte, `quantity` sur le produit).
 
 ## 4. Collections de configuration
 
@@ -86,18 +105,11 @@ Champs :
 - `localNetworkBaseUrl` ;
 - `settings`.
 
-### 4.2 `users`
+### 4.2 `users` — ❌ collection supprimée
 
-Utilisateurs.
+Décision du 2026-08-08 (`21` §6) : **pas d’utilisateurs, pas d’authentification**. Les champs autrefois prévus (`displayName`, `login`, `passwordHash`, `roles`, `isActive`, `lastLoginAt`) ne sont pas implémentés.
 
-Champs :
-
-- `displayName` ;
-- `login` ;
-- `passwordHash` ;
-- `roles` ;
-- `isActive` ;
-- `lastLoginAt`.
+À réintroduire seulement si une identité redevient nécessaire (`02` §6.2).
 
 ### 4.3 `species`
 
@@ -238,7 +250,7 @@ Champs :
 - `strainId` ;
 - `supplier` ;
 - `receivedAt` ;
-- `initialQuantity` ;
+- `initialQuantity` : `Quantity` (voir §3.1) ;
 - `healthStatus` ;
 - `notes` ;
 - `qrId` ;
@@ -266,8 +278,7 @@ Champs :
 - `currentStepEnteredAt` ;
 - `status` ;
 - `currentLocationId` ;
-- `currentQuantity` ;
-- `initialQuantity` ;
+- `substrateWeight` : `Quantity` **`kind: substrate`** — poids substrat total saisi à l’inoculation, **champ de premier rang** (dénominateur du rendement) ;
 - `tags` ;
 - `qrId` ;
 - `importantDates` ;
@@ -282,7 +293,7 @@ Champs :
 - `eventType` ;
 - `occurredAt` ;
 - `recordedAt` ;
-- `recordedBy` ;
+- `recordedBy` : ⚠️ **non peuplé au MVP** — champ optionnel réservé, jamais renseigné ni exposé dans l’UI. Il n’existe que pour rendre une réintroduction d’identité possible sans refondre le journal (`21` §6) ;
 - `target` : type + id ;
 - `relatedTargets` ;
 - `payload` ;
@@ -355,9 +366,8 @@ Champs :
 - `productTypeId` ;
 - `origins` : liste de récoltes/lots avec quantités ;
 - `producedAt` ;
-- `quantity` ;
-- `availableQuantity` ;
-- `unit` ;
+- `quantity` : `Quantity` **`kind: product`** ;
+- `availableQuantity` : `Quantity` **`kind: product`** ;
 - `packaging` ;
 - `bestBeforeDate` ;
 - `status` ;
@@ -372,12 +382,12 @@ Champs :
 
 - `productBatchId` ;
 - `movementType` ;
-- `quantityDelta` ;
-- `unit` ;
+- `quantityDelta` : `Quantity` **`kind: product`** ;
 - `occurredAt` ;
-- `recordedBy` ;
 - `reason` ;
 - `eventId`.
+
+*(`unit` est absorbé par `Quantity` ; `recordedBy` est supprimé — pas d’utilisateurs.)*
 
 ## 6. QR et impression
 
@@ -490,7 +500,7 @@ Champs :
 - `rawPayload` optionnel ;
 - `measurementIds` optionnels.
 
-## 8. Alertes et tâches
+## 8. Alertes
 
 ### 8.1 `alerts`
 
@@ -507,20 +517,15 @@ Champs :
 - `resolvedAt` ;
 - `metadata`.
 
-### 8.2 `tasks`
+### 8.2 `tasks` — ❌ collection supprimée
 
-Actions à faire.
+Décision du 2026-08-08 (`21` §3) : **l’application ne génère aucune tâche.** Réponse du cultivateur `q16_2` : « pas de tâches automatiques, mais des statuts et des alertes ». Cela tranche la tension avec `q9_10_5` (tâche de nettoyage en fin de cycle).
 
-Champs :
+À la place :
 
-- `title` ;
-- `target` ;
-- `dueAt` ;
-- `assignedRole` ;
-- `assignedUserId` ;
-- `status` ;
-- `completedAt` ;
-- `eventId`.
+- la **fin de cycle** produit un statut (`terminé | compost | rebut | contaminé`) et une **alerte** « emplacement occupé jusqu’au nettoyage » ;
+- les **alarmes de durée** produisent des alertes (rappel, dépassement, retard critique) ;
+- une alerte se **résout par une action métier** (nettoyage enregistré, unité avancée), pas par une case à cocher indépendante.
 
 ## 9. Index recommandés
 
@@ -564,16 +569,22 @@ Décisions validées :
 - Trois couches de types : Domain Model, DTO/API, documents MongoDB.
 - `publicCode` à définir après réponses cultivateur, mais prévoir une convention détaillée et stable.
 
-Collections MVP confirmées :
+Collections MVP confirmées *(mise à jour 2026-08-08)* :
 
-- `users`, `sites`, `species`, `strains` ;
+- `sites`, `species`, `strains` ;
 - `locations` ;
 - `processTemplates`, `processVersions` ;
 - `sources`, `lots`, `events` ;
 - `measurements`, `observations` ;
 - `harvests`, `productBatches` ;
 - `qrRegistry`, `printJobs` ;
-- `files`, `alerts`, `tasks`.
+- `files`, `alerts` ;
+- `idempotencyKeys` — clés d’idempotence et réponse d’origine (`08` §2.1).
+
+❌ Retirées :
+
+- **`users`** — pas d’authentification ni d’utilisateurs (`21` §6) ;
+- **`tasks`** — aucune tâche n’est générée par l’application ; alertes et statuts seulement (`21` §3).
 
 Collections après MVP :
 

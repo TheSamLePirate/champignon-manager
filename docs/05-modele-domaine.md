@@ -23,17 +23,11 @@ Attributs importants :
 - fuseau horaire ;
 - unités par défaut.
 
-### 2.2 Utilisateur
+### 2.2 Utilisateur — ❌ hors MVP
 
-Personne utilisant l’application.
+**Décision du 2026-08-08 (`21` §6) : il n’y a pas d’entité Utilisateur.** Pas d’authentification, pas de rôles, pas d’auteur sur les événements. Les attributs envisagés (nom, identifiant, rôle, préférences) sont conservés ici pour mémoire, en vue d’une éventuelle réintroduction (`02` §6.2).
 
-Attributs :
-
-- nom ;
-- email ou identifiant ;
-- rôle ;
-- actif/inactif ;
-- préférences.
+Conséquences directes sur le modèle : pas de `createdBy` / `updatedBy`, pas de `userId` sur les événements, et les **filtres favoris sont globaux** à l’installation au lieu d’être rattachés à une personne.
 
 ### 2.3 Source
 
@@ -331,7 +325,9 @@ Conséquence : `conservation` et `archivage` sont deux états distincts de l’u
 
 ### 6.3 Version de process
 
-Chaque unité doit porter la **version du process** qui lui est appliquée, et cette version doit être figée dans les événements. La modification d’un process fait basculer les unités en cours sur la nouvelle version (après confirmation), mais la comparaison entre versions exige de savoir sous quelle version chaque résultat a été produit. Voir `04-processus-configurable.md` §15.3 pour la tension à arbitrer.
+Chaque unité doit porter la **version du process** qui lui est appliquée (`processVersionId`), et cette version doit être figée dans les événements — c’est la condition technique de toute comparaison.
+
+✅ **Tranché le 2026-08-08** (`21` §2) : une version publiée est **immuable** et l’unité y reste **épinglée jusqu’à la fin de son cycle**. Modifier un process ne déplace **aucune** unité en cours. Une migration reste possible, mais **explicite, manuelle et par sélection**, et produit un événement traçable. Voir `04` §15.3.
 
 ### 6.4 Filtres persistés
 

@@ -370,3 +370,29 @@ C'est une simplification importante : le modèle de process type passe de 13 ét
 `q16_2` : **« pas de tâches automatiques, mais des statuts et des alertes »**. Cela contredit `q9_10_5`, où la création d'une **tâche de nettoyage** en fin de cycle avait été acceptée.
 
 Lecture proposée : pas de génération automatique de tâches récurrentes, mais les alarmes de durée et la fin de cycle produisent des **alertes** que l'on peut traiter. À confirmer avant de coder un module de tâches.
+
+## 19. Mise à jour 2026-08-08 — les dernières questions sont tranchées
+
+Répondant : Olivier. Détail complet : [`21-decisions-avant-code.md`](./21-decisions-avant-code.md).
+
+### 19.1 Questions closes
+
+| Question ouverte | Où elle était posée | Décision |
+| --- | --- | --- |
+| Source et lot = deux objets différents ? | §1.2, P2-2 | **Deux objets distincts.** Une unité référence sa source quand elle en a une ; elle peut naître sans source. |
+| Versioning / migration d’un process utilisé par des lots | §15 « questions techniques », §18.2, `dev_06_05` | **Comparaison entre versions.** Version publiée immuable, unité épinglée jusqu’à fin de cycle, **pas de bascule**, migration explicite par sélection. |
+| Tâches automatiques ? | tension `q16_2` ⇄ `q9_10_5` | **Aucune tâche.** Statuts et alertes seulement — collection et module `tasks` supprimés. |
+| Sémantique quantité / poids | P2-1 | **Type `Quantity` `{ value, unit, kind }`**, masse canonique en grammes, `substrateWeight` en champ de premier rang. *(Réponse « au mieux » → recommandation implémenteur, pas décision métier.)* |
+| Stratégie d’authentification locale | §14.8, §13, P1-2 | **Aucune.** Pas d’auth, pas d’utilisateurs, pas de rôles, pas d’auteur sur les événements. Seule frontière : le tailnet Tailscale. |
+| Nombre d’utilisateurs, rôles dès le MVP | §13.1, §13.2 | **Sans objet** — il n’y a pas d’utilisateurs. |
+| Qui peut corriger / réimprimer / modifier le process | §13.3, §13.4, §13.5, §13.6 | **Sans objet au MVP** — aucune restriction technique n’existe. |
+| Driver / protocole Nimbot B21 | §15, P0-5 | **Résolu : testé, fonctionne.** Le repli image/PDF devient inutile. |
+
+### 19.2 Ce qui reste ouvert
+
+Aucun point bloquant. Il subsiste :
+
+- **le périmètre** (P1-1) : définir la tranche verticale, éditeur de process minimal inclus, et estimer la charge — jamais fait ;
+- **spikes non bloquants** : Safari iOS + `tailscale serve` (accès caméra), compatibilité Bun (driver Mongo, Vitest, BLE) ;
+- **points mineurs** : format des `publicCode`, politique de sauvegarde, hostname MagicDNS, conditions cibles par chambre (`q10_3`, configuration) ;
+- **à faire remonter au cultivateur** : ses unités en cours ne basculeront pas lors d’une modification de process, et l’application ne saura jamais qui a fait quoi (`21` §10).

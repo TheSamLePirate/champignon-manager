@@ -38,14 +38,16 @@ Objectifs :
 - schémas Zod partagés ;
 - OpenAPI automatique ;
 - erreurs typées ;
-- authentification admin simple ;
+- **verrou optimiste (`version`) + `Idempotency-Key`** dès les premiers endpoints (`08` §2.1) ;
 - audit events ;
 - layout frontend Tailwind/shadcn ;
 - outillage Vitest, Playwright, Husky/lint-staged.
 
+*(Plus d’authentification ni d’écran de login — décision du 2026-08-08, `21` §6.)*
+
 Critère de sortie :
 
-- utilisateur peut se connecter et accéder à une interface vide mais structurée.
+- l’application s’ouvre directement sur une interface vide mais structurée.
 
 ## 4. Phase 2 — Sources, lots et QR
 
@@ -137,8 +139,7 @@ Critère de sortie :
 Objectifs :
 
 - dashboard production ;
-- alertes ;
-- tâches du jour ;
+- alertes actives *(pas de tâches — `21` §3)* ;
 - rendement par lot/chambre/période ;
 - pertes et contaminations ;
 - exports.
@@ -182,11 +183,11 @@ Critère de sortie :
 Backlog MVP proposé après réponses développeur :
 
 1. Socle monorepo Bun + TypeScript strict + tooling + Docker Compose.
-2. Backend Hono + MongoDB replica set local + Zod + OpenAPI + erreurs typées.
-3. Auth admin simple + audit events + migrations.
+2. Backend Hono + MongoDB replica set local + Zod + OpenAPI + erreurs typées + idempotence/verrou optimiste.
+3. Audit events + migrations. *(Plus d’auth — `21` §6.)*
 4. Modèle source / unité / lot + QR registry + public codes.
-5. Impression Nimbot B21 + printJobs + réimpression.
-6. Frontend React + Tailwind/shadcn + layout mobile/desktop + login.
+5. Impression Nimbot B21 + printJobs + réimpression. **✅ imprimante validée en test le 2026-08-08.**
+6. Frontend React + Tailwind/shadcn + layout mobile/desktop. *(Plus de login.)*
 7. Scan QR web intégré + fiche unité mobile + timeline.
 8. Moteur process configurable + éditeur complet + actions / observations / formulaires dynamiques.
 9. Mesures, observations, chambres, actions en masse et changements d’étape.
@@ -203,10 +204,10 @@ Hors MVP :
 
 ## 13. Risques de planning
 
-- intégration Nimbot B21 plus longue que prévu ;
+- ~~intégration Nimbot B21 plus longue que prévu~~ → **✅ levé le 2026-08-08 : imprimante testée, fonctionne comme attendu** ;
 - scan web iPhone nécessitant HTTPS : adressé par Tailscale confirmé (`serve` + cert TLS), à valider sur Safari iOS ;
-- compréhension incomplète du process cultivateur ;
-- modèle process configurable complet trop ambitieux ;
+- ~~compréhension incomplète du process cultivateur~~ → **✅ levé : 186/188, structure figée** ;
+- modèle process configurable complet trop ambitieux — **risque n°1 restant** ;
 - exécution fiable sur Raspberry Pi ;
 - accès Inkbird non documenté ou dépendant du cloud ;
 - généalogie multi-origine difficile si mélanges fréquents ;
@@ -240,7 +241,7 @@ Trois réponses élargissent le périmètre du moteur — à intégrer dans l'es
 
 1. **étapes sautables, refaisables et réversibles** → graphe d'états, pas séquence ;
 2. **changement de process en cours de route** sur un lot déjà lancé ;
-3. **versioning avec bascule** des unités en cours + comparaison entre versions (contradiction à arbitrer, cf. `04` §15.3).
+3. ~~**versioning avec bascule** des unités en cours + comparaison entre versions~~ → **tranché le 2026-08-08 : pas de bascule**, l’unité reste épinglée à sa version (`04` §15.3). Le moteur s’allège d’autant.
 
 Ces trois points renforcent la recommandation de `claude-critics.md` : **seed data d'abord, éditeur visuel plus tard**.
 
@@ -267,3 +268,26 @@ Au premier démarrage, tout est vide. Il faudra saisir un process complet, les c
 **À prévoir dans le MVP** : un modèle de process pré-rempli et **modifiable**, présenté explicitement comme un exemple à adapter. Ce n'est pas un seed métier — c'est un anti-écran-vide.
 
 ✅ **Fait** : ce modèle existe — [`20-modele-process-par-defaut.md`](./20-modele-process-par-defaut.md) et son JSON. 6 étapes, valeurs réelles du cultivateur là où elles existent, valeurs inventées explicitement marquées ailleurs.
+
+## Mise à jour 2026-08-08 — plus aucun blocage
+
+Six décisions arrêtées : [`21-decisions-avant-code.md`](./21-decisions-avant-code.md).
+
+### Ce qui sort du périmètre
+
+| Retiré | Raison |
+| --- | --- |
+| Module `auth`, collection `users`, écran de login, rôles, RBAC | Décision « pas de sécurité, réseau local » (`21` §6) |
+| Collection et module `tasks` | « Pas de tâches automatiques, mais des statuts et des alertes » (`21` §3) |
+| Bascule de version de process + confirmation associée | La comparaison entre versions l’emporte (`21` §2) |
+| Repli d’impression (image/PDF, imprimante ESC-POS) | B21 testée et validée (`21` §7) |
+
+### Ce qui entre dans le périmètre
+
+- **Idempotence et verrou optimiste** dès la Phase 1, pas après (`08` §2.1).
+- **Endpoint de migration d’unités par sélection**, distinct de la publication de version.
+- **Type `Quantity`** typé partout, et `substrateWeight` en champ de premier rang (`07` §3.1).
+
+### Le seul risque restant
+
+P1-1 : le périmètre. L’allègement est réel (plus d’auth, plus de rôles, plus de tâches), mais **aucune estimation de charge n’existe toujours**, et l’éditeur de process reste obligatoire. La prochaine étape utile est de définir la **tranche verticale**, éditeur de process minimal inclus.

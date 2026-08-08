@@ -65,7 +65,7 @@ Avantages :
 - adapté à une API locale ;
 - peut générer des contrats OpenAPI ;
 - simple à tester ;
-- bon contrôle des middlewares : auth, permissions, logs.
+- bon contrôle des middlewares : logs, idempotence, gestion d’erreurs. *(Pas de middleware d’auth ni de permissions — `21` §6.)*
 
 ### Alternative : tRPC
 
@@ -144,7 +144,7 @@ Décision validée : **MongoDB native driver + schémas TypeScript/Zod**, pour g
 | files | Photos, captures, pièces jointes. |
 | cameras | Intégration Reolink future. |
 | devices | Capteurs/contrôleurs futurs : Inkbird température/humidité, autres matériels. |
-| alerts | Règles, tâches, notifications locales. |
+| alerts | Règles d’alarme et notifications locales. *(Pas de tâches — `21` §3.)* |
 | reports | Rendements, dashboards, exports. |
 
 ## 8. Modules frontend prévus
@@ -272,10 +272,12 @@ Le passage d’étape se fait à l’observation visuelle, validé par une perso
 Un **planificateur reste nécessaire**, mais uniquement pour :
 
 - évaluer les **seuils d’alarme de durée** (avant échéance, dépassement, retard critique) ;
-- générer les **tâches** associées (nettoyage de chambre en fin de cycle, contrôles) ;
+- produire les **alertes** de fin de cycle (« emplacement occupé jusqu’au nettoyage ») ;
 - lire les **appareils connectés** quand ils arriveront (Inkbird), qui doivent **déclencher des alertes** et pas seulement historiser.
 
-Ces traitements ne modifient jamais l’état métier d’une unité : ils produisent des alertes et des tâches.
+Ces traitements ne modifient jamais l’état métier d’une unité : ils produisent **uniquement des alertes**.
+
+⚠️ **Aucune tâche n’est générée** (décision du 2026-08-08, `21` §3) : pas de module ni de collection `tasks`. Une alerte se résout par une action métier, pas par une case à cocher.
 
 ### Actions annulables
 

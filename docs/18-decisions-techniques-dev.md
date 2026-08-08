@@ -470,3 +470,36 @@ L'export `champignon-reponses-dev-sam-2026-06-17.json` compte **74 / 79** répon
 - `dev_14_03` — résumé personnel des décisions.
 
 Aucun de ces points ne bloque le démarrage, hormis `dev_06_05`.
+
+---
+
+## Mise à jour 08/08/2026 — décisions finales (répondant : Olivier)
+
+> ⚠️ **Ce document conserve les réponses développeur de juin 2026. Là où elles divergent des décisions ci-dessous, ce sont les décisions du 08/08/2026 qui priment.** Document de référence : [`21-decisions-avant-code.md`](./21-decisions-avant-code.md).
+
+### Sections de ce document devenues caduques
+
+| Section | Ce qu'elle dit | Ce qui s'applique désormais |
+| --- | --- | --- |
+| §9 — « login minimal à ajouter car auth retenue » | Écran de login dans la liste des écrans | ❌ **Pas d'écran de login** |
+| §10 — « les actions de modification restent derrière login » | Recommandation de sécurité pragmatique | ❌ **Aucune action n'est derrière un login** — il n'y en a pas. Le token QR non prédictible, lui, **reste exigé** |
+| §11 — « login / mot de passe simple », « rôle unique `admin` » | Auth MVP | ❌ **Aucune authentification, aucun utilisateur, aucun rôle.** Seule frontière : le tailnet Tailscale |
+| §11 — « toutes les actions importantes doivent être auditables » | Audit | ✅ **Maintenu**, mais **sans auteur** : les événements disent quoi et quand, jamais qui |
+| Backlog §16, ligne 3 « Auth admin simple » | Backlog MVP | ❌ retirée |
+| Backlog §16, ligne 6 « … + login » | Backlog MVP | ❌ « login » retiré |
+
+### `dev_06_05` — enfin répondue
+
+La seule réponse développeur encore structurante (« versioning / migration d'un process utilisé par des lots », marquée « à clarifier ») est tranchée :
+
+**Comparaison entre versions.** Version publiée immuable, unité **épinglée** à sa version jusqu'à fin de cycle, **pas de bascule automatique**, migration explicite et par sélection. La contradiction avec la réponse du cultivateur (« les unités basculent ») est résolue en faveur de la comparaison — qu'il avait lui aussi demandée.
+
+Les quatre autres réponses vides (`dev_13_04`, `dev_13_05`, `dev_14_01`, `dev_14_03`) restent sans objet : ce sont des exercices de synthèse, pas des décisions.
+
+### Décisions ajoutées, sans équivalent dans l'export de juin
+
+- **Aucune tâche générée** par l'application : statuts et alertes seulement. Pas de module ni de collection `tasks`.
+- **Type `Quantity { value, unit, kind }`** pour toute grandeur physique, masse canonique en grammes ; `substrateWeight` en champ de premier rang.
+- **Source et Unité/Lot restent deux objets distincts.**
+- **Idempotence (`Idempotency-Key`) et verrou optimiste (`version`)** dans les contrats API dès la Phase 1.
+- **Nimbot B21 : testée et validée.** Le repli image/PDF est abandonné.

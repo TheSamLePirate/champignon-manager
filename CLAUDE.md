@@ -43,10 +43,16 @@ Référence vivante et visuelle : ouvrir **`docs/19-atlas-process-flux.html`** (
 - Réseau / accès : **Tailscale confirmé** (URL MagicDNS `*.ts.net`, HTTPS via `tailscale serve`) — c'est ce qui rend le **scanner web QR iOS** possible (contexte sécurisé).
 - QR : **token opaque** seulement, registre central, scanner web intégré. Imprimante cible : **Nimbot B21** (driver à valider — risque).
 - Déploiement : **Docker Compose** ; dev macOS/Windows, prod **Raspberry Pi**.
-- Auth MVP : login/mot de passe simple, rôle `admin` (RBAC complet = plus tard).
-- Hors MVP : caméra Reolink, Inkbird, ventes/facturation, contrôle matériel actif, offline/PWA avancé.
+- **Aucune authentification** : pas de login, pas d'utilisateurs, pas de rôles, **pas d'auteur sur les événements**. Seule frontière d'accès = le tailnet Tailscale.
+- **Aucune tâche générée** par l'application : statuts et alertes seulement.
+- **Versions de process immuables**, unité épinglée à sa version jusqu'à fin de cycle, **pas de bascule** ; migration explicite par sélection.
+- Toute grandeur physique passe par un type **`Quantity { value, unit, kind }`** (masse canonique en grammes) ; `substrateWeight` est un champ de premier rang.
+- **Source et Unité/Lot = deux objets distincts.**
+- **Idempotence** (`Idempotency-Key`) et **verrou optimiste** (`version`) dès les premiers endpoints.
+- Imprimante **Nimbot B21 : testée et validée** (08/2026).
+- Hors MVP : caméra Reolink, Inkbird, ventes/facturation, contrôle matériel actif, offline/PWA avancé, **rôles/RBAC**, **module de tâches**.
 
-Détail et nuances : `docs/18-decisions-techniques-dev.md`.
+Détail et nuances : `docs/18-decisions-techniques-dev.md` (réponses brutes) et **`docs/21-decisions-avant-code.md`** (décisions du 08/08/2026, qui priment).
 
 ## Carte des documents (`docs/`)
 
@@ -62,6 +68,8 @@ Détail et nuances : `docs/18-decisions-techniques-dev.md`.
 | `18-decisions-techniques-dev.md` | Synthèse des décisions développeur (répondant : Sam). |
 | `19-atlas-process-flux.html` | **Atlas visuel interactif** des process (Mermaid data-driven). |
 | `20-modele-process-par-defaut.md` / `.json` | **Modèle de process pré-rempli et modifiable** livré au premier démarrage. Chaque valeur porte une `provenance` : `cultivator` (réponse réelle) ou `invented` (inventée pour éviter le champ vide — n'engage rien). |
+| `21-decisions-avant-code.md` | **Décisions finales du 08/08/2026** (répondant : Olivier). Clôt les derniers points bloquants. **Prime sur les documents antérieurs en cas de divergence.** |
+| `22-tranche-verticale-mvp.md` | **Périmètre, architecture, qualité et estimation de la tranche 1.** Ce qu'on construit et dans quel ordre. À lire avant toute proposition d'implémentation. |
 | `champignon-reponses-dev-sam-2026-06-17.json` | Export brut des réponses dev — **archive horodatée, ne pas réécrire**. |
 | `champignon-reponses-cultivateur-2026-07-30.json` | Export brut des réponses cultivateur — **archive horodatée, ne pas réécrire**. Attention : son `summary` annonce 100 %, mais 104 des 188 questions sont vides. |
 | `../claude-critics.md` | Revue critique du cadrage (P0/P1/P2, risques, re-scoping MVP). À tenir à jour. |
@@ -107,7 +115,11 @@ Trois passes : 84 réponses réelles au 1er export (l'export annonçait 100 % à
 
 **Conséquence majeure** : sans seed, l'application démarre **vide**. L'éditeur de process passe de « plus tard » à **indispensable au MVP** — la recommandation « seed data d'abord » de `claude-critics.md` ne tient plus (voir sa §10). Prévoir un **modèle de process pré-rempli et modifiable** pour éviter l'écran vide à la mise en service.
 
-**Seule contradiction encore à arbitrer** : bascule totale des unités sur la nouvelle version de process **vs** comparaison entre deux versions — les deux ont été demandés (cf. `docs/04` §15.3).
+**Contradictions arbitrées le 08/08/2026** (voir `docs/21-decisions-avant-code.md`) :
+- bascule de version **vs** comparaison → **la comparaison l'emporte, pas de bascule** ;
+- « pas de tâches automatiques » (`q16_2`) **vs** tâche de nettoyage (`q9_10_5`) → **aucune tâche, alertes seulement**.
+
+⚠️ **Deux décisions ne suivent pas les réponses du cultivateur — à lui remonter avant mise en service** : ses unités en cours ne basculeront pas lors d'une modification de process, et l'application ne saura jamais qui a fait quoi.
 
 Dans les docs, marquer ces points **« à confirmer »** plutôt que d'inventer des valeurs.
 
@@ -122,7 +134,11 @@ Dans les docs, marquer ces points **« à confirmer »** plutôt que d'inventer 
 
 ## Prochaines étapes logiques
 
-1. Faire remplir le **questionnaire cultivateur** (`16`) — chemin critique n°1.
-2. Figer le **modèle métier** (unité/stades/lignée) et le **premier process pleurote** en données.
-3. Dé-risquer (spikes) : impression Nimbot B21 (BLE) et scanner QR iOS via Tailscale HTTPS.
-4. **Seulement ensuite**, sur demande, créer le squelette de l'application.
+> **État au 08/08/2026 : plus aucun prérequis bloquant.** Questionnaire à 186/188, modèle métier figé, imprimante validée, six dernières décisions arrêtées (`docs/21`).
+
+1. ✅ ~~Faire remplir le questionnaire cultivateur~~ — 186/188, le reste est de la configuration.
+2. ✅ ~~Figer le modèle métier~~ — unité/stades/lignée arrêtés ; modèle de process par défaut dans `docs/20`.
+3. ✅ ~~Dé-risquer l'impression Nimbot B21~~ — **testée, fonctionne**.
+4. ✅ ~~Définir la tranche verticale MVP et estimer la charge~~ — **`docs/22`**, 12 lots, **62–78 jours-dev**. Exigences : éditeur de process **graphique**, 100 % de couverture + mutation, E2E + rapport d'audit, application **pilotable à 100 % par un LLM** (API + MCP + CLI).
+5. Spikes restants, non bloquants : scanner QR iOS via Tailscale HTTPS (lot 6) ; compatibilité Bun (lot 1).
+6. **Sur demande explicite**, créer le squelette de l'application — commencer par le lot 1 de `docs/22` §8.

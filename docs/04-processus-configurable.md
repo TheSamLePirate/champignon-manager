@@ -16,7 +16,7 @@ Le process de culture ne doit pas être figé dans le code. L’application doit
 | Transition | Passage autorisé entre deux étapes. |
 | Formulaire d’étape | Données à saisir pour une étape ou une transition. |
 | Règle | Condition, seuil, obligation ou alerte. |
-| Action configurable | Action proposée à l’utilisateur selon la phase, l’étape, le statut du lot et son rôle. |
+| Action configurable | Action proposée à l’utilisateur selon la phase, l’étape et le statut du lot. |
 | Observation configurable | Type d’observation attendu ou proposé : pousse visible, contamination, humidité de surface, odeur, couleur, maturité. |
 
 ## 3. Exemple de process (pleurote — première espèce de référence)
@@ -89,8 +89,9 @@ Chaque étape peut définir :
 - mesures attendues ;
 - champs obligatoires ;
 - transitions autorisées ;
-- conditions de sortie ;
-- rôle autorisé à valider.
+- conditions de sortie.
+
+*(Le champ « rôle autorisé à valider » est retiré : plus de rôles ni d’utilisateurs au MVP — voir `21` §6.)*
 
 ## 6. Types de champs configurables
 
@@ -104,8 +105,8 @@ Chaque étape peut définir :
 | Choix multiple | symptômes observés. |
 | Date/heure | date de réception, date récolte. |
 | Photo | photo de pousse ou anomalie. |
-| Référence | chambre, emplacement, utilisateur. |
-| Quantité avec unité | 12,4 kg, 85 %, 450 ppm. |
+| Référence | chambre, emplacement, unité. |
+| Quantité avec unité | 12,4 kg, 85 %, 450 ppm — modèle typé `{ value, unit, kind }`, cf. `21` §4. |
 
 ## 7. Actions configurables
 
@@ -115,7 +116,6 @@ Les actions ne doivent pas être codées en dur dans l’interface. Le backend d
 - la phase ;
 - l’étape courante ;
 - le statut du lot ;
-- le rôle de l’utilisateur ;
 - les règles métier.
 
 Actions possibles selon la phase ou l’étape :
@@ -210,11 +210,9 @@ Principe recommandé :
 - un lot référence la version utilisée à sa création ;
 - les modifications créent une nouvelle version ;
 - une version publiée doit être considérée comme immuable ;
-- un administrateur peut migrer un lot vers une version plus récente si nécessaire.
+- une unité peut être migrée vers une version plus récente si nécessaire.
 
-Point développeur à clarifier : la stratégie exacte de migration d’un process déjà utilisé par des lots reste ouverte.
-
-Décision provisoire : migration manuelle assistée uniquement, jamais automatique sans validation.
+✅ **Tranché le 2026-08-08** (voir [`21-decisions-avant-code.md`](./21-decisions-avant-code.md) §2) : migration **manuelle, explicite et par sélection uniquement**, jamais globale ni automatique. Une unité reste épinglée à sa version jusqu’à la fin de son cycle. Voir §15.3 ci-dessous.
 
 ## 12. Process expérimental
 
@@ -298,15 +296,24 @@ Au dépassement : **prévenir, créer une tâche, marquer l’unité en retard �
 
 ### 15.3 Versions de process
 
-- Modifier un process fait **basculer les unités déjà lancées sur la nouvelle version**, après une **confirmation explicite** de l’utilisateur.
-- Le cultivateur veut par ailleurs **comparer les résultats entre deux versions** d’un process.
+Deux réponses du cultivateur étaient en tension :
 
-⚠️ **Ces deux réponses sont en tension.** Si toutes les unités basculent, il ne reste plus de population sur l’ancienne version à comparer. Deux pistes, à arbitrer avant implémentation :
+- modifier un process ferait **basculer les unités déjà lancées sur la nouvelle version**, après confirmation explicite ;
+- le cultivateur veut par ailleurs **comparer les résultats entre deux versions** d’un process.
 
-1. bascule proposée par défaut, mais possibilité d’**exclure une sélection** qui reste sur l’ancienne version (permet un vrai A/B) ;
-2. bascule systématique, et la comparaison ne porte que sur l’**historique déjà produit** (les unités terminées sous l’ancienne version).
+Si toutes les unités basculent, il ne reste aucune population sur l’ancienne version à comparer.
 
-Dans les deux cas, la **version de process appliquée doit être enregistrée sur chaque unité** et figée dans les événements — sinon aucune comparaison n’est possible.
+### ✅ Arbitrage du 2026-08-08 — la comparaison l’emporte
+
+Décision (voir [`21-decisions-avant-code.md`](./21-decisions-avant-code.md) §2) : **pas de bascule automatique.**
+
+- Une **version publiée est immuable** ; toute modification crée une nouvelle version.
+- Une unité est **épinglée à la version en vigueur à sa création** et y reste **jusqu’à la fin de son cycle**. Modifier un process ne déplace **jamais** une unité en cours.
+- La **version appliquée est enregistrée sur l’unité** et figée dans ses événements — condition technique de toute comparaison.
+- Une **migration reste possible** mais **explicite, manuelle, par sélection**, et produit un événement traçable.
+- Les statistiques peuvent segmenter par version, y compris sur des unités encore vivantes.
+
+⚠️ À signaler au cultivateur : sa demande de bascule n’est pas suivie. Ses unités en cours continueront sur l’ancienne version ; il migrera une sélection s’il le souhaite. C’est le prix de la comparaison qu’il a également demandée.
 
 ### 15.4 Droits
 

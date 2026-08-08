@@ -213,23 +213,26 @@ Cette découpe respecte l'intention « outil de production, pas démo » **tout 
 
 ## 8. Tableau récapitulatif des risques
 
+> ⚠️ **Tableau mis à jour le 2026-08-08** après les décisions de [`docs/21-decisions-avant-code.md`](./docs/21-decisions-avant-code.md). Voir §11.
+
 | ID | Sévérité | Sujet | Impact si ignoré |
 |----|----------|-------|------------------|
-| P0-1 | 🟢 Levé | Questionnaire cultivateur — 139/188 ; structure close. Les valeurs manquantes deviennent de la **configuration runtime** (31/07/2026) | — |
-| P0-2 | 🔴 Bloquant **et désormais incontournable** | Éditeur de process complet au MVP — plus de seed possible, l'app démarre vide | Sans éditeur, l'application est inutilisable au premier lancement |
+| P0-1 | 🟢 Levé | Questionnaire cultivateur — 186/188 ; structure close. Les valeurs manquantes sont de la **configuration runtime** (31/07/2026) | — |
+| P0-2 | 🟠 Majeur *(déclassé)* | Éditeur de process obligatoire au MVP — pas de seed, l'app démarre vide. Allégé : 6 étapes, pas d'actions par étape, pas de transition temporelle | Sans éditeur, l'application est inutilisable au premier lancement |
 | P0-3 | 🟢 Levé | Unité multi-stade + lignée clone/transfert/division — **figé le 30/07/2026** | Modèle arrêté (voir §9) |
 | P0-4 | 🟢 Levé | Scan iOS / HTTPS — **Tailscale confirmé** (`serve` + cert TLS) | Reste un spike de validation iOS + ACL tailnet |
-| P0-5 | 🔴 Bloquant | Driver Nimbot B21 inconnu | Livrable « impression stable » irréalisable |
-| P1-1 | 🟠 Majeur | « MVP » sur-dimensionné, sans estimation | Dérive planning, pas de v1 livrable |
-| P1-2 | 🟠 Majeur | Contradiction sécurité | Choix utilisateur écrasé en silence |
-| P1-3 | 🟢 Levé | « suppression » vs audit immuable — le cultivateur demande « annuler ou corriger » : événement de compensation | — |
-| P1-4 | 🟠 Majeur | RBAC spéculatif (1 seul rôle réel) | Complexité inutile au MVP |
-| P1-5 | 🟠 Majeur | Module auth oublié | Trou dans le périmètre |
+| P0-5 | 🟢 **Levé (08/08)** | Nimbot B21 **testée, fonctionne comme attendu** | — |
+| P1-1 | 🟠 **Majeur — seul risque structurant restant** | « MVP » sur-dimensionné, **toujours aucune estimation de charge** | Dérive planning, pas de v1 livrable |
+| P1-2 | 🟢 **Levé (08/08)** | Sécurité : décision explicite « aucune », plus de réinterprétation silencieuse | Limite assumée : pas d'imputabilité nominative |
+| P1-3 | 🟢 Levé | « suppression » vs audit immuable — événement de compensation | — |
+| P1-4 | 🟢 **Sans objet (08/08)** | Plus de rôles ni d'utilisateurs du tout | — |
+| P1-5 | 🟢 **Sans objet (08/08)** | Plus de module auth à oublier | — |
 | P1-6 | 🟠 Majeur | Stats T°/humidité impossibles sans Inkbird | Dashboards vides/trompeurs |
-| P1-7 | 🔴 Aggravé | Migration de process : réponse cultivateur **contradictoire** (bascule totale + comparaison de versions) | Comparaison A/B impossible, ou lots en cours déplacés sans témoin |
-| P2-1 | 🟡 Moyen | Sémantique poids/quantité | Rendements faux |
+| P1-7 | 🟢 **Levé (08/08)** | Versioning : **comparaison retenue**, unité épinglée, pas de bascule | — |
+| P2-1 | 🟢 **Levé (08/08)** | Type `Quantity { value, unit, kind }` + `substrateWeight` de premier rang | — |
+| P2-2 | 🟢 **Levé (08/08)** | Source et Lot restent **deux objets distincts** | — |
 | P2-3 | 🟡 Moyen | « Reconstructible » non garanti | Promesse d'audit creuse |
-| P2-4 | 🟡 Moyen | Pas d'idempotence/verrou optimiste | Double-action sur Wi-Fi instable |
+| P2-4 | 🟡 Moyen — **spécifié** | Idempotence + verrou optimiste actés dans `08` §2.1, restent à implémenter dès la Phase 1 | Double-action sur Wi-Fi instable |
 | P2-7 | 🟡 Moyen | Online-only en environnement Wi-Fi douteux | Échec au moment de la saisie |
 | P2-8 | 🟡 Moyen | Ressources/build Raspberry Pi | Instabilité prod, corruption disque |
 
@@ -366,3 +369,49 @@ inoculation → incubation (2-3 sem., 24 °C, obscurité) → fructification (90
 **Effet sur P0-2** : le modèle par défaut à livrer passe de 13 à 6 étapes. L'éditeur reste nécessaire, mais ce qu'il doit produire au premier lancement est bien plus modeste que prévu. Combiné à l'absence de configuration d'actions par étape (§9.6) et à l'absence de transition temporelle, **P0-2 devient tenable** — pour la première fois depuis le début de cette revue.
 
 **Autre simplification** : `q18_5` répond **non** à la fusion d'unités. La traçabilité n'a donc pas à gérer de convergence de lignées, seulement des divergences (clone, transfert, division). Cela retire une des complexités les plus coûteuses d'un modèle généalogique. D5 du tableau des dérives peut être clos.
+
+---
+
+## 11. Mise à jour 2026-08-08 — les six dernières décisions
+
+Source : [`docs/21-decisions-avant-code.md`](./docs/21-decisions-avant-code.md). Répondant : Olivier.
+
+### 11.1 Ce que cette revue avait bien vu
+
+Trois recommandations sont suivies :
+
+- **P1-7 versioning** : la piste « versions publiées immuables, lot épinglé, migration manuelle assistée » (§3, P1-7) est retenue telle quelle. La contradiction bascule/comparaison est tranchée en faveur de la comparaison.
+- **P2-1 quantités** : le modèle typé `{ value, unit, kind }` recommandé en §4 est adopté, avec le poids de substrat comme champ de premier rang — exactement ce que réclamait le calcul d'efficacité biologique.
+- **P2-4 idempotence** : `version` optimiste + `Idempotency-Key` entrent dans les contrats API (`08` §2.1) avant l'écriture du code, pas après.
+
+### 11.2 Ce que cette revue avait mal calibré
+
+**P0-5 Nimbot B21 était surestimé.** Je l'ai classé « point le plus risqué du projet », en m'appuyant sur l'absence de SDK officiel Node/Bun et sur la fragilité du BLE headless. Le test terrain a réussi du premier coup. Le raisonnement — pas de SDK, protocole rétro-conçu, stack BLE fragile — n'était pas faux en soi, mais j'ai transformé une incertitude en risque bloquant sans avoir de quoi la quantifier. Le repli image/PDF que je réclamais était inutile.
+
+**P2-2 Source vs Lot** : j'avais recommandé la fusion au MVP (« source ≈ lot pour un ballot reçu inoculé »). La séparation est maintenue. C'est défendable : la source décrit ce qui *entre dans la ferme* (fournisseur, lot fournisseur, date de réception), l'unité décrit ce qui *vit dans le process*. Les confondre aurait forcé à mélanger deux cycles de vie très différents.
+
+### 11.3 P1-2 sécurité : tranché contre ma recommandation
+
+J'avais insisté (§3, P1-2) pour acter « auth + hash + sessions + audit », en arguant que Tailscale = accès distant, donc fin de l'hypothèse « réseau local de confiance ».
+
+**La décision est : aucune sécurité applicative.** Pas d'auth, pas d'utilisateurs, pas de rôles, pas d'auteur sur les événements. C'est un choix explicite, pris en connaissance de la conséquence — ce qui lève le vrai grief de P1-2, qui n'était pas « il faut de la sécurité » mais « la réponse de l'utilisateur a été silencieusement écrasée par `18` ». Elle ne l'est plus.
+
+Ce que cela coûte, à porter en clair :
+
+- **tout appareil du tailnet a un accès total en lecture et en écriture**, y compris à la configuration des process ;
+- **la traçabilité répond à « quoi et quand », jamais à « qui »**. Le cultivateur a pourtant répondu que le passage d'étape est « validé par une personne » : l'humain déclenche bien l'action, mais son nom n'apparaît nulle part ;
+- **si une certification (bio, contrôle sanitaire) exige un jour l'imputabilité nominative**, il faudra réintroduire une identité. Le champ `recordedBy` reste réservé et non peuplé dans `events` pour que ce soit une migration, pas une refonte.
+
+Ce n'est pas une objection : c'est le périmètre de la promesse de traçabilité, qu'il faut énoncer avant de la vendre comme telle.
+
+### 11.4 Effet net sur le périmètre
+
+Le MVP maigrit réellement pour la première fois : plus de module `auth`, plus de `users`, plus de rôles ni de matrice de permissions, plus de collection ni de module `tasks`, plus de mécanique de bascule de version. Ajouté au process ramené à 6 étapes (§10.6), à l'absence de configuration d'actions par étape (§9.6) et à l'absence de fusion d'unités, **P0-2 est déclassé de bloquant à majeur**.
+
+### 11.5 Le seul risque structurant qui reste : P1-1
+
+Tout le reste est levé ou spécifié. Il demeure que **ce qui est appelé « MVP » n'a jamais été estimé** — ni en charge, ni en durée — et qu'il contient encore un moteur de process configurable avec étapes sautables, refaisables et réversibles, un éditeur, la généalogie multi-stade, le QR, l'impression, le scan et les rapports.
+
+La recommandation du §7 reste valable **à une correction près** (déjà notée en §10.2) : la tranche verticale doit inclure de quoi **créer un process**, puisqu'il n'y a pas de seed. Un formulaire de création de phases/étapes suffit — l'éditeur graphique peut attendre.
+
+**C'est le seul travail de cadrage encore utile avant de coder.**

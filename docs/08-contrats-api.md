@@ -11,11 +11,24 @@ Ce document ne définit pas encore du code. Il fixe les responsabilités fonctio
 - API locale HTTP/JSON.
 - Validation stricte des entrées.
 - Réponses typées et documentées.
-- Authentification par session ou token local.
-- Permissions vérifiées côté backend.
+- **Aucune authentification** — décision du 2026-08-08 (`21` §6). L’accès est borné par le tailnet Tailscale, pas par l’application.
 - Erreurs normalisées.
 - Pagination sur les listes.
 - Les actions métier importantes créent des événements.
+- **Verrou optimiste** : tout document d’état courant porte un champ `version` ; une écriture concurrente renvoie `CONFLICT`.
+- **Idempotence** : les POST d’action acceptent un en-tête `Idempotency-Key`, **obligatoire sur les actions de masse** (voir §2.1).
+
+### 2.1 Idempotence et concurrence
+
+Contexte : Wi-Fi de chambre instable + action de masse sur plusieurs dizaines d’unités + retry automatique = **double avancement** silencieux. C’est le scénario de perte de données le plus probable de l’application (P2-4).
+
+| Mécanisme | Portée | Comportement |
+| --- | --- | --- |
+| `version` (verrou optimiste) | tout document d’état courant (unité, chambre, produit…) | La requête envoie la `version` lue ; si elle a changé, réponse `CONFLICT` sans écriture. |
+| `Idempotency-Key` | tous les `POST` d’action, **impératif en masse** | Clé fournie par le client, conservée avec le résultat. Un rejeu de la même clé renvoie **la réponse d’origine**, sans réexécuter l’action ni créer d’événement. |
+| `correlationId` | événements | Relie les événements produits par une même action de masse (déjà prévu). |
+
+Rétention recommandée des clés d’idempotence : au moins la durée d’une session terrain (24 h suffisent).
 
 ## 3. Format de réponse recommandé
 
@@ -43,14 +56,13 @@ Pour les erreurs :
 
 Ce format est indicatif pour le cahier des charges ; il sera traduit en types lors du codage.
 
-## 4. Authentification
+## 4. Authentification — ❌ supprimée du MVP
 
-| Méthode | Rôle |
-| --- | --- |
-| `POST /api/auth/login` | Ouvrir une session. |
-| `POST /api/auth/logout` | Fermer une session. |
-| `GET /api/auth/me` | Récupérer l’utilisateur courant. |
-| `POST /api/auth/switch-operator` | Option future : changer rapidement d’opérateur par PIN. |
+Décision du 2026-08-08 (`21` §6) : **aucun endpoint d’authentification.**
+
+Les routes `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` et `POST /api/auth/switch-operator` qui figuraient ici sont retirées, ainsi que toute notion d’utilisateur courant. Il n’y a ni session, ni token applicatif, ni middleware de permissions.
+
+Si une identité est réintroduite plus tard, ces routes redeviendront le point de départ — voir `02` §6.2.
 
 ## 5. Configuration
 
@@ -211,7 +223,7 @@ Les endpoints appareil resteront inactifs tant que le mode d’intégration Inkb
 
 | Méthode | Rôle |
 | --- | --- |
-| `GET /api/dashboard/production` | Vue lots actifs, alertes, tâches. |
+| `GET /api/dashboard/production` | Vue lots actifs et **alertes actives**. *(Pas de tâches : aucune tâche n’est générée — `21` §3.)* |
 | `GET /api/reports/yield` | Rendements par période, chambre, espèce. |
 | `GET /api/reports/losses` | Pertes et contaminations. |
 | `GET /api/reports/traceability` | Exports de traçabilité. |
@@ -301,7 +313,8 @@ IDs exposés :
 
 - **Validation obligatoire avant action en masse** : les endpoints de masse doivent fonctionner en deux temps — un appel de *prévisualisation* renvoyant le nombre et la liste des unités touchées, puis l’exécution avec un jeton de confirmation. Ne jamais exécuter une action de masse en un seul appel non confirmé.
 - **Pas d’endpoint d’avancement automatique.** Le passage d’étape est toujours déclenché par une personne ; aucune API ne doit faire avancer une unité sur la seule base d’une échéance.
-- **Bascule de version de process** : l’endpoint de publication doit renvoyer le nombre d’unités en cours impactées **avant** d’appliquer, pour permettre la confirmation explicite demandée par le cultivateur.
+- **Versions de process : pas de bascule** (décision du 2026-08-08, `04` §15.3). Publier une version **n’affecte aucune unité en cours** — l’endpoint de publication n’a donc rien à confirmer. La migration est un endpoint distinct, explicite et par sélection : `POST /api/process-versions/:id/migrate-units` avec la liste des unités, produisant un événement de migration par unité.
+- **Toute unité porte sa `processVersionId`** dès sa création, figée dans ses événements — c’est ce qui rend la comparaison entre versions possible.
 - **`parentId` nullable** dans les payloads de création : une unité peut être créée à n’importe quel stade sans ascendant.
 
 ### 20.3 Récoltes et produits

@@ -1,2 +1,32 @@
 # Pi / τ-mux local planning artifacts
 .pi/plans/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Dépendances
+node_modules/
+.bun/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Tests / couverture
+coverage/
+.nyc_output/
+reports/
+playwright-report/
+test-results/
+.stryker-tmp/
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# Données locales
+data/
+*.log

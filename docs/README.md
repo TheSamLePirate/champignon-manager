@@ -75,12 +75,17 @@ Permettre à un utilisateur sur site de suivre toute la chaîne de culture :
 - **Aucune transition temporelle** : la durée cible sert uniquement aux alarmes, jamais à faire avancer une unité.
 - **Aucune liste d’actions ni d’observations par étape** : la liste est globale, filtrée par pertinence de stade.
 - **Aucune suppression** : une action annulée produit un événement de compensation.
-- **Aucun blocage** : une alarme prévient, crée une tâche, marque un retard — elle ne bloque jamais.
+- **Aucun blocage** : une alarme prévient, crée une **alerte**, marque un retard — elle ne bloque jamais.
 - **Pas de parent obligatoire** : une unité peut naître à n’importe quel stade, sans ascendant.
+- **Aucune tâche générée**, **aucune authentification**, **aucune bascule de version** — voir [21](./21-decisions-avant-code.md).
 
 ## Prochaine étape après ces documents
 
-1. Trancher la contradiction sur le versioning de process (bascule totale *vs* comparaison entre versions) — voir [04 §15.3](./04-processus-configurable.md). C’est le dernier point de structure ouvert.
-2. Dé-risquer par deux spikes : impression Nimbot B21 (BLE) et scanner QR iOS via Tailscale HTTPS.
-3. Créer le squelette de l’application : authentification locale, unités, QR, événements, consultation mobile — **plus de quoi créer un process depuis l’interface**, puisque rien n’est livré en seed.
-4. Prévoir le **modèle de process pré-rempli et modifiable** et un **jeu de démonstration** pour les tests E2E.
+> **Au 08/08/2026, plus aucun prérequis ne bloque le développement.** Les six dernières décisions sont dans [21-decisions-avant-code.md](./21-decisions-avant-code.md).
+
+1. ✅ ~~Trancher le versioning de process~~ — **la comparaison l’emporte, pas de bascule** ([04 §15.3](./04-processus-configurable.md)).
+2. ✅ ~~Dé-risquer l’impression Nimbot B21~~ — **testée, fonctionne comme attendu**.
+3. ✅ ~~Définir la tranche verticale MVP et estimer la charge~~ — [22-tranche-verticale-mvp.md](./22-tranche-verticale-mvp.md) : **12 lots, 62–78 jours-dev**.
+4. Spikes restants, non bloquants : scanner QR iOS via Tailscale HTTPS (lot 6) ; compatibilité Bun (lot 1).
+5. **Construire la tranche 1** dans l’ordre du [22 §8](./22-tranche-verticale-mvp.md) : socle → domaine → persistance → API → QR/impression → web → suivi → récolte/produit → **éditeur graphique** → MCP/CLI → E2E/audit → mise en service.
+6. Le **modèle de process pré-rempli** ([20](./20-modele-process-par-defaut.md)) est proposé au premier lancement — c’est l’anti-écran-vide.
