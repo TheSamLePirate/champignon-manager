@@ -13,7 +13,7 @@
 | 4 | API Hono, OpenAPI, idempotence, erreurs | 5–6 j | ✅ **terminé** |
 | 5 | QR, publicCode, printJobs, Nimbot B21 | 3–4 j | ✅ **terminé** |
 | 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⚠️ **terminé, capture caméra reportée** |
-| 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ⬜ |
+| 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ✅ **terminé** |
 | 8 | Récolte → produit → traçabilité | 4–5 j | ⬜ |
 | 9 | Éditeur de process graphique | 11–15 j | ⬜ |
 | 10 | MCP + CLI + parité de surface | 4–5 j | ⬜ |
@@ -26,10 +26,10 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **644** |
-| Scénarios end-to-end | — | **53** (API, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **730** |
+| Scénarios end-to-end | — | **65** (API, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
-| Score de mutation global | ≥ 90 % | **91,43 %** |
+| Score de mutation global | ≥ 90 % | **91,25 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
 | Score de mutation `contracts` | ≥ 90 % | ⚠️ **84,97 %** (voir D-4) |
 | Avertissements lint | 0 | **0** |
@@ -314,12 +314,24 @@ remonte que des entrées déjà interprétées (`token` ou `public-code`), jamai
 « inconnu ». L'appelant n'a donc plus de branche d'erreur à traiter — et il n'y
 a plus de code mort à couvrir.
 
+### D-16 — La photo obligatoire est une règle de domaine, pas d'interface
+
+`q12_4` exige une photo en cas de contamination. Il aurait été plus simple de
+l'imposer dans le formulaire — c'est là qu'un utilisateur la voit.
+
+Elle est placée dans `packages/domain` : ainsi elle vaut pour **tous** les
+appelants, y compris un agent qui passerait par l'API sans jamais ouvrir
+l'interface. Une règle métier appliquée seulement dans l'UI n'est pas une règle,
+c'est une suggestion.
+
 ---
 
 ## Prochaine étape
 
-**Lot 7 — Suivi d'unité.** Fiche complète, timeline événementielle, avancement
-d'étape depuis l'interface, observations et mesures avec photo.
+**Lot 8 — Récolte → produit → traçabilité.** Enregistrement des récoltes par
+flush (poids en grammes, qualité, pertes avec cause), création de produits
+finaux avec proportions exactes, et remontée depuis un produit jusqu'aux unités
+d'origine.
 
 *(Le lot 6 est terminé : voir ci-dessous.)*
 
