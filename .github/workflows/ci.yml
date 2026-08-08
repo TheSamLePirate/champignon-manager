@@ -28,6 +28,23 @@ jobs:
       - name: Installer les dépendances
         run: bun install --frozen-lockfile
 
+      # Les tests d'intégration tournent contre un MongoDB réel, jamais un mock
+      # (docs/22 §6.1) : mocker la base ferait passer des tests qui échouent en
+      # production, précisément sur les transactions et le verrou optimiste.
+      - name: Démarrer MongoDB en replica set
+        run: bun run db:up
+
+      - name: Attendre que le replica set soit prêt
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec champi-mongo mongosh --quiet --port 27018 \
+                 --eval 'rs.status().ok' >/dev/null 2>&1; then
+              echo "Replica set prêt."; exit 0
+            fi
+            sleep 2
+          done
+          echo "Le replica set n'est pas devenu disponible."; exit 1
+
       - name: Format
         run: bun run format:check
 
@@ -48,6 +65,10 @@ jobs:
           path: coverage/
           retention-days: 14
 
+      - name: Arrêter MongoDB
+        if: always()
+        run: bun run db:down
+
   mutation:
     name: Score de mutation
     runs-on: ubuntu-latest
@@ -61,6 +82,23 @@ jobs:
       - name: Installer les dépendances
         run: bun install --frozen-lockfile
 
+      # Les tests d'intégration tournent contre un MongoDB réel, jamais un mock
+      # (docs/22 §6.1) : mocker la base ferait passer des tests qui échouent en
+      # production, précisément sur les transactions et le verrou optimiste.
+      - name: Démarrer MongoDB en replica set
+        run: bun run db:up
+
+      - name: Attendre que le replica set soit prêt
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec champi-mongo mongosh --quiet --port 27018 \
+                 --eval 'rs.status().ok' >/dev/null 2>&1; then
+              echo "Replica set prêt."; exit 0
+            fi
+            sleep 2
+          done
+          echo "Le replica set n'est pas devenu disponible."; exit 1
+
       - name: Tests de mutation (rupture sous 90 %)
         run: bunx stryker run
 
@@ -71,3 +109,7 @@ jobs:
           name: mutation
           path: reports/mutation/
           retention-days: 14
+
+      - name: Arrêter MongoDB
+        if: always()
+        run: bun run db:down
