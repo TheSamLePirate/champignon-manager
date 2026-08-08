@@ -17,7 +17,7 @@
 | 8 | Récolte → produit → traçabilité | 4–5 j | ⬜ |
 | 9 | Éditeur de process graphique | 11–15 j | ⬜ |
 | 10 | MCP + CLI + parité de surface | 4–5 j | ⬜ |
-| 11 | E2E, rapport d'audit, mutation, perfs Pi | 7–9 j | ⬜ |
+| 11 | E2E, rapport d'audit, mutation, perfs Pi | 7–9 j | 🟡 **E2E faits, rapport et perfs Pi à venir** |
 | 12 | Intégration, déploiement Pi, mise en service | 4–5 j | ⬜ |
 
 Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec déviation
@@ -26,7 +26,8 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests | — | **583** |
+| Tests unitaires et d'intégration | — | **644** |
+| Scénarios end-to-end | — | **53** (API, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **91,43 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
@@ -227,6 +228,59 @@ déclenchées, pas seulement mortes :
 **À retenir** : viser 100 % ne sert pas qu'à « couvrir ». Ici, la contrainte a
 servi de détecteur de code défensif faux, qu'un seuil à 95 % aurait laissé
 passer sans bruit.
+
+### D-13 — ⚠️ Le serveur tourne sous Node, pas sous Bun (P2-10 confirmé)
+
+**Constat** : `bun run` sur le serveur échoue au chargement du driver MongoDB —
+`bson` appelle `node:v8 isBuildingSnapshot`, non implémenté dans Bun 1.3.
+L'erreur ne survient qu'au **runtime** : les tests passaient, ce qui a masqué le
+problème jusqu'au premier démarrage réel.
+
+**C'est P2-10 qui se matérialise** (« maturité de l'écosystème Bun », driver
+MongoDB explicitement cité), après une première alerte sur Stryker (D-3).
+
+**Décision** : le serveur est empaqueté par Bun (`bun build --target=node`) et
+**exécuté par Node**. C'est exactement la mitigation prévue par `docs/22` §9.3
+(« isoler le service dans un process Node si Bun ne convient pas »). Bun reste
+l'outil de workspaces, de build et de tests.
+
+**À surveiller** : le même piège guette l'intégration BLE de l'imprimante. Le
+transport étant déjà derrière une interface injectée, le coût sera faible.
+
+### D-14 — Un bug de traçabilité trouvé par les E2E
+
+L'événement `unit.step_advanced` ne portait **pas le stade atteint**. Or changer
+d'étape change le stade (`incubation` → `fructification` fait passer de
+`substrate` à `fruiting`).
+
+Conséquence : une unité passée en fructification restait « substrate » au rejeu.
+**Le journal était lacunaire, donc l'état n'était pas reconstructible** — ce qui
+vide de sens la promesse de traçabilité, celle-là même que P2-3 réclamait de
+garantir.
+
+**Détecté par le test d'audit end-to-end**, contre une vraie base. Ni les tests
+unitaires ni les tests d'intégration ne l'avaient vu : ils utilisaient tous des
+avancements au sein d'un même stade.
+
+**Corrigé** par un champ `toStage` obligatoire sur l'événement, plus les deux
+tests unitaires qui manquaient. **À retenir** : un test qui ne fait varier qu'une
+dimension ne prouve rien sur les autres — ici, tous les avancements testés
+restaient dans le même stade.
+
+### D-15 — Les routes de création n'existaient pas
+
+En écrivant les E2E, constat : **la tranche verticale n'était pas traversable**.
+Aucune route ne permettait de créer un process ni une unité. Les lots 4 et 5
+avaient livré la lecture, l'avancement, le QR et l'impression — mais rien pour
+amorcer quoi que ce soit.
+
+Le trou n'était visible d'aucun test unitaire, chacun créant ses données
+directement par le dépôt. **C'est précisément ce que les E2E servent à
+attraper** : la différence entre « chaque pièce fonctionne » et « le parcours
+existe ».
+
+Comblé : dépôt de process, routes de création/publication/brouillon/édition de
+graphe, création d'unité, et assemblage du serveur.
 
 ### D-11 — ⚠️ Capture caméra reportée avec le spike iOS
 
