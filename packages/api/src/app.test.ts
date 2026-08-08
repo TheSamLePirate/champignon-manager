@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { CultureUnit, DomainEvent, ProcessGraph } from '@champi/contracts';
 import {
   connect,
+  HarvestRepository,
   ProcessRepository,
   QrRepository,
   UnitRepository,
@@ -26,6 +27,7 @@ let connection: MongoConnection;
 let repository: UnitRepository;
 let qr: QrRepository;
 let processes: ProcessRepository;
+let harvests: HarvestRepository;
 let transport: InMemoryTransport;
 let app: Hono;
 let idCounter = 0;
@@ -126,16 +128,19 @@ beforeAll(async () => {
   repository = new UnitRepository(connection);
   qr = new QrRepository(connection);
   processes = new ProcessRepository(connection);
+  harvests = new HarvestRepository(connection);
   transport = new InMemoryTransport();
   await repository.ensureIndexes();
   await qr.ensureIndexes();
   await processes.ensureIndexes();
+  await harvests.ensureIndexes();
   await ensureApiIndexes(connection);
   app = createApp({
     connection,
     units: repository,
     qr,
     processes,
+    harvests,
     printQueue: new PrintQueue(transport),
     now: () => NOW,
     newId: () => `evt-${String(++idCounter)}`,
@@ -158,6 +163,7 @@ beforeEach(async () => {
     units: repository,
     qr,
     processes,
+    harvests,
     printQueue: new PrintQueue(transport),
     now: () => NOW,
     newId: () => `evt-${String(++idCounter)}`,
@@ -175,6 +181,8 @@ beforeEach(async () => {
     .replaceOne({ _id: 'publicCode:SUB:2026' as never }, { sequence: 5000 }, { upsert: true });
   await connection.db.collection('processTemplates').deleteMany({});
   await connection.db.collection('processVersions').deleteMany({});
+  await connection.db.collection('harvests').deleteMany({});
+  await connection.db.collection('productBatches').deleteMany({});
   await repository.create(makeUnit(), birthEvent());
 });
 
@@ -861,6 +869,7 @@ describe('dépendances défaillantes', () => {
       units: repository,
       qr,
       processes,
+      harvests,
       printQueue: new PrintQueue(transport),
       now: () => NOW,
       newId: () => `evt-${String(++idCounter)}`,
@@ -1288,6 +1297,7 @@ describe('propagation des échecs de la couche de persistance', () => {
       units: repository,
       qr,
       processes,
+      harvests,
       printQueue: new PrintQueue(transport),
       now: () => NOW,
       newId: () => `evt-${String(++idCounter)}`,
@@ -1400,6 +1410,118 @@ describe('propagation des échecs de la couche de persistance', () => {
     const body = (await response.json()) as { error: { message: string } };
     expect(response.status).toBe(400);
     expect(body.error.message).toContain('Séquence épuisée');
+  });
+
+  it('remonte un échec d’attribution de code de récolte', async () => {
+    const broken = appWithBroken({
+      qr: {
+        allocatePublicCode: () =>
+          Promise.resolve({
+            ok: false,
+            error: { code: 'VALIDATION_FAILED', message: 'Séquence épuisée.' },
+          }),
+      },
+    });
+    const response = await postTo(broken, '/api/units/SUB-2026-0001/harvests', {
+      flushNumber: 1,
+      weight: { value: 800, unit: 'g', kind: 'harvest' },
+      quality: 'A',
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('remonte un échec d’attribution de code produit', async () => {
+    // On enregistre d'abord une récolte avec l'application saine.
+    const harvestResponse = await post('/api/units/SUB-2026-0001/harvests', {
+      flushNumber: 1,
+      weight: { value: 800, unit: 'g', kind: 'harvest' },
+      quality: 'A',
+    });
+    const harvestCode = (
+      (await harvestResponse.json()) as { data: { harvest: { publicCode: string } } }
+    ).data.harvest.publicCode;
+
+    const broken = appWithBroken({
+      qr: {
+        allocatePublicCode: () =>
+          Promise.resolve({
+            ok: false,
+            error: { code: 'VALIDATION_FAILED', message: 'Séquence épuisée.' },
+          }),
+      },
+    });
+    const response = await postTo(broken, '/api/products', {
+      name: 'Barquette',
+      quantity: { value: 1, unit: 'tray', kind: 'product' },
+      origins: [
+        { harvestId: harvestCode, weight: { value: 500, unit: 'g', kind: 'harvest' }, share: 1 },
+      ],
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('remonte un échec d’enregistrement de produit', async () => {
+    const harvestResponse = await post('/api/units/SUB-2026-0001/harvests', {
+      flushNumber: 1,
+      weight: { value: 800, unit: 'g', kind: 'harvest' },
+      quality: 'A',
+    });
+    const harvestCode = (
+      (await harvestResponse.json()) as { data: { harvest: { publicCode: string } } }
+    ).data.harvest.publicCode;
+
+    const broken = appWithBroken({
+      harvests: {
+        findHarvestByIdOrPublicCode: (reference: string) =>
+          harvests.findHarvestByIdOrPublicCode(reference),
+        createProduct: () => Promise.resolve(boom),
+      },
+    });
+    const response = await postTo(broken, '/api/products', {
+      name: 'Barquette',
+      quantity: { value: 1, unit: 'tray', kind: 'product' },
+      origins: [
+        { harvestId: harvestCode, weight: { value: 500, unit: 'g', kind: 'harvest' }, share: 1 },
+      ],
+    });
+    expect(response.status).toBe(409);
+  });
+
+  /**
+   * Deux récoltes aux unités incompatibles rendent le cumul impossible : la
+   * trace descendante doit le dire plutôt que de rendre un total faux.
+   */
+  it('remonte un échec de cumul dans la trace descendante', async () => {
+    const broken = appWithBroken({
+      harvests: {
+        harvestsForUnit: () =>
+          Promise.resolve([
+            {
+              id: 'h-1',
+              publicCode: 'REC-2026-0001',
+              unitId: 'u-1',
+              flushNumber: 1,
+              weight: { value: 800, unit: 'g', kind: 'harvest' },
+              quality: 'A',
+              losses: [],
+              harvestedAt: NOW,
+            },
+            {
+              id: 'h-2',
+              publicCode: 'REC-2026-0002',
+              unitId: 'u-1',
+              flushNumber: 2,
+              weight: { value: 2, unit: 'piece', kind: 'harvest' },
+              quality: 'A',
+              losses: [],
+              harvestedAt: NOW,
+            },
+          ]),
+        productsFromUnit: () => Promise.resolve([]),
+      },
+    });
+    const response = await broken.request('/api/units/SUB-2026-0001/trace');
+    expect(response.status).toBe(422);
   });
 
   it('remonte un échec de création d’unité', async () => {
@@ -1679,6 +1801,7 @@ describe('course entre deux écritures', () => {
       units: racing,
       qr,
       processes,
+      harvests,
       printQueue: new PrintQueue(transport),
       now: () => NOW,
       newId: () => `evt-${String(++idCounter)}`,
@@ -1715,5 +1838,392 @@ describe('course entre deux écritures', () => {
       { metric: 'temperature_c', numericValue: 24 },
     );
     expect(response.status).toBe(409);
+  });
+});
+
+describe('récoltes', () => {
+  const validHarvest = {
+    flushNumber: 1,
+    weight: { value: 800, unit: 'g', kind: 'harvest' },
+    quality: 'A',
+  };
+
+  it('enregistre une récolte avec son code et son poids net', async () => {
+    const response = await post('/api/units/SUB-2026-0001/harvests', validHarvest);
+    const body = (await response.json()) as {
+      data: {
+        harvest: { publicCode: string; weight: { value: number; unit: string } };
+        netWeight: { value: number };
+        event: { type: string };
+      };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.harvest.publicCode).toMatch(/^REC-\d{4}-\d{4,6}$/);
+    // Le cultivateur pèse en grammes : le stockage est canonique.
+    expect(body.data.harvest.weight).toEqual({ value: 800, unit: 'g', kind: 'harvest' });
+    expect(body.data.netWeight.value).toBe(800);
+    expect(body.data.event.type).toBe('harvest.recorded');
+  });
+
+  it('convertit un poids saisi en kilogrammes', async () => {
+    const response = await post('/api/units/SUB-2026-0001/harvests', {
+      ...validHarvest,
+      weight: { value: 1.2, unit: 'kg', kind: 'harvest' },
+    });
+    const body = (await response.json()) as { data: { harvest: { weight: { value: number } } } };
+    expect(body.data.harvest.weight.value).toBe(1200);
+  });
+
+  it('retire les pertes du poids net, avec leur cause', async () => {
+    const response = await post('/api/units/SUB-2026-0001/harvests', {
+      ...validHarvest,
+      losses: [
+        { weight: { value: 50, unit: 'g', kind: 'harvest' }, cause: 'contamination' },
+        { weight: { value: 30, unit: 'g', kind: 'harvest' }, cause: 'malformation' },
+      ],
+    });
+    const body = (await response.json()) as {
+      data: { netWeight: { value: number }; harvest: { losses: { cause: string }[] } };
+    };
+
+    expect(body.data.netWeight.value).toBe(720);
+    expect(body.data.harvest.losses.map((l) => l.cause)).toEqual(['contamination', 'malformation']);
+  });
+
+  it('refuse des pertes supérieures au brut', async () => {
+    const response = await post('/api/units/SUB-2026-0001/harvests', {
+      ...validHarvest,
+      losses: [{ weight: { value: 2, unit: 'kg', kind: 'harvest' }, cause: 'damage' }],
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.path).toBe('losses');
+  });
+
+  /** Une unité contaminée ne peut plus produire (`q18_2`). */
+  it('refuse une récolte sur une unité contaminée', async () => {
+    await connection.db
+      .collection('lots')
+      .updateOne({ _id: 'u-1' as never }, { $set: { status: 'contaminated' } });
+
+    const response = await post('/api/units/SUB-2026-0001/harvests', validHarvest);
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe('UNIT_NOT_ACTIVE');
+    expect(body.error.hint).toContain('ne peut plus produire');
+  });
+
+  /**
+   * Un même flush ne se récolte qu'une fois : une double saisie gonflerait le
+   * rendement sans que rien ne le signale.
+   */
+  it('refuse de récolter deux fois le même flush', async () => {
+    await post('/api/units/SUB-2026-0001/harvests', validHarvest);
+    const duplicate = await post('/api/units/SUB-2026-0001/harvests', validHarvest);
+    const body = (await duplicate.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+
+    expect(duplicate.status).toBe(409);
+    expect(body.error.message).toContain('déjà été récolté');
+    expect(body.error.hint).toContain('gonflerait le rendement');
+    expect(body.error.path).toBe('flushNumber');
+  });
+
+  it('accepte plusieurs flushs successifs', async () => {
+    await post('/api/units/SUB-2026-0001/harvests', validHarvest);
+    const second = await post('/api/units/SUB-2026-0001/harvests', {
+      ...validHarvest,
+      flushNumber: 2,
+      weight: { value: 500, unit: 'g', kind: 'harvest' },
+      quality: 'B',
+    });
+    expect(second.status).toBe(200);
+  });
+
+  it('refuse un poids qui n’est pas de nature « harvest »', async () => {
+    const response = await post('/api/units/SUB-2026-0001/harvests', {
+      ...validHarvest,
+      weight: { value: 800, unit: 'g', kind: 'substrate' },
+    });
+    expect(response.status).toBe(422);
+  });
+
+  it('refuse un corps invalide en décrivant la forme attendue', async () => {
+    const response = await post('/api/units/SUB-2026-0001/harvests', { flushNumber: 1 });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.hint).toContain('quality');
+  });
+
+  it('décrit sans écrire en dryRun', async () => {
+    const response = await post('/api/units/SUB-2026-0001/harvests?dryRun=true', validHarvest);
+    const body = (await response.json()) as { dryRun: boolean; data: { netWeight: unknown } };
+    expect(body.dryRun).toBe(true);
+    expect(body.data.netWeight).toBeDefined();
+
+    const list = await app.request('/api/units/SUB-2026-0001/harvests');
+    expect(((await list.json()) as { data: { harvests: unknown[] } }).data.harvests).toHaveLength(
+      0,
+    );
+  });
+
+  it('renvoie 404 pour une unité inconnue', async () => {
+    expect((await post('/api/units/inconnue/harvests', validHarvest)).status).toBe(404);
+  });
+
+  it('liste les récoltes et calcule le rendement', async () => {
+    await post('/api/units/SUB-2026-0001/harvests', {
+      ...validHarvest,
+      weight: { value: 1, unit: 'kg', kind: 'harvest' },
+    });
+
+    const response = await app.request('/api/units/SUB-2026-0001/harvests');
+    const body = (await response.json()) as {
+      data: { harvests: unknown[]; biologicalEfficiencyPct: number | null };
+    };
+    expect(body.data.harvests).toHaveLength(1);
+    // 1 kg récolté sur 5 kg de substrat = 20 % d'efficacité biologique.
+    expect(body.data.biologicalEfficiencyPct).toBe(20);
+  });
+
+  /** Sans poids de substrat, un rendement de zéro serait trompeur : on le dit. */
+  it('explique pourquoi le rendement est indisponible', async () => {
+    await connection.db
+      .collection('lots')
+      .updateOne({ _id: 'u-1' as never }, { $unset: { substrateWeight: '' } });
+
+    const response = await app.request('/api/units/SUB-2026-0001/harvests');
+    const body = (await response.json()) as {
+      data: { biologicalEfficiencyPct: number | null; yieldUnavailableReason: string | null };
+    };
+    expect(body.data.biologicalEfficiencyPct).toBeNull();
+    expect(body.data.yieldUnavailableReason).toContain('poids de substrat');
+  });
+
+  it('renvoie 404 sur les récoltes d’une unité inconnue', async () => {
+    expect((await app.request('/api/units/inconnue/harvests')).status).toBe(404);
+  });
+});
+
+describe('produits finaux', () => {
+  async function harvest(flushNumber = 1, grams = 800): Promise<string> {
+    const response = await post('/api/units/SUB-2026-0001/harvests', {
+      flushNumber,
+      weight: { value: grams, unit: 'g', kind: 'harvest' },
+      quality: 'A',
+    });
+    return ((await response.json()) as { data: { harvest: { publicCode: string } } }).data.harvest
+      .publicCode;
+  }
+
+  it('crée un produit à origine unique', async () => {
+    const code = await harvest();
+    const response = await post('/api/products', {
+      name: 'Barquette 500 g',
+      quantity: { value: 1, unit: 'tray', kind: 'product' },
+      origins: [{ harvestId: code, weight: { value: 500, unit: 'g', kind: 'harvest' }, share: 1 }],
+    });
+    const body = (await response.json()) as {
+      data: { product: { publicCode: string; origins: { unitId: string }[] } };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.product.publicCode).toMatch(/^PRO-\d{4}-\d{4,6}$/);
+    // Le lien produit → unité est **dérivé** de la récolte, pas déclaré.
+    expect(body.data.product.origins[0]?.unitId).toBe('u-1');
+  });
+
+  it('accepte un mélange dont les proportions sont exactes', async () => {
+    const first = await harvest(1);
+    const second = await harvest(2, 500);
+
+    const response = await post('/api/products', {
+      name: 'Mélange',
+      quantity: { value: 2, unit: 'tray', kind: 'product' },
+      origins: [
+        { harvestId: first, weight: { value: 300, unit: 'g', kind: 'harvest' }, share: 0.6 },
+        { harvestId: second, weight: { value: 200, unit: 'g', kind: 'harvest' }, share: 0.4 },
+      ],
+    });
+    expect(response.status).toBe(200);
+  });
+
+  /** Sans proportions exactes, la remontée depuis une barquette est fausse. */
+  it('refuse un mélange dont les proportions ne totalisent pas 1', async () => {
+    const first = await harvest(1);
+    const second = await harvest(2, 500);
+
+    const response = await post('/api/products', {
+      name: 'Mélange faux',
+      quantity: { value: 2, unit: 'tray', kind: 'product' },
+      origins: [
+        { harvestId: first, weight: { value: 300, unit: 'g', kind: 'harvest' }, share: 0.5 },
+        { harvestId: second, weight: { value: 200, unit: 'g', kind: 'harvest' }, share: 0.3 },
+      ],
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe('SHARES_DO_NOT_SUM_TO_ONE');
+  });
+
+  it('refuse une récolte d’origine inexistante, en disant où chercher', async () => {
+    const response = await post('/api/products', {
+      name: 'Fantôme',
+      quantity: { value: 1, unit: 'tray', kind: 'product' },
+      origins: [
+        { harvestId: 'REC-2026-9999', weight: { value: 1, unit: 'g', kind: 'harvest' }, share: 1 },
+      ],
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(404);
+    expect(body.error.hint).toContain('/harvests');
+  });
+
+  it('refuse un corps invalide', async () => {
+    const response = await post('/api/products', { name: 'Sans origine' });
+    expect(response.status).toBe(400);
+  });
+
+  it('refuse un produit sans origine', async () => {
+    const response = await post('/api/products', {
+      name: 'Vide',
+      quantity: { value: 1, unit: 'tray', kind: 'product' },
+      origins: [],
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('décrit sans créer en dryRun', async () => {
+    const code = await harvest();
+    const response = await post('/api/products?dryRun=true', {
+      name: 'Essai',
+      quantity: { value: 1, unit: 'tray', kind: 'product' },
+      origins: [{ harvestId: code, weight: { value: 500, unit: 'g', kind: 'harvest' }, share: 1 }],
+    });
+    expect(((await response.json()) as { dryRun: boolean }).dryRun).toBe(true);
+    expect(await connection.db.collection('productBatches').countDocuments()).toBe(0);
+  });
+});
+
+/**
+ * La promesse du produit, vérifiable en deux appels : d'une barquette aux blocs
+ * qui l'ont produite, et d'un bloc aux barquettes déjà parties.
+ */
+describe('traçabilité « du spore à l’assiette »', () => {
+  async function fullChain(): Promise<{ harvestCode: string; productCode: string }> {
+    const harvestResponse = await post('/api/units/SUB-2026-0001/harvests', {
+      flushNumber: 1,
+      weight: { value: 1000, unit: 'g', kind: 'harvest' },
+      quality: 'A',
+    });
+    const harvestCode = (
+      (await harvestResponse.json()) as { data: { harvest: { publicCode: string } } }
+    ).data.harvest.publicCode;
+
+    const productResponse = await post('/api/products', {
+      name: 'Barquette',
+      quantity: { value: 2, unit: 'tray', kind: 'product' },
+      origins: [
+        { harvestId: harvestCode, weight: { value: 500, unit: 'g', kind: 'harvest' }, share: 1 },
+      ],
+    });
+    const productCode = (
+      (await productResponse.json()) as { data: { product: { publicCode: string } } }
+    ).data.product.publicCode;
+
+    return { harvestCode, productCode };
+  }
+
+  it('remonte d’une barquette jusqu’au bloc qui l’a produite', async () => {
+    const { productCode } = await fullChain();
+
+    const response = await app.request(`/api/products/${productCode}/trace`);
+    const body = (await response.json()) as {
+      data: {
+        singleOrigin: boolean;
+        contributions: { unitPublicCode: string; sharePct: number; grams: number }[];
+      };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.singleOrigin).toBe(true);
+    expect(body.data.contributions[0]?.unitPublicCode).toBe('SUB-2026-0001');
+    expect(body.data.contributions[0]?.sharePct).toBe(100);
+    expect(body.data.contributions[0]?.grams).toBe(500);
+  });
+
+  it('descend d’un bloc aux barquettes déjà parties', async () => {
+    const { productCode } = await fullChain();
+
+    const response = await app.request('/api/units/SUB-2026-0001/trace');
+    const body = (await response.json()) as {
+      data: { totalHarvestedGrams: number; products: { publicCode: string }[] };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.totalHarvestedGrams).toBe(1000);
+    expect(body.data.products.map((p) => p.publicCode)).toEqual([productCode]);
+  });
+
+  it('rend une trace descendante vide pour une unité sans récolte', async () => {
+    const response = await app.request('/api/units/SUB-2026-0001/trace');
+    const body = (await response.json()) as {
+      data: { harvestCount: number; products: unknown[] };
+    };
+    expect(body.data.harvestCount).toBe(0);
+    expect(body.data.products).toEqual([]);
+  });
+
+  it('renvoie 404 pour un produit inconnu, en citant le format', async () => {
+    const response = await app.request('/api/products/PRO-2026-9999/trace');
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(404);
+    expect(body.error.hint).toContain('PRO-2026-0001');
+  });
+
+  it('renvoie 404 pour la trace d’une unité inconnue', async () => {
+    expect((await app.request('/api/units/inconnue/trace')).status).toBe(404);
+  });
+
+  /**
+   * Une chaîne incomplète est pire qu'une absence de chaîne : elle a l'air
+   * complète. On échoue donc bruyamment.
+   */
+  it('échoue si une récolte citée a disparu de la base', async () => {
+    const { productCode } = await fullChain();
+    await connection.db.collection('harvests').deleteMany({});
+
+    const response = await app.request(`/api/products/${productCode}/trace`);
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(404);
+    expect(body.error.hint).toContain('trompeuse');
+  });
+
+  it('échoue si une unité citée a disparu de la base', async () => {
+    const { productCode } = await fullChain();
+    await connection.db.collection('lots').deleteMany({});
+
+    const response = await app.request(`/api/products/${productCode}/trace`);
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(404);
+    expect(body.error.path).toBe('origins.unitId');
   });
 });

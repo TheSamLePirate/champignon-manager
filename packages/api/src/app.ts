@@ -8,14 +8,24 @@ import {
   stageSchema,
   type CultureUnit,
   type DomainEvent,
+  type Harvest,
   type ProcessGraph,
   type ProcessVersion,
+  type ProductBatch,
 } from '@champi/contracts';
 import {
   advanceUnit,
   buildUnitLabel,
+  netHarvestWeight,
+  PREFIX_HARVEST,
+  PREFIX_PRODUCT,
   relevantObservationKinds,
+  traceDownstream,
+  traceUpstream,
+  unitYieldPct,
+  validateHarvest,
   validateObservation,
+  validateProductOrigins,
   checkJournalIntegrity,
   diffReplayAgainstStored,
   draftFromVersion,
@@ -28,6 +38,7 @@ import {
   validateTokenFormat,
 } from '@champi/domain';
 import type {
+  HarvestRepository,
   MongoConnection,
   ProcessRepository,
   QrRepository,
@@ -54,6 +65,7 @@ export interface AppDependencies {
   readonly units: UnitRepository;
   readonly qr: QrRepository;
   readonly processes: ProcessRepository;
+  readonly harvests: HarvestRepository;
   readonly printQueue: PrintQueue;
   /** Horloge injectée : aucune lecture d'horloge ambiante dans la logique. */
   readonly now: () => string;
@@ -97,6 +109,40 @@ const createProcessBodySchema = z.object({
   name: z.string().min(1),
   speciesScope: z.union([z.literal('any'), z.string().min(1)]).default('any'),
   graph: processGraphSchema,
+});
+
+const quantityBodySchema = z.object({
+  value: z.number().finite().nonnegative(),
+  unit: z.enum(['g', 'kg', 'piece', 'tray', 'L', 'mL']),
+  kind: z.enum(['substrate', 'harvest', 'product', 'inoculum']),
+});
+
+const harvestBodySchema = z.object({
+  flushNumber: z.number().int().positive(),
+  weight: quantityBodySchema,
+  quality: z.enum(['A', 'B', 'C']),
+  losses: z
+    .array(
+      z.object({
+        weight: quantityBodySchema,
+        cause: z.enum(['contamination', 'malformation', 'overripe', 'damage', 'other']),
+      }),
+    )
+    .default([]),
+});
+
+const productBodySchema = z.object({
+  name: z.string().min(1),
+  quantity: quantityBodySchema,
+  origins: z
+    .array(
+      z.object({
+        harvestId: z.string().min(1),
+        weight: quantityBodySchema,
+        share: z.number().finite().positive().max(1),
+      }),
+    )
+    .min(1),
 });
 
 const createUnitBodySchema = z.object({
@@ -1016,6 +1062,267 @@ export function createApp(deps: AppDependencies): Hono {
       return c.json(errorBody(saved.error), statusForError(saved.error.code));
     }
     return c.json({ data: { unit: saved.value, event } });
+  });
+
+  // --- Récoltes et produits ---
+
+  /**
+   * Enregistre une récolte.
+   *
+   * Poids **par unité** à chaque flush, en grammes, plus la qualité et les
+   * pertes avec leur cause (`q14_1`, `q9_7_2`→`5`). Une unité contaminée ne
+   * peut plus produire (`q18_2`) : c'est le domaine qui le refuse.
+   */
+  app.post('/api/units/:reference/harvests', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const rawBody: unknown = await c.req.json().catch(() => null);
+    const parsed = harvestBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Corps de requête invalide.', {
+            hint: 'Attendu : { flushNumber: number, weight: { value, unit, kind }, quality: "A"|"B"|"C", losses?: [{ weight, cause }] }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    const validated = validateHarvest({
+      unit,
+      weight: parsed.data.weight,
+      flushNumber: parsed.data.flushNumber,
+    });
+    if (!validated.ok) {
+      return c.json(errorBody(validated.error), statusForError(validated.error.code));
+    }
+
+    const nowIso = deps.now();
+    const year = Number(nowIso.slice(0, 4));
+    const code = await deps.qr.allocatePublicCode(PREFIX_HARVEST, year);
+    if (!code.ok) {
+      return c.json(errorBody(code.error), statusForError(code.error.code));
+    }
+
+    const harvest: Harvest = {
+      id: deps.newId(),
+      publicCode: code.value,
+      unitId: unit.id,
+      flushNumber: parsed.data.flushNumber,
+      weight: validated.value,
+      quality: parsed.data.quality,
+      losses: parsed.data.losses,
+      harvestedAt: nowIso,
+    };
+
+    // Les pertes ne peuvent pas dépasser le brut : autrement le rendement
+    // deviendrait négatif sans que rien ne le signale.
+    const net = netHarvestWeight(harvest);
+    if (!net.ok) {
+      return c.json(errorBody(net.error), statusForError(net.error.code));
+    }
+
+    const event: DomainEvent = domainEventSchema.parse({
+      id: deps.newId(),
+      type: 'harvest.recorded',
+      occurredAt: nowIso,
+      recordedAt: nowIso,
+      source: 'manual',
+      unitId: unit.id,
+      payload: {
+        harvestId: harvest.id,
+        flushNumber: harvest.flushNumber,
+        weight: harvest.weight,
+      },
+    });
+
+    if (isDryRun(c.req.url)) {
+      return c.json({
+        dryRun: true,
+        data: { wouldRecord: harvest, netWeight: net.value, wouldJournal: event },
+      });
+    }
+
+    const saved = await deps.harvests.recordHarvest(harvest, event);
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+    return c.json({ data: { harvest: saved.value, netWeight: net.value, event } });
+  });
+
+  /** Récoltes d'une unité, avec son rendement cumulé. */
+  app.get('/api/units/:reference/harvests', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const harvests = await deps.harvests.harvestsForUnit(unit.id);
+    const yieldPct = unitYieldPct(unit, harvests);
+
+    return c.json({
+      data: {
+        harvests,
+        // Le rendement n'est calculable que si le poids de substrat a été saisi
+        // à l'inoculation : on le dit plutôt que de rendre un zéro trompeur.
+        biologicalEfficiencyPct: yieldPct.ok ? Math.round(yieldPct.value * 10) / 10 : null,
+        yieldUnavailableReason: yieldPct.ok ? null : yieldPct.error.message,
+      },
+    });
+  });
+
+  /**
+   * Crée un produit final à partir de récoltes.
+   *
+   * Les mélanges sont autorisés **avec proportions exactes** (`q14_5`) : sans
+   * cela la remontée depuis une barquette deviendrait approximative.
+   */
+  app.post('/api/products', async (c) => {
+    const rawBody: unknown = await c.req.json().catch(() => null);
+    const parsed = productBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Corps de requête invalide.', {
+            hint: 'Attendu : { name: string, quantity: {...}, origins: [{ harvestId, weight, share }] }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    // On résout chaque récolte pour retrouver son unité : le lien produit →
+    // unité ne se déclare pas, il se dérive.
+    const origins = [];
+    for (const origin of parsed.data.origins) {
+      const harvest = await deps.harvests.findHarvestByIdOrPublicCode(origin.harvestId);
+      if (harvest === null) {
+        return c.json(
+          errorBody(
+            appError('NOT_FOUND', `La récolte « ${origin.harvestId} » n'existe pas.`, {
+              hint: "GET /api/units/:code/harvests liste les récoltes d'une unité.",
+              path: 'origins.harvestId',
+            }),
+          ),
+          404,
+        );
+      }
+      origins.push({
+        harvestId: harvest.id,
+        unitId: harvest.unitId,
+        weight: origin.weight,
+        share: origin.share,
+      });
+    }
+
+    const validatedOrigins = validateProductOrigins(origins);
+    if (!validatedOrigins.ok) {
+      return c.json(errorBody(validatedOrigins.error), statusForError(validatedOrigins.error.code));
+    }
+
+    const nowIso = deps.now();
+    const year = Number(nowIso.slice(0, 4));
+    const code = await deps.qr.allocatePublicCode(PREFIX_PRODUCT, year);
+    if (!code.ok) {
+      return c.json(errorBody(code.error), statusForError(code.error.code));
+    }
+
+    const product: ProductBatch = {
+      id: deps.newId(),
+      publicCode: code.value,
+      name: parsed.data.name,
+      origins,
+      quantity: parsed.data.quantity,
+      producedAt: nowIso,
+    };
+
+    const event: DomainEvent = domainEventSchema.parse({
+      id: deps.newId(),
+      type: 'product.created',
+      occurredAt: nowIso,
+      recordedAt: nowIso,
+      source: 'manual',
+      unitId: origins[0]?.unitId,
+      payload: { productId: product.id, harvestIds: origins.map((o) => o.harvestId) },
+    });
+
+    if (isDryRun(c.req.url)) {
+      return c.json({ dryRun: true, data: { wouldCreate: product } });
+    }
+
+    const saved = await deps.harvests.createProduct(product, event);
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+    return c.json({ data: { product: saved.value, event } });
+  });
+
+  /**
+   * Traçabilité ascendante : d'une barquette aux blocs qui l'ont produite.
+   *
+   * C'est la promesse « du spore à l'assiette », vérifiable en un appel.
+   */
+  app.get('/api/products/:reference/trace', async (c) => {
+    const product = await deps.harvests.findProductByIdOrPublicCode(c.req.param('reference'));
+    if (product === null) {
+      return c.json(
+        errorBody(
+          appError('NOT_FOUND', `Aucun produit ne correspond à « ${c.req.param('reference')} ».`, {
+            hint: "Utilise l'identifiant technique ou le code produit (ex. PRO-2026-0001).",
+            path: 'reference',
+          }),
+        ),
+        404,
+      );
+    }
+
+    const harvests = [];
+    const units = [];
+    for (const origin of product.origins) {
+      const harvest = await deps.harvests.findHarvest(origin.harvestId);
+      if (harvest !== null) {
+        harvests.push(harvest);
+      }
+      const unit = await deps.units.findById(origin.unitId);
+      if (unit !== null) {
+        units.push(unit);
+      }
+    }
+
+    const trace = traceUpstream(product, harvests, units);
+    if (!trace.ok) {
+      return c.json(errorBody(trace.error), statusForError(trace.error.code));
+    }
+    return c.json({ data: trace.value });
+  });
+
+  /**
+   * Traçabilité descendante : d'un bloc aux barquettes déjà parties.
+   *
+   * La question qu'un rappel sanitaire pose.
+   */
+  app.get('/api/units/:reference/trace', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const [harvests, products] = await Promise.all([
+      deps.harvests.harvestsForUnit(unit.id),
+      deps.harvests.productsFromUnit(unit.id),
+    ]);
+
+    const trace = traceDownstream(unit, harvests, products);
+    if (!trace.ok) {
+      return c.json(errorBody(trace.error), statusForError(trace.error.code));
+    }
+    return c.json({ data: trace.value });
   });
 
   return app;

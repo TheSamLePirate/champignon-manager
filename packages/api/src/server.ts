@@ -1,5 +1,6 @@
 import {
   connect,
+  HarvestRepository,
   ProcessRepository,
   QrRepository,
   UnitRepository,
@@ -38,10 +39,12 @@ export async function assembleServer(options: ServerOptions = {}): Promise<Assem
   const units = new UnitRepository(connection);
   const qr = new QrRepository(connection);
   const processes = new ProcessRepository(connection);
+  const harvests = new HarvestRepository(connection);
 
   await units.ensureIndexes();
   await qr.ensureIndexes();
   await processes.ensureIndexes();
+  await harvests.ensureIndexes();
   await ensureApiIndexes(connection);
 
   const transport = options.transport ?? new InMemoryTransport();
@@ -51,6 +54,7 @@ export async function assembleServer(options: ServerOptions = {}): Promise<Assem
     units,
     qr,
     processes,
+    harvests,
     printQueue: new PrintQueue(transport),
     now: () => new Date().toISOString(),
     newId: () => crypto.randomUUID(),
