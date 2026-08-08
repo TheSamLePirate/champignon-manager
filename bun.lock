@@ -40,6 +40,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@champi/contracts": "workspace:*",
+        "@champi/domain": "workspace:*",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
       },

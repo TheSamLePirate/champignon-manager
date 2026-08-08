@@ -11,3 +11,4 @@ export * from './qr/token.js';
 export * from './printing/label.js';
 export * from './unit/observation.js';
 export * from './trace/traceability.js';
+export * from './process/default-model.js';

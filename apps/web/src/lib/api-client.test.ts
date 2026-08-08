@@ -248,6 +248,50 @@ describe('opérations métier ajoutées', () => {
   });
 });
 
+describe('process', () => {
+  it('liste les modèles de process', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: [] })));
+    await makeClient(fetchImpl).listProcessTemplates();
+    expect(fetchImpl).toHaveBeenCalledWith(`${BASE}/api/process-templates`);
+  });
+
+  it('lit une version de process', async () => {
+    const fetchImpl = mockFetch(() =>
+      Promise.resolve(jsonResponse({ data: { id: 'v', status: 'draft' } })),
+    );
+    const result = await makeClient(fetchImpl).getProcessVersion('v-1');
+    expect(fetchImpl).toHaveBeenCalledWith(`${BASE}/api/process-versions/v-1`);
+    expect(result.ok && result.data.status).toBe('draft');
+  });
+
+  it('crée un modèle avec son graphe', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).createProcessTemplate('Pleurote', { steps: [], transitions: [] });
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/process-templates`);
+    expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual({
+      name: 'Pleurote',
+      graph: { steps: [], transitions: [] },
+    });
+  });
+
+  /** Le canvas envoie exactement le JSON qu'il édite — aucune conversion. */
+  it('envoie le graphe tel quel à l’enregistrement', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    const graph = { steps: [], transitions: [], layout: { a: { x: 1, y: 2 } } };
+    await makeClient(fetchImpl).saveProcessGraph('v-1', graph);
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/process-versions/v-1/graph`);
+    expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual(graph);
+  });
+
+  it('publie une version', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).publishProcessVersion('v-1');
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/process-versions/v-1/publish`);
+  });
+});
+
 describe('createQueueSender', () => {
   const item = { path: '/api/units/u-1/advance', body: { a: 1 }, idempotencyKey: 'k-1' };
 

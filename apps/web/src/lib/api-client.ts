@@ -145,6 +145,33 @@ export class ApiClient {
     return this.post(`/api/units/${encodeURIComponent(reference)}/measurements`, body);
   }
 
+  listProcessTemplates(): Promise<
+    ApiResult<{ id: string; name: string; currentVersionId?: string }[]>
+  > {
+    return this.get('/api/process-templates');
+  }
+
+  getProcessVersion(
+    id: string,
+  ): Promise<ApiResult<{ id: string; status: string; versionNumber: number; graph: unknown }>> {
+    return this.get(`/api/process-versions/${encodeURIComponent(id)}`);
+  }
+
+  createProcessTemplate(
+    name: string,
+    graph: unknown,
+  ): Promise<MutationResult<{ template: { id: string }; version: { id: string } }>> {
+    return this.post('/api/process-templates', { name, graph });
+  }
+
+  saveProcessGraph(versionId: string, graph: unknown): Promise<MutationResult<{ id: string }>> {
+    return this.post(`/api/process-versions/${encodeURIComponent(versionId)}/graph`, graph);
+  }
+
+  publishProcessVersion(versionId: string): Promise<MutationResult<{ status: string }>> {
+    return this.post(`/api/process-versions/${encodeURIComponent(versionId)}/publish`, {});
+  }
+
   advance(
     reference: string,
     toStepId: string,

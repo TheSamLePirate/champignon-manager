@@ -132,7 +132,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.test.ts', '**/__testing__/**/*.ts', '**/__fixtures__/**/*.ts'],
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/__testing__/**/*.ts', '**/__fixtures__/**/*.ts'],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
       'no-restricted-properties': 'off',
