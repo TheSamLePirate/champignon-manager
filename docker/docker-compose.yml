@@ -1,21 +1,28 @@
 # MongoDB en replica set à un seul nœud.
-# Le replica set n'est pas là pour la haute disponibilité mais parce que
-# les transactions MongoDB l'exigent — et toute écriture « état courant +
-# événement » est transactionnelle (docs/06, docs/22 §2.4).
+#
+# Le replica set n'est pas là pour la haute disponibilité mais parce que les
+# transactions MongoDB l'exigent — et toute écriture « état courant + événement »
+# est transactionnelle (docs/06, docs/22 §2.4).
+#
+# ⚠️ Port 27018, pas 27017 : une installation MongoDB locale (Homebrew) occupe
+# souvent déjà 27017 et intercepterait les connexions sans erreur visible — le
+# driver tomberait sur un standalone, sans replica set, et les transactions
+# échoueraient de façon obscure. Le port est identique dedans et dehors pour que
+# l'hôte annoncé par le replica set soit joignable des deux côtés.
 services:
   mongo:
     image: mongo:8
     container_name: champi-mongo
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    command: ['--replSet', 'rs0', '--bind_ip_all', '--port', '27018']
     ports:
-      - "27017:27017"
+      - '27018:27018'
     volumes:
       - mongo-data:/data/db
     healthcheck:
       test: |
-        mongosh --quiet --eval '
+        mongosh --quiet --port 27018 --eval '
           try { rs.status().ok }
-          catch { rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]}).ok }
+          catch { rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27018"}]}).ok }
         '
       interval: 5s
       timeout: 10s
