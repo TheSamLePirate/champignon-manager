@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { CultureUnit, DomainEvent, ProcessGraph } from '@champi/contracts';
-import { connect, UnitRepository, type MongoConnection } from '@champi/persistence';
+import { connect, QrRepository, UnitRepository, type MongoConnection } from '@champi/persistence';
+import { InMemoryTransport, PrintQueue } from '@champi/printing';
 import type { Hono } from 'hono';
 import { createApp, ensureApiIndexes } from './app.js';
 
@@ -17,8 +18,17 @@ const NOW = '2026-08-22T09:00:00.000Z';
 
 let connection: MongoConnection;
 let repository: UnitRepository;
+let qr: QrRepository;
+let transport: InMemoryTransport;
 let app: Hono;
 let idCounter = 0;
+let randomSeed = 0;
+
+/** Source d'aléa déterministe : chaque appel produit un token différent. */
+function seededBytes(length: number): Uint8Array {
+  randomSeed += 1;
+  return Uint8Array.from({ length }, (_, index) => (randomSeed * 7 + index) % 256);
+}
 
 const graph: ProcessGraph = {
   steps: [
@@ -107,13 +117,19 @@ async function post(path: string, body: unknown, headers: Record<string, string>
 beforeAll(async () => {
   connection = await connect(undefined, TEST_DB);
   repository = new UnitRepository(connection);
+  qr = new QrRepository(connection);
+  transport = new InMemoryTransport();
   await repository.ensureIndexes();
+  await qr.ensureIndexes();
   await ensureApiIndexes(connection);
   app = createApp({
     connection,
     units: repository,
+    qr,
+    printQueue: new PrintQueue(transport),
     now: () => NOW,
     newId: () => `evt-${String(++idCounter)}`,
+    randomBytes: seededBytes,
     graphForVersion: (versionId) => Promise.resolve(versionId === 'pv-1' ? graph : null),
   });
 });
@@ -125,9 +141,22 @@ afterAll(async () => {
 
 beforeEach(async () => {
   idCounter = 0;
+  randomSeed = 0;
+  transport = new InMemoryTransport();
+  app = createApp({
+    connection,
+    units: repository,
+    qr,
+    printQueue: new PrintQueue(transport),
+    now: () => NOW,
+    newId: () => `evt-${String(++idCounter)}`,
+    randomBytes: seededBytes,
+    graphForVersion: (versionId) => Promise.resolve(versionId === 'pv-1' ? graph : null),
+  });
   await connection.db.collection('lots').deleteMany({});
   await connection.db.collection('events').deleteMany({});
   await connection.db.collection('idempotencyKeys').deleteMany({});
+  await connection.db.collection('qrRegistry').deleteMany({});
   await repository.create(makeUnit(), birthEvent());
 });
 
@@ -537,5 +566,326 @@ describe('audit à la demande', () => {
 
   it('renvoie 404 sur une unité inconnue', async () => {
     expect((await app.request('/api/units/inconnue/audit')).status).toBe(404);
+  });
+});
+
+describe('QR — attribution et résolution', () => {
+  it('attribue un QR à une unité qui n’en a pas', async () => {
+    const response = await post('/api/units/SUB-2026-0001/qr', {});
+    const body = (await response.json()) as {
+      data: { token: string; targetId: string; printCount: number };
+      alreadyExisted: boolean;
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.alreadyExisted).toBe(false);
+    expect(body.data.targetId).toBe('u-1');
+    expect(body.data.printCount).toBe(0);
+  });
+
+  /**
+   * Redemander le QR d'une unité rend le sien : l'opération est idempotente
+   * par nature, sans clé. Un token d'unité ne change jamais (`q17_5`).
+   */
+  it('rend le QR existant plutôt que d’en fabriquer un second', async () => {
+    const first = await post('/api/units/SUB-2026-0001/qr', {});
+    const firstBody = (await first.json()) as { data: { token: string } };
+
+    const second = await post('/api/units/SUB-2026-0001/qr', {});
+    const secondBody = (await second.json()) as {
+      data: { token: string };
+      alreadyExisted: boolean;
+    };
+
+    expect(secondBody.alreadyExisted).toBe(true);
+    expect(secondBody.data.token).toBe(firstBody.data.token);
+  });
+
+  it('décrit sans écrire en dryRun', async () => {
+    const response = await post('/api/units/SUB-2026-0001/qr?dryRun=true', {});
+    const body = (await response.json()) as { dryRun: boolean; data: { wouldRegisterFor: string } };
+
+    expect(body.dryRun).toBe(true);
+    expect(body.data.wouldRegisterFor).toBe('SUB-2026-0001');
+    expect(await qr.findByTarget('unit', 'u-1')).toBeNull();
+  });
+
+  it('renvoie 404 pour une unité inconnue', async () => {
+    expect((await post('/api/units/inconnue/qr', {})).status).toBe(404);
+  });
+
+  it('résout un token scanné directement vers la fiche de l’unité', async () => {
+    const created = await post('/api/units/SUB-2026-0001/qr', {});
+    const token = ((await created.json()) as { data: { token: string } }).data.token;
+
+    const response = await app.request(`/api/qr/${token}`);
+    const body = (await response.json()) as {
+      data: { qr: { targetType: string }; target: { publicCode: string } | null };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.qr.targetType).toBe('unit');
+    // Après un scan, l'opérateur veut la fiche — pas un identifiant à
+    // ré-interroger. La réponse la porte déjà.
+    expect(body.data.target?.publicCode).toBe('SUB-2026-0001');
+  });
+
+  it('distingue un QR mal formé d’un QR inconnu', async () => {
+    const malformed = await app.request('/api/qr/pas-un-token');
+    const malformedBody = (await malformed.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(malformed.status).toBe(400);
+    expect(malformedBody.error.hint).toContain("étiquette de l'application");
+
+    const unknown = await app.request('/api/qr/ZZZZZZZZZZZZZZZZZZZZZZ');
+    const unknownBody = (await unknown.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(unknown.status).toBe(404);
+    expect(unknownBody.error.hint).toContain('autre installation');
+  });
+
+  it('rend une cible nulle quand l’unité liée a disparu', async () => {
+    const created = await post('/api/units/SUB-2026-0001/qr', {});
+    const token = ((await created.json()) as { data: { token: string } }).data.token;
+    await connection.db.collection('lots').deleteMany({});
+
+    const response = await app.request(`/api/qr/${token}`);
+    const body = (await response.json()) as { data: { target: unknown } };
+    expect(response.status).toBe(200);
+    expect(body.data.target).toBeNull();
+  });
+});
+
+describe('impression d’étiquette', () => {
+  async function withQr(): Promise<string> {
+    const created = await post('/api/units/SUB-2026-0001/qr', {});
+    return ((await created.json()) as { data: { token: string } }).data.token;
+  }
+
+  it('imprime les quatre éléments demandés par le cultivateur', async () => {
+    const token = await withQr();
+    const response = await post('/api/units/SUB-2026-0001/label/print', {});
+    const body = (await response.json()) as {
+      data: { status: string; isReprint: boolean; label: { name: string; type: string } };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.status).toBe('printed');
+    expect(body.data.isReprint).toBe(false);
+    expect(transport.printed[0]?.label).toEqual({
+      name: 'Bloc pleurote 1',
+      type: 'Ballot de substrat',
+      date: '01/08/2026',
+      publicCode: 'SUB-2026-0001',
+      qrToken: token,
+    });
+  });
+
+  /** L'enjeu de `q17_5` : une étiquette abîmée se remplace à l'identique. */
+  it('réimprime exactement le même token', async () => {
+    const token = await withQr();
+    await post('/api/units/SUB-2026-0001/label/print', {});
+    const second = await post('/api/units/SUB-2026-0001/label/print', {});
+    const body = (await second.json()) as { data: { isReprint: boolean } };
+
+    expect(body.data.isReprint).toBe(true);
+    expect(transport.printed[0]?.label.qrToken).toBe(token);
+    expect(transport.printed[1]?.label.qrToken).toBe(token);
+  });
+
+  it('compte les impressions réussies', async () => {
+    await withQr();
+    await post('/api/units/SUB-2026-0001/label/print', {});
+    await post('/api/units/SUB-2026-0001/label/print', {});
+    expect((await qr.findByTarget('unit', 'u-1'))?.printCount).toBe(2);
+  });
+
+  /**
+   * Une impression ratée ne doit pas incrémenter le compteur : on croirait
+   * qu'une étiquette circule alors qu'elle n'est jamais sortie de l'imprimante.
+   */
+  it('ne compte pas une impression qui a échoué', async () => {
+    await withQr();
+    transport.failNext(99);
+
+    const response = await post('/api/units/SUB-2026-0001/label/print', {});
+    const body = (await response.json()) as { data: { status: string; attempts: number } };
+
+    expect(body.data.status).toBe('failed');
+    expect(body.data.attempts).toBe(3);
+    expect((await qr.findByTarget('unit', 'u-1'))?.printCount).toBe(0);
+  });
+
+  it('imprime le nombre de copies demandé', async () => {
+    await withQr();
+    await post('/api/units/SUB-2026-0001/label/print', { copies: 4 });
+    expect(transport.printed[0]?.copies).toBe(4);
+  });
+
+  it('refuse un nombre de copies aberrant', async () => {
+    await withQr();
+    const response = await post('/api/units/SUB-2026-0001/label/print', { copies: 0 });
+    expect(response.status).toBe(400);
+    expect(transport.printed).toHaveLength(0);
+  });
+
+  it('refuse un corps mal typé', async () => {
+    await withQr();
+    const response = await post('/api/units/SUB-2026-0001/label/print', { copies: 'trois' });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.path).toBe('copies');
+  });
+
+  it('tolère un corps absent et imprime une copie', async () => {
+    await withQr();
+    const response = await app.request('/api/units/SUB-2026-0001/label/print', { method: 'POST' });
+    expect(response.status).toBe(200);
+    expect(transport.printed[0]?.copies).toBe(1);
+  });
+
+  it('exige un QR avant d’imprimer, et dit comment l’obtenir', async () => {
+    const response = await post('/api/units/SUB-2026-0001/label/print', {});
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+
+    expect(response.status).toBe(404);
+    expect(body.error.hint).toContain('/qr');
+    expect(body.error.hint).toContain('SUB-2026-0001');
+  });
+
+  it('décrit sans imprimer en dryRun', async () => {
+    await withQr();
+    const response = await post('/api/units/SUB-2026-0001/label/print?dryRun=true', { copies: 2 });
+    const body = (await response.json()) as {
+      dryRun: boolean;
+      data: { wouldPrint: { publicCode: string }; copies: number };
+    };
+
+    expect(body.dryRun).toBe(true);
+    expect(body.data.wouldPrint.publicCode).toBe('SUB-2026-0001');
+    expect(body.data.copies).toBe(2);
+    expect(transport.printed).toHaveLength(0);
+  });
+
+  it('annonce une copie par défaut en dryRun', async () => {
+    await withQr();
+    const response = await post('/api/units/SUB-2026-0001/label/print?dryRun=true', {});
+    const body = (await response.json()) as { data: { copies: number } };
+    expect(body.data.copies).toBe(1);
+  });
+
+  it('renvoie 404 pour une unité inconnue', async () => {
+    expect((await post('/api/units/inconnue/label/print', {})).status).toBe(404);
+  });
+
+  /**
+   * Un document corrompu en base est une **panne**, pas un refus métier. La
+   * réponse doit garder la forme habituelle — un agent ne doit pas avoir à
+   * traiter deux formats d'erreur — sans divulguer de pile d'appel.
+   */
+  it('rend une panne sous la même forme qu’une erreur métier', async () => {
+    await withQr();
+    await connection.db
+      .collection('lots')
+      .updateOne({ _id: 'u-1' as never }, { $set: { createdAt: 'hier' } });
+
+    const response = await post('/api/units/SUB-2026-0001/label/print', {});
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+
+    expect(response.status).toBe(500);
+    expect(body.error.message).toContain("n'a pas pu traiter");
+    expect(body.error.hint).toContain('panne');
+    expect(body.error.hint).toContain('Référence à citer');
+    expect(body.error.docsUrl).toBeDefined();
+    expect(JSON.stringify(body)).not.toContain('at Object');
+  });
+});
+
+describe('test imprimante', () => {
+  it('confirme une imprimante joignable', async () => {
+    const response = await app.request('/api/printer/test');
+    const body = (await response.json()) as { data: { reachable: boolean; transport: string } };
+    expect(response.status).toBe(200);
+    expect(body.data.reachable).toBe(true);
+  });
+
+  it('signale une imprimante muette sans dramatiser', async () => {
+    transport.setReachable(false);
+    const response = await app.request('/api/printer/test');
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+
+    expect(response.status).toBe(409);
+    expect(body.error.hint).toContain('à la reconnexion');
+  });
+});
+
+/**
+ * Certains chemins d'échec ne sont pas atteignables par la porte d'entrée
+ * normale — le dépôt valide déjà les documents qu'il relit. On monte donc des
+ * instances dédiées avec une dépendance défaillante, plutôt que de laisser ces
+ * branches non testées : ce sont elles qui parlent à l'utilisateur le jour où
+ * quelque chose casse.
+ */
+describe('dépendances défaillantes', () => {
+  function appWith(overrides: Partial<Parameters<typeof createApp>[0]>): Hono {
+    return createApp({
+      connection,
+      units: repository,
+      qr,
+      printQueue: new PrintQueue(transport),
+      now: () => NOW,
+      newId: () => `evt-${String(++idCounter)}`,
+      randomBytes: seededBytes,
+      graphForVersion: (versionId) => Promise.resolve(versionId === 'pv-1' ? graph : null),
+      ...overrides,
+    });
+  }
+
+  it('remonte l’échec d’attribution de QR quand la source d’aléa est défaillante', async () => {
+    const broken = appWith({ randomBytes: () => new Uint8Array(2) });
+    const response = await broken.request('/api/units/SUB-2026-0001/qr', { method: 'POST' });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error.message).toContain('2 octets');
+  });
+
+  it('remonte l’échec de composition d’étiquette', async () => {
+    await post('/api/units/SUB-2026-0001/qr', {});
+
+    // Un dépôt qui rend une unité dont la date est inexploitable : c'est ce que
+    // verrait la route si la validation amont venait à être relâchée.
+    // On ne copie pas le dépôt à coups de spread — cela perdrait son prototype.
+    // La route n'appelle qu'une méthode : un objet minimal suffit et dit
+    // exactement ce qui est simulé.
+    const corrupting = {
+      findByIdOrPublicCode: () => Promise.resolve(makeUnit({ createdAt: 'hier' })),
+    } as unknown as UnitRepository;
+
+    const broken = appWith({ units: corrupting });
+    const response = await broken.request('/api/units/SUB-2026-0001/label/print', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error.path).toBe('date');
+    expect(transport.printed).toHaveLength(0);
   });
 });

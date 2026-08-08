@@ -1,5 +1,5 @@
 {
-  "name": "@champi/api",
+  "name": "@champi/printing",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,10 +10,6 @@
   },
   "dependencies": {
     "@champi/contracts": "workspace:*",
-    "@champi/domain": "workspace:*",
-    "@champi/persistence": "workspace:*",
-    "hono": "^4.13.1",
-    "zod": "^3.24.0",
-    "@champi/printing": "workspace:*"
+    "@champi/domain": "workspace:*"
   }
 }

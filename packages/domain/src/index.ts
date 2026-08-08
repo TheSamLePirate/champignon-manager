@@ -6,3 +6,6 @@ export * from './process/version.js';
 export * from './unit/advance.js';
 export * from './harvest/harvest.js';
 export * from './trace/replay.js';
+export * from './qr/public-code.js';
+export * from './qr/token.js';
+export * from './printing/label.js';

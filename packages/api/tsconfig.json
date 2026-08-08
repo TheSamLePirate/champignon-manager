@@ -1,6 +1,22 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "rootDir": "./src", "outDir": "./dist" },
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
   "include": ["src/**/*.ts"],
-  "references": [{ "path": "../contracts" }, { "path": "../domain" }, { "path": "../persistence" }]
+  "references": [
+    {
+      "path": "../contracts"
+    },
+    {
+      "path": "../domain"
+    },
+    {
+      "path": "../persistence"
+    },
+    {
+      "path": "../printing"
+    }
+  ]
 }

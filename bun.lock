@@ -30,6 +30,7 @@
         "@champi/contracts": "workspace:*",
         "@champi/domain": "workspace:*",
         "@champi/persistence": "workspace:*",
+        "@champi/printing": "workspace:*",
         "hono": "^4.13.1",
         "zod": "^3.24.0",
       },
@@ -55,6 +56,14 @@
         "@champi/contracts": "workspace:*",
         "@champi/domain": "workspace:*",
         "mongodb": "^7.5.0",
+      },
+    },
+    "packages/printing": {
+      "name": "@champi/printing",
+      "version": "0.1.0",
+      "dependencies": {
+        "@champi/contracts": "workspace:*",
+        "@champi/domain": "workspace:*",
       },
     },
   },
@@ -136,6 +145,8 @@
     "@champi/domain": ["@champi/domain@workspace:packages/domain"],
 
     "@champi/persistence": ["@champi/persistence@workspace:packages/persistence"],
+
+    "@champi/printing": ["@champi/printing@workspace:packages/printing"],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.28.1", "", { "os": "aix", "cpu": "ppc64" }, "sha512-Svl7tq8k/08+p6CXPpRjQ1fKX+1odH/BQbb48fV6fj3CWHhsoIOoY87w1oHXm0qEpkIK3ZfVgp0hed3XBXzXMQ=="],
 

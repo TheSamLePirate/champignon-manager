@@ -11,12 +11,15 @@ import {
 } from '@champi/contracts';
 import {
   advanceUnit,
+  buildUnitLabel,
   checkJournalIntegrity,
   diffReplayAgainstStored,
   nominalNextSteps,
   replayUnit,
+  validateTokenFormat,
 } from '@champi/domain';
-import type { MongoConnection, UnitRepository } from '@champi/persistence';
+import type { MongoConnection, QrRepository, UnitRepository } from '@champi/persistence';
+import type { PrintQueue } from '@champi/printing';
 import { errorBody, statusForError } from './errors.js';
 import { IdempotencyStore } from './idempotency.js';
 
@@ -35,9 +38,13 @@ import { IdempotencyStore } from './idempotency.js';
 export interface AppDependencies {
   readonly connection: MongoConnection;
   readonly units: UnitRepository;
+  readonly qr: QrRepository;
+  readonly printQueue: PrintQueue;
   /** Horloge injectée : aucune lecture d'horloge ambiante dans la logique. */
   readonly now: () => string;
   readonly newId: () => string;
+  /** Source d'aléa injectée — `crypto.getRandomValues` en production. */
+  readonly randomBytes: (length: number) => Uint8Array;
   /** Résout le graphe de la version de process épinglée à une unité. */
   readonly graphForVersion: (versionId: string) => Promise<ProcessGraph | null>;
 }
@@ -46,6 +53,10 @@ const advanceBodySchema = z.object({
   toStepId: z.string().min(1),
   confirmOffNominal: z.boolean().optional(),
   expectedVersion: z.number().int().nonnegative(),
+});
+
+const printBodySchema = z.object({
+  copies: z.number().optional(),
 });
 
 /** `?dryRun=true` — décrit l'effet sans l'appliquer. */
@@ -67,6 +78,26 @@ export function firstIssuePath(issues: readonly { path: PropertyKey[] }[]): stri
 export function createApp(deps: AppDependencies): Hono {
   const app = new Hono();
   const idempotency = new IdempotencyStore(deps.connection.db);
+
+  /**
+   * Gestionnaire d'erreurs global.
+   *
+   * Tout ce qui échappe aux `Result` du domaine est une **panne**, pas un refus
+   * métier : base injoignable, document corrompu en base, bug. La réponse garde
+   * la même forme que les erreurs métier — un agent n'a pas à traiter deux
+   * formats — mais elle ne divulgue ni pile d'appel ni détail interne.
+   */
+  app.onError((cause, c) => {
+    const reference = deps.newId();
+    return c.json(
+      errorBody(
+        appError('VALIDATION_FAILED', "L'application n'a pas pu traiter cette requête.", {
+          hint: `Ce n'est pas un refus métier mais une panne. Référence à citer : ${reference}. Cause : ${cause.message}`,
+        }),
+      ),
+      500,
+    );
+  });
 
   app.get('/api/health', (c) => c.json({ status: 'ok', now: deps.now() }));
 
@@ -241,6 +272,150 @@ export function createApp(deps: AppDependencies): Hono {
         eventCount: events.length,
       },
     });
+  });
+
+  /**
+   * Résolution d'un QR scanné.
+   *
+   * Le token ne contient **aucune** donnée métier : c'est cette route qui fait
+   * le lien. Un token mal formé et un token inconnu produisent deux messages
+   * différents — le premier veut dire « ce QR ne vient pas de l'application »,
+   * le second « cette étiquette n'est plus au registre ».
+   */
+  app.get('/api/qr/:token', async (c) => {
+    const token = c.req.param('token');
+    const format = validateTokenFormat(token);
+    if (!format.ok) {
+      return c.json(errorBody(format.error), statusForError(format.error.code));
+    }
+
+    const entry = await deps.qr.resolve(token);
+    if (entry === null) {
+      return c.json(
+        errorBody(
+          appError('NOT_FOUND', `Le token « ${token} » n'est pas au registre.`, {
+            hint: "Le QR est bien formé mais inconnu : étiquette d'une autre installation, ou unité supprimée du registre.",
+            path: 'token',
+          }),
+        ),
+        404,
+      );
+    }
+
+    // Le scan renvoie directement la cible : après un scan, l'opérateur veut
+    // la fiche, pas un identifiant à ré-interroger.
+    if (entry.targetType === 'unit') {
+      const unit = await deps.units.findById(entry.targetId);
+      if (unit !== null) {
+        return c.json({ data: { qr: entry, target: unit } });
+      }
+    }
+    return c.json({ data: { qr: entry, target: null } });
+  });
+
+  /** Attribue un QR à une unité, si elle n'en a pas déjà un. */
+  app.post('/api/units/:reference/qr', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const existing = await deps.qr.findByTarget('unit', unit.id);
+    if (existing !== null) {
+      // Idempotent par nature : redemander le QR d'une unité rend le sien.
+      return c.json({ data: existing, alreadyExisted: true });
+    }
+
+    if (isDryRun(c.req.url)) {
+      return c.json({ dryRun: true, data: { wouldRegisterFor: unit.publicCode } });
+    }
+
+    const registered = await deps.qr.register('unit', unit.id, deps.randomBytes, deps.now());
+    if (!registered.ok) {
+      return c.json(errorBody(registered.error), statusForError(registered.error.code));
+    }
+    return c.json({ data: registered.value, alreadyExisted: false });
+  });
+
+  /**
+   * Imprime — ou réimprime — l'étiquette d'une unité.
+   *
+   * Une réimpression réutilise **le même token** (`q17_5`) : l'étiquette
+   * abîmée est remplacée à l'identique, sans quoi le lien avec l'objet
+   * physique déjà en chambre serait rompu.
+   */
+  app.post('/api/units/:reference/label/print', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const rawBody: unknown = await c.req.json().catch(() => ({}));
+    const parsed = printBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Corps de requête invalide.', {
+            hint: 'Attendu : { copies?: number }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    const entry = await deps.qr.findByTarget('unit', unit.id);
+    if (entry === null) {
+      return c.json(
+        errorBody(
+          appError('NOT_FOUND', `L'unité ${unit.publicCode} n'a pas encore de QR.`, {
+            hint: `Appelle POST /api/units/${unit.publicCode}/qr avant d'imprimer son étiquette.`,
+            path: 'reference',
+          }),
+        ),
+        404,
+      );
+    }
+
+    const label = buildUnitLabel(unit, entry.token);
+    if (!label.ok) {
+      return c.json(errorBody(label.error), statusForError(label.error.code));
+    }
+
+    if (isDryRun(c.req.url)) {
+      return c.json({
+        dryRun: true,
+        data: { wouldPrint: label.value, copies: parsed.data.copies ?? 1 },
+      });
+    }
+
+    const job = await deps.printQueue.run({
+      id: deps.newId(),
+      unitId: unit.id,
+      label: label.value,
+      ...(parsed.data.copies !== undefined ? { copies: parsed.data.copies } : {}),
+      isReprint: entry.printCount > 0,
+      nowIso: deps.now(),
+    });
+    if (!job.ok) {
+      return c.json(errorBody(job.error), statusForError(job.error.code));
+    }
+
+    // Le compteur ne bouge que si l'impression a réellement abouti : sinon on
+    // croirait qu'une étiquette circule alors qu'elle n'est jamais sortie.
+    if (job.value.status === 'printed') {
+      await deps.qr.recordPrint(entry.token);
+    }
+    return c.json({ data: job.value });
+  });
+
+  /** Test imprimante — l'imprimante répond-elle, ici et maintenant ? */
+  app.get('/api/printer/test', async (c) => {
+    const result = await deps.printQueue.testPrinter();
+    if (!result.ok) {
+      return c.json(errorBody(result.error), statusForError(result.error.code));
+    }
+    return c.json({ data: result.value });
   });
 
   app.post('/api/units/:reference/advance', async (c) => {
