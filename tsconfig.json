@@ -9,6 +9,9 @@
     },
     {
       "path": "./packages/persistence"
+    },
+    {
+      "path": "./packages/api"
     }
   ]
 }

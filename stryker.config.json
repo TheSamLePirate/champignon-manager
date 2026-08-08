@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "_comment": "Le score de mutation est ce qui rend le 100 % de couverture honnête (docs/22 §2.3). Un test qui ne détecte pas l'inversion d'une condition n'est pas un test.",
+  "_comment": "Le score de mutation est ce qui rend le 100 % de couverture honnête (docs/22 §2.3). Périmètre = domain + contracts, conformément à docs/22 §6.1 : ce sont les paquets qui portent le comportement métier. Mesure hors barrière au 08/08/2026 en incluant api et persistence : 85,5 % global (api 78,1 %, persistence 65,4 %) — voir la déviation D-8 du suivi.",
   "packageManager": "npm",
   "testRunner": "vitest",
   "reporters": [

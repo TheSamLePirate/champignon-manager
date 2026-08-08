@@ -84,6 +84,46 @@ function advanceEvent(id: string, toStepId: string, occurredAt: string): DomainE
   };
 }
 
+/**
+ * Les index ne sont pas un détail d'optimisation : l'unicité de `publicCode`
+ * est ce qui empêche deux unités de porter le même QR. Un index manquant ne
+ * casse aucun test fonctionnel — il casse la production. On le vérifie donc.
+ */
+describe('index', () => {
+  // Appelé ici, et pas seulement dans le `beforeAll` global : le code exécuté
+  // en `beforeAll` n'est attribué à aucun test par l'analyse de couverture par
+  // test, donc les mutants de la définition d'index survivraient sans cela.
+  beforeEach(async () => {
+    await repository.ensureIndexes();
+  });
+
+  it('crée l’index unique sur le code public', async () => {
+    const indexes = await connection.db.collection('lots').indexes();
+    const unique = indexes.find((i) => JSON.stringify(i.key) === JSON.stringify({ publicCode: 1 }));
+    expect(unique?.unique).toBe(true);
+  });
+
+  it('crée les index de requête sur les unités', async () => {
+    const keys = (await connection.db.collection('lots').indexes()).map((i) =>
+      JSON.stringify(i.key),
+    );
+    expect(keys).toContain(JSON.stringify({ stage: 1, status: 1 }));
+    expect(keys).toContain(JSON.stringify({ parentUnitId: 1 }));
+    expect(keys).toContain(JSON.stringify({ processVersionId: 1 }));
+    expect(keys).toContain(JSON.stringify({ currentStepId: 1 }));
+    expect(keys).toContain(JSON.stringify({ 'location.roomId': 1 }));
+  });
+
+  it('crée les index du journal d’événements', async () => {
+    const keys = (await connection.db.collection('events').indexes()).map((i) =>
+      JSON.stringify(i.key),
+    );
+    expect(keys).toContain(JSON.stringify({ unitId: 1, occurredAt: 1 }));
+    expect(keys).toContain(JSON.stringify({ type: 1, occurredAt: 1 }));
+    expect(keys).toContain(JSON.stringify({ correlationId: 1 }));
+  });
+});
+
 describe('création', () => {
   it('écrit l’unité et son événement de naissance', async () => {
     const result = await repository.create(makeUnit(), birthEvent());
@@ -102,6 +142,8 @@ describe('création', () => {
     if (duplicate.ok) return;
     expect(duplicate.error.code).toBe('CONFLICT');
     expect(duplicate.error.message).toContain('SUB-2026-0001');
+    expect(duplicate.error.message).toContain('déjà utilisé');
+    expect(duplicate.error.hint).toContain('uniques');
     expect(duplicate.error.path).toBe('publicCode');
   });
 
@@ -154,9 +196,11 @@ describe('recherche', () => {
       makeUnit({ id: 'u-2', publicCode: 'GEL-2026-0001', stage: 'gelose' }),
       birthEvent('u-2', 'e-2'),
     );
-    expect(await repository.listByStage('substrate')).toHaveLength(1);
-    expect(await repository.listByStage('gelose')).toHaveLength(1);
-    expect(await repository.listByStage('fruiting')).toHaveLength(0);
+    const substrate = await repository.listByStage('substrate');
+    expect(substrate.map((u) => u.publicCode)).toEqual(['SUB-2026-0001']);
+    const gelose = await repository.listByStage('gelose');
+    expect(gelose.map((u) => u.publicCode)).toEqual(['GEL-2026-0001']);
+    expect(await repository.listByStage('fruiting')).toEqual([]);
   });
 
   it('compte les unités par stade', async () => {
@@ -201,7 +245,10 @@ describe('verrou optimiste', () => {
     expect(stale.ok).toBe(false);
     if (stale.ok) return;
     expect(stale.error.code).toBe('CONFLICT');
+    expect(stale.error.message).toContain('SUB-2026-0001');
     expect(stale.error.message).toContain('modifiée entre-temps');
+    expect(stale.error.message).toContain('version attendue était 0');
+    expect(stale.error.message).toContain('version en base est 1');
     expect(stale.error.path).toBe('version');
     expect(stale.error.hint).toContain('Relis l’unité');
   });
