@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { CultureUnit } from '@champi/contracts';
+import type { CultureUnit, DomainEvent } from '@champi/contracts';
 import { StatusBanner } from './components/StatusBanner.js';
-import { ScanPanel } from './components/ScanPanel.js';
-import type { ApiClient } from './lib/api-client.js';
+import { ScanPanel, type RecognisedScan } from './components/ScanPanel.js';
+import { UnitSheet, type NextStep } from './components/UnitSheet.js';
+import type { ApiClient, MutationResult } from './lib/api-client.js';
 import type { OfflineQueue } from './lib/offline-queue.js';
 import type { ScanEnvironment } from './lib/scanner.js';
-import type { RecognisedScan } from './components/ScanPanel.js';
 
 /**
  * Écran principal.
@@ -22,9 +22,16 @@ export interface AppProps {
   readonly online: boolean;
 }
 
+interface LoadedUnit {
+  readonly unit: CultureUnit;
+  readonly events: readonly DomainEvent[];
+  readonly nominalNext: readonly NextStep[];
+}
+
 export function App({ client, queue, environment, online }: AppProps): React.JSX.Element {
-  const [unit, setUnit] = useState<CultureUnit | null>(null);
+  const [loaded, setLoaded] = useState<LoadedUnit | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [pendingCount, setPendingCount] = useState(queue.pendingCount());
   const [failedCount, setFailedCount] = useState(queue.failed().length);
 
@@ -41,27 +48,87 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
     void client.flushQueue().then(refreshQueueCounts);
   }, [online, client, refreshQueueCounts]);
 
-  // `input` ne peut pas être « inconnu » : le panneau de scan ne remonte que
-  // ce qu'il a su interpréter. Il n'y a donc pas de cas d'erreur à traiter ici.
-  const openUnit = useCallback(
-    async (input: RecognisedScan) => {
-      const result =
-        input.kind === 'token'
-          ? await client.resolveQr(input.value)
-          : await client.getUnit(input.value);
+  /** Charge la fiche complète : identité, historique et suites possibles. */
+  const loadUnit = useCallback(
+    async (reference: string) => {
+      const [unit, timeline, steps] = await Promise.all([
+        client.getUnit(reference),
+        client.getTimeline(reference),
+        client.nextSteps(reference),
+      ]);
 
-      if (!result.ok) {
-        setUnit(null);
+      if (!unit.ok) {
+        setLoaded(null);
         // On affiche l'indice du serveur : il contient les valeurs valides.
-        setMessage(result.error.hint ?? result.error.message);
+        setMessage(unit.error.hint ?? unit.error.message);
         return;
       }
 
-      const found = 'target' in result.data ? result.data.target : result.data;
-      setUnit(found);
-      setMessage(found === null ? 'Ce QR ne correspond à aucune unité connue.' : null);
+      setLoaded({
+        unit: unit.data,
+        events: timeline.ok ? timeline.data : [],
+        nominalNext: steps.ok ? steps.data.nominal : [],
+      });
+      setMessage(null);
     },
     [client],
+  );
+
+  const openUnit = useCallback(
+    async (input: RecognisedScan) => {
+      if (input.kind === 'public-code') {
+        await loadUnit(input.value);
+        return;
+      }
+
+      const resolved = await client.resolveQr(input.value);
+      if (!resolved.ok) {
+        setLoaded(null);
+        setMessage(resolved.error.hint ?? resolved.error.message);
+        return;
+      }
+      if (resolved.data.target === null) {
+        setLoaded(null);
+        setMessage('Ce QR ne correspond à aucune unité connue.');
+        return;
+      }
+      await loadUnit(resolved.data.target.publicCode);
+    },
+    [client, loadUnit],
+  );
+
+  /**
+   * Traite le résultat d'une mutation.
+   *
+   * Trois issues, et l'opérateur doit pouvoir les distinguer : envoyée,
+   * conservée pour plus tard, ou refusée pour une raison métier.
+   */
+  const handleMutation = useCallback(
+    async (result: MutationResult<unknown>, reference: string) => {
+      if ('queued' in result) {
+        setMessage('Saisie conservée sur l’appareil — elle partira au retour du réseau.');
+        refreshQueueCounts();
+        return;
+      }
+      if (!result.ok) {
+        setMessage(result.error.hint ?? result.error.message);
+        return;
+      }
+      await loadUnit(reference);
+    },
+    [loadUnit, refreshQueueCounts],
+  );
+
+  const runAction = useCallback(
+    async (action: () => Promise<MutationResult<unknown>>, reference: string) => {
+      setBusy(true);
+      try {
+        await handleMutation(await action(), reference);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [handleMutation],
   );
 
   return (
@@ -83,20 +150,36 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
         </p>
       )}
 
-      {unit !== null && (
-        <section aria-labelledby="unit-title">
-          <h2 id="unit-title">{unit.name}</h2>
-          <dl>
-            <dt>Code</dt>
-            <dd>{unit.publicCode}</dd>
-            <dt>Stade</dt>
-            <dd>{unit.stage}</dd>
-            <dt>Étape courante</dt>
-            <dd>{unit.currentStepId}</dd>
-            <dt>Statut</dt>
-            <dd>{unit.status}</dd>
-          </dl>
-        </section>
+      {loaded !== null && (
+        <UnitSheet
+          unit={loaded.unit}
+          events={loaded.events}
+          nominalNext={loaded.nominalNext}
+          busy={busy}
+          onAdvance={(stepId) => {
+            void runAction(
+              () => client.advance(loaded.unit.publicCode, stepId, loaded.unit.version),
+              loaded.unit.publicCode,
+            );
+          }}
+          onObserve={() => {
+            void runAction(
+              () =>
+                client.observe(loaded.unit.publicCode, { kind: 'colonisation', severity: 'low' }),
+              loaded.unit.publicCode,
+            );
+          }}
+          onMeasure={() => {
+            void runAction(
+              () =>
+                client.measure(loaded.unit.publicCode, {
+                  metric: 'temperature_c',
+                  numericValue: 24,
+                }),
+              loaded.unit.publicCode,
+            );
+          }}
+        />
       )}
     </main>
   );

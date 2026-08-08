@@ -1418,3 +1418,302 @@ describe('propagation des échecs de la couche de persistance', () => {
     expect(response.status).toBe(409);
   });
 });
+
+describe('observations', () => {
+  it('liste les types pertinents au stade courant', async () => {
+    const response = await app.request('/api/units/SUB-2026-0001/observation-kinds');
+    const body = (await response.json()) as {
+      data: { stage: string; kinds: string[]; note: string };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.stage).toBe('substrate');
+    expect(body.data.kinds).toContain('contamination');
+    // Pas de liste par étape : la liste complète existe partout (`q12_2`).
+    expect(body.data.note).toContain('tous les stades');
+  });
+
+  it('renvoie 404 pour une unité inconnue', async () => {
+    expect((await app.request('/api/units/inconnue/observation-kinds')).status).toBe(404);
+  });
+
+  it('enregistre une observation simple', async () => {
+    const response = await post('/api/units/SUB-2026-0001/observations', {
+      kind: 'colonisation',
+      severity: 'low',
+      note: 'mycélium à mi-sac',
+    });
+    const body = (await response.json()) as {
+      data: { event: { type: string; payload: { kind: string; note: string } } };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.event.type).toBe('unit.observed');
+    expect(body.data.event.payload.kind).toBe('colonisation');
+    expect(body.data.event.payload.note).toBe('mycélium à mi-sac');
+  });
+
+  /**
+   * L'observation enrichit l'historique sans toucher à l'état métier : ni
+   * l'étape ni le statut ne bougent (`observationChangesStatus`).
+   */
+  it('ne change ni l’étape ni le statut de l’unité', async () => {
+    await post('/api/units/SUB-2026-0001/observations', {
+      kind: 'contamination',
+      severity: 'critical',
+      photoId: 'f-1',
+    });
+
+    const unit = await app.request('/api/units/SUB-2026-0001');
+    const body = (await unit.json()) as { data: { currentStepId: string; status: string } };
+    expect(body.data.currentStepId).toBe('inoculation');
+    expect(body.data.status).toBe('active');
+  });
+
+  /** La seule saisie obligatoire de l'application (`q12_4`). */
+  it('refuse une contamination sans photo', async () => {
+    const response = await post('/api/units/SUB-2026-0001/observations', {
+      kind: 'contamination',
+      severity: 'critical',
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe('PHOTO_REQUIRED');
+    expect(body.error.hint).toContain('seule saisie obligatoire');
+    expect(body.error.path).toBe('photoId');
+  });
+
+  it('accepte une contamination documentée par une photo', async () => {
+    const response = await post('/api/units/SUB-2026-0001/observations', {
+      kind: 'contamination',
+      severity: 'critical',
+      photoId: 'f-42',
+    });
+    const body = (await response.json()) as {
+      data: { event: { payload: { photoId: string } } };
+    };
+    expect(response.status).toBe(200);
+    expect(body.data.event.payload.photoId).toBe('f-42');
+  });
+
+  it('refuse un type d’observation sans objet au stade courant', async () => {
+    await repository.create(
+      makeUnit({ id: 'u-gel', publicCode: 'GEL-2026-0001', stage: 'gelose' }),
+      {
+        id: 'birth-u-gel',
+        type: 'unit.created',
+        occurredAt: '2026-08-01T08:00:00.000Z',
+        recordedAt: '2026-08-01T08:00:00.000Z',
+        source: 'manual',
+        unitId: 'u-gel',
+        payload: {
+          stage: 'gelose',
+          processVersionId: 'pv-1',
+          stepId: 'inoculation',
+          parentUnitId: null,
+        },
+      },
+    );
+
+    const response = await post('/api/units/GEL-2026-0001/observations', {
+      kind: 'taille',
+      severity: 'low',
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.hint).toContain('colonisation');
+  });
+
+  it('refuse un corps invalide en décrivant la forme attendue', async () => {
+    const response = await post('/api/units/SUB-2026-0001/observations', { kind: 'odeur' });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.hint).toContain('severity');
+    expect(body.error.path).toBe('severity');
+  });
+
+  it('décrit sans écrire en dryRun', async () => {
+    const response = await post('/api/units/SUB-2026-0001/observations?dryRun=true', {
+      kind: 'odeur',
+      severity: 'medium',
+    });
+    const body = (await response.json()) as { dryRun: boolean };
+    expect(body.dryRun).toBe(true);
+    expect(await repository.eventsForUnit('u-1')).toHaveLength(1);
+  });
+
+  it('renvoie 404 pour une unité inconnue', async () => {
+    const response = await post('/api/units/inconnue/observations', {
+      kind: 'odeur',
+      severity: 'low',
+    });
+    expect(response.status).toBe(404);
+  });
+});
+
+describe('mesures', () => {
+  it('enregistre une température', async () => {
+    const response = await post('/api/units/SUB-2026-0001/measurements', {
+      metric: 'temperature_c',
+      numericValue: 24,
+    });
+    const body = (await response.json()) as {
+      data: { event: { type: string; payload: { metric: string; numericValue: number } } };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.event.type).toBe('unit.measured');
+    expect(body.data.event.payload.metric).toBe('temperature_c');
+    expect(body.data.event.payload.numericValue).toBe(24);
+  });
+
+  it('enregistre une humidité', async () => {
+    const response = await post('/api/units/SUB-2026-0001/measurements', {
+      metric: 'humidity_pct',
+      numericValue: 90,
+    });
+    expect(response.status).toBe(200);
+  });
+
+  it('enregistre un poids en quantité typée', async () => {
+    const response = await post('/api/units/SUB-2026-0001/measurements', {
+      metric: 'weight',
+      quantity: { value: 4.8, unit: 'kg', kind: 'substrate' },
+    });
+    const body = (await response.json()) as {
+      data: { event: { payload: { quantity: { value: number } } } };
+    };
+    expect(body.data.event.payload.quantity.value).toBe(4.8);
+  });
+
+  /** Une mesure sans valeur ne dit rien — mieux vaut la refuser que la stocker. */
+  it('refuse une mesure sans valeur', async () => {
+    const response = await post('/api/units/SUB-2026-0001/measurements', {
+      metric: 'temperature_c',
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.message).toContain('sans valeur');
+    expect(body.error.hint).toContain('numericValue');
+  });
+
+  it('refuse une métrique inconnue', async () => {
+    const response = await post('/api/units/SUB-2026-0001/measurements', {
+      metric: 'ph',
+      numericValue: 7,
+    });
+    const body = (await response.json()) as {
+      error: { code: string; message: string; hint: string; path: string; docsUrl: string };
+    };
+    expect(response.status).toBe(400);
+    expect(body.error.path).toBe('metric');
+  });
+
+  it('décrit sans écrire en dryRun', async () => {
+    const response = await post('/api/units/SUB-2026-0001/measurements?dryRun=true', {
+      metric: 'temperature_c',
+      numericValue: 24,
+    });
+    expect(((await response.json()) as { dryRun: boolean }).dryRun).toBe(true);
+    expect(await repository.eventsForUnit('u-1')).toHaveLength(1);
+  });
+
+  it('renvoie 404 pour une unité inconnue', async () => {
+    const response = await post('/api/units/inconnue/measurements', {
+      metric: 'temperature_c',
+      numericValue: 24,
+    });
+    expect(response.status).toBe(404);
+  });
+
+  it('apparaît dans le journal sans altérer l’étape', async () => {
+    await post('/api/units/SUB-2026-0001/measurements', {
+      metric: 'temperature_c',
+      numericValue: 23,
+    });
+    const timeline = await app.request('/api/units/SUB-2026-0001/timeline');
+    const events = ((await timeline.json()) as { data: { type: string }[] }).data;
+    expect(events.map((e) => e.type)).toEqual(['unit.created', 'unit.measured']);
+
+    const audit = await app.request('/api/units/SUB-2026-0001/audit');
+    const auditBody = (await audit.json()) as { data: { verified: boolean } };
+    expect(auditBody.data.verified).toBe(true);
+  });
+});
+
+/**
+ * Course entre deux écritures sur la même unité.
+ *
+ * La route relit l'unité puis écrit avec la version lue : le conflit n'est donc
+ * possible que si quelqu'un s'intercale entre les deux. C'est rare mais réel —
+ * deux téléphones en chambre au même moment — et c'est ce chemin qui parle à
+ * l'utilisateur quand cela arrive. On le déclenche par un dépôt qui refuse.
+ */
+describe('course entre deux écritures', () => {
+  const conflict = {
+    ok: false as const,
+    error: {
+      code: 'CONFLICT' as const,
+      message: 'L’unité a été modifiée entre-temps.',
+      hint: 'Relis l’unité puis réessaie.',
+    },
+  };
+
+  function appWithRacingRepository(): Hono {
+    const racing = {
+      findByIdOrPublicCode: (reference: string) => repository.findByIdOrPublicCode(reference),
+      saveWithEvent: () => Promise.resolve(conflict),
+    } as unknown as UnitRepository;
+
+    return createApp({
+      connection,
+      units: racing,
+      qr,
+      processes,
+      printQueue: new PrintQueue(transport),
+      now: () => NOW,
+      newId: () => `evt-${String(++idCounter)}`,
+      randomBytes: seededBytes,
+      graphForVersion: (versionId) => Promise.resolve(versionId === 'pv-1' ? graph : null),
+    });
+  }
+
+  async function postTo(target: Hono, path: string, body: unknown): Promise<Response> {
+    return target.request(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  it('refuse une observation quand l’unité a bougé entre-temps', async () => {
+    const response = await postTo(
+      appWithRacingRepository(),
+      '/api/units/SUB-2026-0001/observations',
+      { kind: 'odeur', severity: 'low' },
+    );
+    const body = (await response.json()) as { error: { code: string; hint: string } };
+
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe('CONFLICT');
+    expect(body.error.hint).toContain('Relis');
+  });
+
+  it('refuse une mesure quand l’unité a bougé entre-temps', async () => {
+    const response = await postTo(
+      appWithRacingRepository(),
+      '/api/units/SUB-2026-0001/measurements',
+      { metric: 'temperature_c', numericValue: 24 },
+    );
+    expect(response.status).toBe(409);
+  });
+});

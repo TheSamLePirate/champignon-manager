@@ -14,6 +14,8 @@ import {
 import {
   advanceUnit,
   buildUnitLabel,
+  relevantObservationKinds,
+  validateObservation,
   checkJournalIntegrity,
   diffReplayAgainstStored,
   draftFromVersion,
@@ -70,6 +72,25 @@ const advanceBodySchema = z.object({
 
 const printBodySchema = z.object({
   copies: z.number().optional(),
+});
+
+const observationBodySchema = z.object({
+  kind: z.string().min(1),
+  severity: z.enum(['low', 'medium', 'critical']),
+  note: z.string().min(1).optional(),
+  photoId: z.string().min(1).optional(),
+});
+
+const measurementBodySchema = z.object({
+  metric: z.enum(['temperature_c', 'humidity_pct', 'weight']),
+  numericValue: z.number().finite().optional(),
+  quantity: z
+    .object({
+      value: z.number().finite().nonnegative(),
+      unit: z.enum(['g', 'kg', 'piece', 'tray', 'L', 'mL']),
+      kind: z.enum(['substrate', 'harvest', 'product', 'inoculum']),
+    })
+    .optional(),
 });
 
 const createProcessBodySchema = z.object({
@@ -856,6 +877,145 @@ export function createApp(deps: AppDependencies): Hono {
       await idempotency.remember(key, rawBody, 200, body);
     }
     return c.json(body);
+  });
+
+  /**
+   * Observations pertinentes au stade courant.
+   *
+   * Il n'y a **pas** de liste par étape (`q12_2`) : la liste complète existe
+   * partout, l'application masque simplement ce qui n'a pas de sens.
+   */
+  app.get('/api/units/:reference/observation-kinds', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+    return c.json({
+      data: {
+        stage: unit.stage,
+        kinds: relevantObservationKinds(unit.stage),
+        note: 'La liste complète existe à tous les stades ; seuls les types sans objet sont masqués.',
+      },
+    });
+  });
+
+  /** Enregistre une observation terrain. */
+  app.post('/api/units/:reference/observations', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const rawBody: unknown = await c.req.json().catch(() => null);
+    const parsed = observationBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Corps de requête invalide.', {
+            hint: 'Attendu : { kind: string, severity: "low"|"medium"|"critical", note?: string, photoId?: string }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    const validated = validateObservation({
+      unit,
+      kind: parsed.data.kind,
+      severity: parsed.data.severity,
+      ...(parsed.data.note !== undefined ? { note: parsed.data.note } : {}),
+      ...(parsed.data.photoId !== undefined ? { photoId: parsed.data.photoId } : {}),
+    });
+    if (!validated.ok) {
+      return c.json(errorBody(validated.error), statusForError(validated.error.code));
+    }
+
+    const nowIso = deps.now();
+    const event: DomainEvent = domainEventSchema.parse({
+      id: deps.newId(),
+      type: 'unit.observed',
+      occurredAt: nowIso,
+      recordedAt: nowIso,
+      source: 'manual',
+      unitId: unit.id,
+      payload: validated.value,
+    });
+
+    if (isDryRun(c.req.url)) {
+      return c.json({ dryRun: true, data: { wouldRecord: event } });
+    }
+
+    // Une observation n'altère pas l'état de l'unité (`observationChangesStatus`) :
+    // seul `updatedAt` et le verrou bougent, l'étape et le statut restent.
+    const saved = await deps.units.saveWithEvent(
+      { ...unit, updatedAt: nowIso, version: unit.version + 1 },
+      event,
+      unit.version,
+    );
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+    return c.json({ data: { unit: saved.value, event } });
+  });
+
+  /** Enregistre une mesure. Tout est manuel aujourd'hui (`q11_1`). */
+  app.post('/api/units/:reference/measurements', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const rawBody: unknown = await c.req.json().catch(() => null);
+    const parsed = measurementBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Corps de requête invalide.', {
+            hint: 'Attendu : { metric: "temperature_c"|"humidity_pct"|"weight", numericValue?: number, quantity?: {...} }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    if (parsed.data.numericValue === undefined && parsed.data.quantity === undefined) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Une mesure sans valeur ne veut rien dire.', {
+            hint: 'Renseigne `numericValue` pour une température ou une humidité, `quantity` pour un poids.',
+            path: 'numericValue',
+          }),
+        ),
+        400,
+      );
+    }
+
+    const nowIso = deps.now();
+    const event: DomainEvent = domainEventSchema.parse({
+      id: deps.newId(),
+      type: 'unit.measured',
+      occurredAt: nowIso,
+      recordedAt: nowIso,
+      source: 'manual',
+      unitId: unit.id,
+      payload: parsed.data,
+    });
+
+    if (isDryRun(c.req.url)) {
+      return c.json({ dryRun: true, data: { wouldRecord: event } });
+    }
+
+    const saved = await deps.units.saveWithEvent(
+      { ...unit, updatedAt: nowIso, version: unit.version + 1 },
+      event,
+      unit.version,
+    );
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+    return c.json({ data: { unit: saved.value, event } });
   });
 
   return app;

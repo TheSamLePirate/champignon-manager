@@ -125,6 +125,26 @@ export class ApiClient {
     return this.get(`/api/qr/${encodeURIComponent(token)}`);
   }
 
+  nextSteps(
+    reference: string,
+  ): Promise<ApiResult<{ currentStepId: string; nominal: { id: string; name: string }[] }>> {
+    return this.get(`/api/units/${encodeURIComponent(reference)}/next-steps`);
+  }
+
+  observe(
+    reference: string,
+    body: { kind: string; severity: string; note?: string; photoId?: string },
+  ): Promise<MutationResult<{ unit: CultureUnit; event: DomainEvent }>> {
+    return this.post(`/api/units/${encodeURIComponent(reference)}/observations`, body);
+  }
+
+  measure(
+    reference: string,
+    body: { metric: string; numericValue?: number },
+  ): Promise<MutationResult<{ unit: CultureUnit; event: DomainEvent }>> {
+    return this.post(`/api/units/${encodeURIComponent(reference)}/measurements`, body);
+  }
+
   advance(
     reference: string,
     toStepId: string,

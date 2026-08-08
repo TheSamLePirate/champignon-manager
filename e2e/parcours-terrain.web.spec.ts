@@ -172,3 +172,105 @@ test.describe('scanner', () => {
     await expect(page.getByLabel(/saisis le code/i)).toBeVisible();
   });
 });
+
+/**
+ * Le parcours complet de suivi, vu depuis le navigateur : l'opérateur ouvre une
+ * fiche, avance d'étape, observe, mesure — et voit l'historique se remplir.
+ */
+test.describe('suivi d’une unité depuis le navigateur', () => {
+  test('affiche l’historique et les suites possibles', async ({ page, request }) => {
+    const process = await createPublishedProcess(request);
+    const unit = await createUnit(request, process.versionId, { name: 'Bloc suivi' });
+
+    await page.goto('/');
+    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Bloc suivi' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Historique' })).toBeVisible();
+    // La suite nominale du process à six étapes.
+    await expect(page.getByRole('button', { name: /Passer à « Incubation »/ })).toBeVisible();
+  });
+
+  test('avance d’étape et voit l’historique se remplir', async ({ page, request }) => {
+    const process = await createPublishedProcess(request);
+    const unit = await createUnit(request, process.versionId, { name: 'Bloc avancé' });
+
+    await page.goto('/');
+    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
+    await page.getByRole('button', { name: /Passer à « Incubation »/ }).click();
+
+    await expect(page.getByText('inoculation → incubation')).toBeVisible();
+    // La fiche se recharge : la suite proposée est maintenant la fructification.
+    await expect(page.getByRole('button', { name: /Passer à « Fructification »/ })).toBeVisible();
+  });
+
+  test('enregistre une observation et une mesure', async ({ page, request }) => {
+    const process = await createPublishedProcess(request);
+    const unit = await createUnit(request, process.versionId, { name: 'Bloc observé' });
+
+    await page.goto('/');
+    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
+
+    await page.getByRole('button', { name: 'Ajouter une observation' }).click();
+    await expect(page.getByText(/colonisation — gravité low/)).toBeVisible();
+
+    await page.getByRole('button', { name: 'Ajouter une mesure' }).click();
+    await expect(page.getByText(/temperature_c : 24/)).toBeVisible();
+  });
+
+  /** Une observation enrichit l'historique sans toucher à l'état métier. */
+  test('une observation ne change ni l’étape ni le statut', async ({ page, request }) => {
+    const process = await createPublishedProcess(request);
+    const unit = await createUnit(request, process.versionId);
+
+    await page.goto('/');
+    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
+    await page.getByRole('button', { name: 'Ajouter une observation' }).click();
+    await expect(page.getByText(/colonisation/)).toBeVisible();
+
+    const after = await request.get(`/api/units/${unit.publicCode}`);
+    const body = (await after.json()) as { data: { currentStepId: string; status: string } };
+    expect(body.data.currentStepId).toBe('inoculation');
+    expect(body.data.status).toBe('active');
+  });
+
+  test('le journal reste cohérent après une suite d’actions', async ({ page, request }) => {
+    const process = await createPublishedProcess(request);
+    const unit = await createUnit(request, process.versionId);
+
+    await page.goto('/');
+    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
+    await page.getByRole('button', { name: 'Ajouter une mesure' }).click();
+    await expect(page.getByText(/temperature_c/)).toBeVisible();
+    await page.getByRole('button', { name: /Passer à « Incubation »/ }).click();
+    await expect(page.getByText('inoculation → incubation')).toBeVisible();
+
+    // L'assertion centrale du rapport d'audit, après un parcours réellement
+    // piloté par l'interface.
+    const audit = await request.get(`/api/units/${unit.publicCode}/audit`);
+    const auditBody = (await audit.json()) as {
+      data: { verified: boolean; divergences: unknown[]; eventCount: number };
+    };
+    expect(auditBody.data.divergences).toEqual([]);
+    expect(auditBody.data.verified).toBe(true);
+    expect(auditBody.data.eventCount).toBe(3);
+  });
+
+  test('les boutons d’action respectent la taille de cible tactile', async ({ page, request }) => {
+    const process = await createPublishedProcess(request);
+    const unit = await createUnit(request, process.versionId);
+
+    await page.goto('/');
+    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
+
+    const action = page.getByRole('button', { name: 'Ajouter une observation' });
+    const box = await action.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  });
+});

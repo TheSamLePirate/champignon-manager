@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { CultureUnit } from '@champi/contracts';
+import type { AppError, CultureUnit, DomainEvent } from '@champi/contracts';
 import { App } from './App.js';
 import type { ApiClient } from './lib/api-client.js';
 import { OfflineQueue, type QueuedMutation, type QueueStorage } from './lib/offline-queue.js';
@@ -49,10 +49,43 @@ function makeQueue(): OfflineQueue {
 function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
   return {
     getUnit: () => Promise.resolve({ ok: true, data: unit }),
+    getTimeline: () => Promise.resolve({ ok: true, data: [] }),
+    nextSteps: () =>
+      Promise.resolve({
+        ok: true,
+        data: {
+          currentStepId: 'incubation',
+          nominal: [{ id: 'fructification', name: 'Fructification' }],
+        },
+      }),
     resolveQr: () => Promise.resolve({ ok: true, data: { qr: {}, target: unit } }),
+    advance: mutationOk,
+    observe: mutationOk,
+    measure: mutationOk,
     flushQueue: () => Promise.resolve({ sent: 0, remaining: 0, stoppedOnNetwork: false }),
     ...overrides,
   } as unknown as ApiClient;
+}
+
+/** Événement complet et typé — un `{}` ne satisfait pas `DomainEvent`. */
+const someEvent: DomainEvent = {
+  id: 'e-1',
+  type: 'unit.observed',
+  occurredAt: '2026-08-02T08:00:00.000Z',
+  recordedAt: '2026-08-02T08:00:00.000Z',
+  source: 'manual',
+  unitId: 'u-1',
+  payload: { kind: 'colonisation', severity: 'low' },
+};
+
+/** Succès de mutation, correctement typé. */
+function mutationOk() {
+  return Promise.resolve({ ok: true as const, data: { unit, event: someEvent } });
+}
+
+/** Échec métier, correctement typé — le code d'erreur est une union, pas `string`. */
+function mutationFailed(error: AppError) {
+  return Promise.resolve({ ok: false as const, error, offline: false });
 }
 
 async function scan(value: string): Promise<void> {
@@ -77,7 +110,12 @@ describe('App', () => {
     expect(screen.getByText('incubation')).toBeInTheDocument();
   });
 
-  it('résout un token par la route de QR, pas par la fiche', async () => {
+  /**
+   * Un token passe par la route de QR, puis la fiche complète est chargée par
+   * son code public : après un scan, l'opérateur voit l'unité, son historique
+   * et ses suites possibles — pas un identifiant à ré-interroger.
+   */
+  it('résout un token par la route de QR puis charge la fiche complète', async () => {
     const resolveQr = vi.fn(() =>
       Promise.resolve({ ok: true as const, data: { qr: {}, target: unit } }),
     );
@@ -93,19 +131,37 @@ describe('App', () => {
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
 
     expect(resolveQr).toHaveBeenCalledWith('ABCDEFGHJKMNPQRSTUVWXY');
-    expect(getUnit).not.toHaveBeenCalled();
+    expect(getUnit).toHaveBeenCalledWith('SUB-2026-0042');
+    expect(await screen.findByRole('heading', { name: 'Pleurote bloc 1' })).toBeInTheDocument();
+  });
+
+  it('n’appelle pas la route de QR pour un code public', async () => {
+    const resolveQr = vi.fn(() =>
+      Promise.resolve({ ok: true as const, data: { qr: {}, target: unit } }),
+    );
+    render(
+      <App
+        client={fakeClient({ resolveQr })}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+      />,
+    );
+    await scan('SUB-2026-0042');
+
+    expect(resolveQr).not.toHaveBeenCalled();
   });
 
   /** L'indice du serveur contient les valeurs valides : c'est lui qu'on montre. */
   it('affiche l’indice du serveur plutôt que le code d’erreur', async () => {
     const client = fakeClient({
       getUnit: () =>
-        Promise.resolve({
-          ok: false as const,
-          error: { code: 'NOT_FOUND', message: 'introuvable', hint: 'Vérifie le code public.' },
-          offline: false,
+        mutationFailed({
+          code: 'NOT_FOUND',
+          message: 'introuvable',
+          hint: 'Vérifie le code public.',
         }),
-    } as unknown as Partial<ApiClient>);
+    });
 
     render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
     await scan('SUB-2026-9999');
@@ -115,13 +171,8 @@ describe('App', () => {
 
   it('se rabat sur le message quand l’erreur n’a pas d’indice', async () => {
     const client = fakeClient({
-      getUnit: () =>
-        Promise.resolve({
-          ok: false as const,
-          error: { code: 'NOT_FOUND', message: 'Rien à cet endroit.' },
-          offline: false,
-        }),
-    } as unknown as Partial<ApiClient>);
+      getUnit: () => mutationFailed({ code: 'NOT_FOUND', message: 'Rien à cet endroit.' }),
+    });
 
     render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
     await scan('SUB-2026-9999');
@@ -207,5 +258,132 @@ describe('App', () => {
     // Le bouton reste désactivé : rien ne part.
     expect(screen.getByRole('button', { name: 'Ouvrir la fiche' })).toBeDisabled();
     expect(getUnit).not.toHaveBeenCalled();
+  });
+});
+
+describe('actions depuis la fiche', () => {
+  async function openSheet(client: ApiClient): Promise<void> {
+    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    await scan('SUB-2026-0042');
+    await screen.findByRole('heading', { name: 'Pleurote bloc 1' });
+  }
+
+  it('avance d’étape avec la version courante de l’unité', async () => {
+    const advance = vi.fn(mutationOk);
+    await openSheet(fakeClient({ advance }));
+
+    await userEvent.click(screen.getByRole('button', { name: /Passer à/ }));
+    // La version lue est renvoyée telle quelle : c'est le verrou optimiste.
+    expect(advance).toHaveBeenCalledWith('SUB-2026-0042', 'fructification', 0);
+  });
+
+  it('enregistre une observation', async () => {
+    const observe = vi.fn(mutationOk);
+    await openSheet(fakeClient({ observe }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter une observation' }));
+    expect(observe).toHaveBeenCalledWith('SUB-2026-0042', {
+      kind: 'colonisation',
+      severity: 'low',
+    });
+  });
+
+  it('enregistre une mesure', async () => {
+    const measure = vi.fn(mutationOk);
+    await openSheet(fakeClient({ measure }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter une mesure' }));
+    expect(measure).toHaveBeenCalledWith('SUB-2026-0042', {
+      metric: 'temperature_c',
+      numericValue: 24,
+    });
+  });
+
+  /**
+   * Les trois issues d'une mutation doivent être distinguables par l'opérateur :
+   * envoyée, conservée, ou refusée.
+   */
+  it('annonce une saisie conservée sans la présenter comme un échec', async () => {
+    const advance = vi.fn(() =>
+      Promise.resolve({ ok: true as const, queued: true as const, pendingCount: 1 }),
+    );
+    await openSheet(fakeClient({ advance }));
+
+    await userEvent.click(screen.getByRole('button', { name: /Passer à/ }));
+    expect(await screen.findByText(/conservée sur l’appareil/)).toBeInTheDocument();
+  });
+
+  it('affiche l’indice du serveur quand l’action est refusée', async () => {
+    const advance = vi.fn(() =>
+      mutationFailed({
+        code: 'CONFLICT',
+        message: 'conflit',
+        hint: 'Relis l’unité puis réessaie.',
+      }),
+    );
+    await openSheet(fakeClient({ advance }));
+
+    await userEvent.click(screen.getByRole('button', { name: /Passer à/ }));
+    expect(await screen.findByText('Relis l’unité puis réessaie.')).toBeInTheDocument();
+  });
+
+  it('se rabat sur le message quand le refus n’a pas d’indice', async () => {
+    const advance = vi.fn(() => mutationFailed({ code: 'CONFLICT', message: 'Refus sec.' }));
+    await openSheet(fakeClient({ advance }));
+
+    await userEvent.click(screen.getByRole('button', { name: /Passer à/ }));
+    expect(await screen.findByText('Refus sec.')).toBeInTheDocument();
+  });
+
+  it('recharge la fiche après une action réussie', async () => {
+    const getUnit = vi.fn(() => Promise.resolve({ ok: true as const, data: unit }));
+    await openSheet(fakeClient({ getUnit }));
+    const callsBefore = getUnit.mock.calls.length;
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter une mesure' }));
+    await vi.waitFor(() => {
+      expect(getUnit.mock.calls.length).toBeGreaterThan(callsBefore);
+    });
+  });
+
+  it('affiche une fiche même si l’historique est indisponible', async () => {
+    const getTimeline = vi.fn(() => mutationFailed({ code: 'CONFLICT', message: 'indisponible' }));
+    await openSheet(fakeClient({ getTimeline }));
+    // La fiche s'affiche quand même : mieux vaut une identité sans historique
+    // que rien du tout devant une unité qu'on a dans les mains.
+    expect(screen.getByText('Aucun événement enregistré.')).toBeInTheDocument();
+  });
+
+  it('affiche une fiche même si les suites sont indisponibles', async () => {
+    const nextSteps = vi.fn(() => mutationFailed({ code: 'NOT_FOUND', message: 'introuvable' }));
+    await openSheet(fakeClient({ nextSteps }));
+    expect(screen.getByText(/Toute étape reste atteignable/)).toBeInTheDocument();
+  });
+});
+
+describe('résolution de QR — chemins d’échec', () => {
+  it('affiche l’indice quand la résolution du QR échoue', async () => {
+    const client = fakeClient({
+      resolveQr: () =>
+        mutationFailed({
+          code: 'NOT_FOUND',
+          message: 'inconnu',
+          hint: 'Étiquette d’une autre installation ?',
+        }),
+    });
+    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    await scan('ABCDEFGHJKMNPQRSTUVWXY');
+
+    expect(await screen.findByText('Étiquette d’une autre installation ?')).toBeInTheDocument();
+  });
+
+  it('se rabat sur le message quand la résolution échoue sans indice', async () => {
+    const client = fakeClient({
+      resolveQr: () => mutationFailed({ code: 'NOT_FOUND', message: 'Token illisible.' }),
+    });
+    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    await scan('ABCDEFGHJKMNPQRSTUVWXY');
+
+    expect(await screen.findByText('Token illisible.')).toBeInTheDocument();
   });
 });

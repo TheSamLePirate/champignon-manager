@@ -161,3 +161,75 @@ label {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --- Fiche d'unité --- */
+
+.unit {
+  margin-top: var(--espace);
+  background: var(--surface);
+  padding: var(--espace);
+  border-radius: 12px;
+}
+
+.unit__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.unit__facts dt {
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+.unit__facts dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+  /* Un code public ou un nom long ne doit pas élargir la page. */
+  overflow-wrap: anywhere;
+}
+
+/* Les actions sont empilées et largement espacées : on les vise avec des gants. */
+.unit__actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.unit__actions button {
+  min-height: 56px;
+}
+
+.unit__closed,
+.unit__hint {
+  color: var(--texte-doux);
+  margin: 0 0 1rem;
+}
+
+.unit__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.unit__timeline li {
+  padding: 0.6rem 0.75rem;
+  background: var(--fond);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+
+.unit__timeline time {
+  color: var(--texte-doux);
+  font-variant-numeric: tabular-nums;
+}
+
+.message {
+  margin: var(--espace) 0;
+  padding: 0.9rem var(--espace);
+  background: var(--surface);
+  border-radius: 10px;
+}

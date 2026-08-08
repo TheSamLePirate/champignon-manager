@@ -9,3 +9,4 @@ export * from './trace/replay.js';
 export * from './qr/public-code.js';
 export * from './qr/token.js';
 export * from './printing/label.js';
+export * from './unit/observation.js';

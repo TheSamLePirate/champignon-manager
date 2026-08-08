@@ -188,6 +188,66 @@ describe('mutation', () => {
   });
 });
 
+describe('opérations métier ajoutées', () => {
+  it('interroge les étapes suivantes', async () => {
+    const fetchImpl = mockFetch(() =>
+      Promise.resolve(jsonResponse({ data: { currentStepId: 'a', nominal: [] } })),
+    );
+    const result = await makeClient(fetchImpl).nextSteps('SUB-2026-0001');
+
+    expect(fetchImpl).toHaveBeenCalledWith(`${BASE}/api/units/SUB-2026-0001/next-steps`);
+    expect(result.ok && result.data.currentStepId).toBe('a');
+  });
+
+  it('envoie une observation avec sa clé d’idempotence', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).observe('SUB-2026-0001', {
+      kind: 'contamination',
+      severity: 'critical',
+      photoId: 'f-1',
+    });
+
+    const [url, init] = [fetchImpl.mock.calls[0]?.[0], firstInit(fetchImpl)];
+    expect(url).toBe(`${BASE}/api/units/SUB-2026-0001/observations`);
+    expect((init.headers as Record<string, string>)['Idempotency-Key']).toBe('key-1');
+    expect(JSON.parse(init.body as string)).toEqual({
+      kind: 'contamination',
+      severity: 'critical',
+      photoId: 'f-1',
+    });
+  });
+
+  it('envoie une mesure', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).measure('SUB-2026-0001', {
+      metric: 'temperature_c',
+      numericValue: 24,
+    });
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units/SUB-2026-0001/measurements`);
+    expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual({
+      metric: 'temperature_c',
+      numericValue: 24,
+    });
+  });
+
+  /** Une saisie terrain hors réseau doit être conservée comme les autres. */
+  it('met une observation en file quand le réseau lâche', async () => {
+    const client = makeClient(() => Promise.reject(new Error('offline')));
+    const result = await client.observe('SUB-2026-0001', { kind: 'odeur', severity: 'low' });
+
+    expect(result.ok).toBe(true);
+    expect(queue.pendingCount()).toBe(1);
+    expect(queue.pending()[0]?.path).toBe('/api/units/SUB-2026-0001/observations');
+  });
+
+  it('met une mesure en file quand le réseau lâche', async () => {
+    const client = makeClient(() => Promise.reject(new Error('offline')));
+    await client.measure('SUB-2026-0001', { metric: 'humidity_pct', numericValue: 90 });
+    expect(queue.pending()[0]?.path).toBe('/api/units/SUB-2026-0001/measurements');
+  });
+});
+
 describe('createQueueSender', () => {
   const item = { path: '/api/units/u-1/advance', body: { a: 1 }, idempotencyKey: 'k-1' };
 
