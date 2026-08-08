@@ -11,7 +11,7 @@
 | 2 | Contrats Zod + domaine pur (100 % + mutation) | 7–9 j | ✅ **terminé** |
 | 3 | Persistance MongoDB, transactions, migrations | 4–5 j | ✅ **terminé** |
 | 4 | API Hono, OpenAPI, idempotence, erreurs | 5–6 j | ✅ **terminé** |
-| 5 | QR, publicCode, printJobs, Nimbot B21 | 3–4 j | ⬜ |
+| 5 | QR, publicCode, printJobs, Nimbot B21 | 3–4 j | ✅ **terminé** |
 | 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⬜ |
 | 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ⬜ |
 | 8 | Récolte → produit → traçabilité | 4–5 j | ⬜ |
@@ -26,9 +26,9 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests | — | **378** |
+| Tests | — | **497** |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
-| Score de mutation global | ≥ 90 % | **91,45 %** |
+| Score de mutation global | ≥ 90 % | **91,43 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
 | Score de mutation `contracts` | ≥ 90 % | ⚠️ **84,97 %** (voir D-4) |
 | Avertissements lint | 0 | **0** |
@@ -209,9 +209,34 @@ tests qui le vérifient.
 d'élargir la barrière. Ce n'est pas urgent — la couverture reste à 100 % et le
 comportement métier, lui, est couvert à 93 % en mutation.
 
+### D-10 — Deux replis silencieusement dangereux supprimés
+
+La barrière à 100 % de couverture a mis au jour deux valeurs de repli
+inatteignables. Toutes deux auraient été **nuisibles** si elles s'étaient
+déclenchées, pas seulement mortes :
+
+1. `nextSequence()` finissait par `updated?.sequence ?? 1`. Avec `upsert: true`
+   et `returnDocument: 'after'`, le document existe toujours — mais si le repli
+   avait servi, il aurait **redistribué la séquence 1**, donc un code public en
+   double : exactement ce que ce compteur existe pour empêcher. Remplacé par une
+   assertion documentée.
+2. `PrintQueue.run()` finissait par `lastError?.message ?? 'Échec inconnu.'`.
+   La boucle a été restructurée pour que la variable soit toujours affectée —
+   plus de repli du tout.
+
+**À retenir** : viser 100 % ne sert pas qu'à « couvrir ». Ici, la contrainte a
+servi de détecteur de code défensif faux, qu'un seuil à 95 % aurait laissé
+passer sans bruit.
+
 ---
 
 ## Prochaine étape
+
+**Lot 6 — Socle web.** Vite/React, layout mobile pensé pour des gants et 90 %
+d'humidité, scanner QR web via HTTPS Tailscale (spike à faire ici), file
+d'attente locale des saisies, et plancher d'accessibilité.
+
+*(Le lot 5 est terminé : voir ci-dessous.)*
 
 **Lot 5 — QR, publicCode, printJobs, Nimbot B21.** Registre de QR à token
 opaque, génération de codes publics, file d'impression avec réimpression du
