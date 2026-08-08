@@ -9,7 +9,7 @@
 | --- | --- | --- | --- |
 | 1 | Socle monorepo, TS strict, Docker, CI, lint | 3–4 j | ✅ **terminé** |
 | 2 | Contrats Zod + domaine pur (100 % + mutation) | 7–9 j | ✅ **terminé** |
-| 3 | Persistance MongoDB, transactions, migrations | 4–5 j | ⬜ à faire |
+| 3 | Persistance MongoDB, transactions, migrations | 4–5 j | ✅ **terminé** |
 | 4 | API Hono, OpenAPI, idempotence, erreurs | 5–6 j | ⬜ |
 | 5 | QR, publicCode, printJobs, Nimbot B21 | 3–4 j | ⬜ |
 | 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⬜ |
@@ -26,7 +26,7 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests | — | **315** |
+| Tests | — | **332** |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **91,45 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
@@ -138,11 +138,36 @@ Plutôt que de fabriquer un projet artificiel pour trois fichiers sans logique
 métier, les règles typées y sont désactivées.
 **Impact** : négligeable — aucun code métier dans ces fichiers.
 
+### D-6 — ⚠️ Port MongoDB déplacé sur 27018
+
+**Constat** : une installation **MongoDB Homebrew** (`mongodb-community`) tourne
+déjà sur cette machine et occupe `127.0.0.1:27017`. Elle interceptait les
+connexions destinées au conteneur — sans erreur visible : le driver se
+connectait à un **standalone**, sans replica set, et `?replicaSet=rs0` expirait
+après 30 s sur un message de sélection de serveur qui ne dit rien du vrai
+problème.
+
+**Décision** : le conteneur écoute sur **27018**, dedans comme dehors (pour que
+l'hôte annoncé par le replica set soit joignable des deux côtés). L'instance
+Homebrew de l'utilisateur n'est **pas** touchée.
+
+**Impact** : `CHAMPI_MONGO_URL` permet de surcharger l'URL. À documenter au lot
+12 (mise en service), car le même piège se posera sur toute machine de
+développement ayant déjà MongoDB.
+
+### D-7 — Le contrôle d'audit a détecté une incohérence dès son premier usage
+
+En écrivant le test d'intégration, `diffReplayAgainstStored()` a signalé une
+divergence sur `currentStepEnteredAt` : l'état sauvegardé gardait la date de
+création alors que le journal disait que l'étape avait changé la veille.
+C'était mon jeu de test qui était faux — mais **c'est exactement la classe de
+bug que ce mécanisme existe pour attraper**, et il l'a attrapée avant la
+première ligne d'API.
+
 ---
 
 ## Prochaine étape
 
-**Lot 3 — Persistance MongoDB.** Repos, transactions état + événement,
-migrations versionnées, tests d'intégration sur MongoDB réel (jamais de mock de
-base : masquer le comportement transactionnel ferait passer des tests qui
-échouent en production).
+**Lot 4 — API Hono.** Routage, OpenAPI généré depuis Zod, `Idempotency-Key`,
+verrou optimiste exposé, erreurs actionnables avec valeurs valides dans le
+`hint`, endpoint `/api/_discover`, et `dryRun` universel.
