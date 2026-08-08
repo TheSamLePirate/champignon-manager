@@ -16,7 +16,7 @@
 | 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ✅ **terminé** |
 | 8 | Récolte → produit → traçabilité | 4–5 j | ✅ **terminé** |
 | 9 | Éditeur de process graphique | 11–15 j | ✅ **terminé** |
-| 10 | MCP + CLI + parité de surface | 4–5 j | ⬜ |
+| 10 | CLI + parité de surface | 4–5 j | ✅ **terminé** *(MCP écarté)* |
 | 11 | E2E, rapport d'audit, mutation, perfs Pi | 7–9 j | 🟡 **E2E faits, rapport et perfs Pi à venir** |
 | 12 | Intégration, déploiement Pi, mise en service | 4–5 j | ⬜ |
 
@@ -26,8 +26,8 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **975** |
-| Scénarios end-to-end | — | **88** (API, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **1033** |
+| Scénarios end-to-end | — | **95** (API, CLI, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **91,78 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
@@ -367,13 +367,52 @@ Corrigé : une valeur illisible ne modifie rien. C'est le même motif que D-10 �
 la barrière à 100 % a servi de détecteur de repli défensif faux, pas seulement
 de mesure de couverture. Troisième occurrence.
 
+### D-20 — ⚠️ Serveur MCP écarté : le CLI est la surface d'agent
+
+**Décision de l'utilisateur** : pas de MCP, le LLM utilisera le CLI.
+
+**Ce que ça simplifie** : deux surfaces au lieu de trois (Web, API, CLI), et
+la parité devient une comparaison à deux termes.
+
+**Ce que ça exige en retour** : le CLI n'est plus un confort de script, c'est
+**la seule porte d'entrée d'un agent**. Sa découvrabilité et la qualité de ses
+erreurs cessent d'être un agrément pour devenir la promesse elle-même. D'où :
+
+- `champi help` rend le catalogue complet, les conventions et les recettes ;
+- une commande inconnue propose les commandes proches ;
+- un paramètre manquant donne l'usage exact ;
+- une clé d'idempotence est **générée par défaut**, pour qu'un agent qui
+  réessaie soit protégé même sans y avoir pensé.
+
+**Le mécanisme qui tient la promesse** : `API_OPERATIONS` est la source unique
+— elle alimente `/api/_discover` et les commandes du CLI. Un test E2E compare
+ce que le **serveur annonce** à ce que le **binaire sait faire**, sur le
+système qui tourne. Il échoue dès qu'une route est ajoutée sans commande.
+
+`docs/22` §0, §2.1, §4.1, §4.2, §4.5, §6.2, §8 ont été mis à jour. L'estimation
+du lot passe de 4–5 j à 3–4 j.
+
+### D-21 — Quatre replis morts de plus, dont deux dangereux
+
+La barrière à 100 % en a encore débusqué quatre :
+
+- `split(':')[0] ?? ''` et `rest[index] ?? ''` dans l'analyse du CLI — morts,
+  supprimés par restructuration (`indexOf`, `entries()`) ;
+- les deux `?? 0` du panneau de propriétés (D-19) — **dangereux** : ils
+  auraient enregistré 0 °C sur un champ vidé.
+
+Motif désormais établi sur tout le projet : **les gardes défensives sur des
+expressions totales sont systématiquement du bruit, et parfois un mensonge**.
+Le seuil à 100 % les fait apparaître ; un seuil à 95 % les laisserait passer.
+
 ---
 
 ## Prochaine étape
 
-**Lot 10 — MCP + CLI.** Serveur MCP exposant les opérations métier, CLI
-JSON-in/JSON-out, et le **test de parité de surface** qui échoue dès qu'une
-route est ajoutée sans être exposée aux deux.
+**Lot 11 — Rapport d'audit et perfs.** Rapport d'audit automatisé publié en CI
+(couverture, mutation, E2E, traçabilité, parité, accessibilité, contrat API) et
+mesure des performances **sur Raspberry Pi**, pas sur Mac — c'est le point D11
+de `claude-critics.md` qui reste ouvert.
 
 *(Le lot 6 est terminé : voir ci-dessous.)*
 
