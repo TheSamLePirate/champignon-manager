@@ -55,86 +55,97 @@ export function ProcessCanvas({
   }
 
   return (
-    <svg
-      className="canvas"
-      role="img"
-      aria-label={`Graphe du process : ${String(graph.steps.length)} étapes`}
-      viewBox={`0 0 ${String(bounds.width)} ${String(bounds.height)}`}
-      width="100%"
-    >
-      <defs>
-        <marker
-          id="fleche"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="6"
-          markerHeight="6"
-          orient="auto-start-reverse"
-        >
-          <path d="M 0 0 L 10 5 L 0 10 z" className="edge__head" />
-        </marker>
-      </defs>
+    /*
+     * Le cadre défile, le graphe garde sa taille réelle.
+     *
+     * Avec `width="100%"`, le SVG se mettait à l'échelle du conteneur : à dix
+     * étapes, les nœuds tombaient sous 20 px de haut sur iPhone — inutilisables
+     * avec des gants, et sous le seuil de 44 px que l'application s'impose.
+     * C'est le défilement qui absorbe un process large, pas la réduction.
+     */
+    <div className="canvas__cadre">
+      <svg
+        className="canvas"
+        role="img"
+        aria-label={`Graphe du process : ${String(graph.steps.length)} étapes`}
+        viewBox={`0 0 ${String(bounds.width)} ${String(bounds.height)}`}
+        width={bounds.width}
+        height={bounds.height}
+      >
+        <defs>
+          <marker
+            id="fleche"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" className="edge__head" />
+          </marker>
+        </defs>
 
-      <g className="edges">
-        {edges.map((edge) => (
-          <g key={`${edge.from}-${edge.to}`}>
-            <path d={edge.d} className="edge" markerEnd="url(#fleche)" />
-            {edge.label !== undefined && (
-              <text className="edge__label" x={0} y={0}>
-                <textPath href={`#${edge.from}-${edge.to}`}>{edge.label}</textPath>
-              </text>
-            )}
-          </g>
-        ))}
-      </g>
-
-      <g className="nodes">
-        {positioned.map(({ step, x, y }) => {
-          const selected = step.id === selectedStepId;
-          const linking = step.id === linkingFrom;
-
-          return (
-            <g
-              key={step.id}
-              className={[
-                stageClass(step.stage),
-                selected ? 'node--selected' : '',
-                linking ? 'node--linking' : '',
-                step.optional ? 'node--optional' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              transform={`translate(${String(x)}, ${String(y)})`}
-            >
-              {/* Un bouton dans le SVG : cliquable au doigt et atteignable au clavier. */}
-              <foreignObject width={NODE_WIDTH} height={NODE_HEIGHT}>
-                <button
-                  type="button"
-                  className="node__button"
-                  aria-pressed={selected}
-                  onClick={() => {
-                    onSelectStep(step.id);
-                  }}
-                >
-                  <span className="node__name">{step.name}</span>
-                  <span className="node__meta">
-                    {step.optional ? 'optionnelle · ' : ''}
-                    {step.targetDurationDays === undefined
-                      ? 'sans durée'
-                      : `${String(step.targetDurationDays)} j`}
-                  </span>
-                  {step.provenance === 'invented' && (
-                    // Les valeurs inventées n'engagent rien : le dire à l'écran
-                    // évite qu'elles soient prises pour des recommandations.
-                    <span className="node__invented">valeurs inventées</span>
-                  )}
-                </button>
-              </foreignObject>
+        <g className="edges">
+          {edges.map((edge) => (
+            <g key={`${edge.from}-${edge.to}`}>
+              <path d={edge.d} className="edge" markerEnd="url(#fleche)" />
+              {edge.label !== undefined && (
+                <text className="edge__label" x={0} y={0}>
+                  <textPath href={`#${edge.from}-${edge.to}`}>{edge.label}</textPath>
+                </text>
+              )}
             </g>
-          );
-        })}
-      </g>
-    </svg>
+          ))}
+        </g>
+
+        <g className="nodes">
+          {positioned.map(({ step, x, y }) => {
+            const selected = step.id === selectedStepId;
+            const linking = step.id === linkingFrom;
+
+            return (
+              <g
+                key={step.id}
+                className={[
+                  stageClass(step.stage),
+                  selected ? 'node--selected' : '',
+                  linking ? 'node--linking' : '',
+                  step.optional ? 'node--optional' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                transform={`translate(${String(x)}, ${String(y)})`}
+              >
+                {/* Un bouton dans le SVG : cliquable au doigt et atteignable au clavier. */}
+                <foreignObject width={NODE_WIDTH} height={NODE_HEIGHT}>
+                  <button
+                    type="button"
+                    className="node__button"
+                    aria-pressed={selected}
+                    onClick={() => {
+                      onSelectStep(step.id);
+                    }}
+                  >
+                    <span className="node__name">{step.name}</span>
+                    <span className="node__meta">
+                      {step.optional ? 'optionnelle · ' : ''}
+                      {step.targetDurationDays === undefined
+                        ? 'sans durée'
+                        : `${String(step.targetDurationDays)} j`}
+                    </span>
+                    {step.provenance === 'invented' && (
+                      // Les valeurs inventées n'engagent rien : le dire à l'écran
+                      // évite qu'elles soient prises pour des recommandations.
+                      <span className="node__invented">valeurs inventées</span>
+                    )}
+                  </button>
+                </foreignObject>
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+    </div>
   );
 }

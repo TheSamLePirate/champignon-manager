@@ -15,7 +15,7 @@
 | 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⚠️ **terminé, capture caméra reportée** |
 | 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ✅ **terminé** |
 | 8 | Récolte → produit → traçabilité | 4–5 j | ✅ **terminé** |
-| 9 | Éditeur de process graphique | 11–15 j | ✅ **terminé** |
+| 9 | Éditeur de process graphique | 11–15 j | ⚠️ **terminé après correction** (voir D-28) |
 | 10 | CLI + parité de surface | 4–5 j | ✅ **terminé** *(MCP écarté)* |
 | 11 | E2E, rapport d'audit, mutation, perfs Pi | 7–9 j | ⚠️ **terminé, perfs non mesurées sur Pi** |
 | 12 | Intégration, déploiement Pi, mise en service | 4–5 j | ⚠️ **terminé, recette Pi à dérouler** |
@@ -26,8 +26,8 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **1044** |
-| Scénarios end-to-end | — | **117** (API, CLI, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **1068** |
+| Scénarios end-to-end | — | **133** (API, CLI, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **92,23 %** |
 | Mutants sans couverture | 0 | **0** (voir D-24) |
@@ -545,6 +545,59 @@ Trois points restent ouverts, et le rapport d'audit les porte en réserves :
 
 Ces trois points forment la **recette de mise en service** de `docs/23` §7 : ils
 se lèvent sur place, pas ici.
+
+### D-28 — ⚠️ L'éditeur de process n'était monté nulle part
+
+**Le défaut le plus grave du projet à ce jour**, et il a été trouvé par une
+question du client — « je ne vois pas l'éditeur graphique » — pas par une
+barrière automatique.
+
+`ProcessEditor`, `ProcessCanvas` et `StepProperties` étaient écrits, commentés
+et couverts par **60 tests unitaires**. Mais `App.tsx` ne les importait pas. Ni
+onglet, ni route, ni bouton : **aucun chemin ne menait à l'éditeur** dans
+l'application qui tourne. Le lot 9 était marqué « ✅ terminé ».
+
+Pourquoi rien ne l'a vu :
+
+- **le 100 % de couverture** mesure les lignes exécutées par des tests, pas
+  l'accessibilité depuis l'application. Un composant orphelin est couvert ;
+- **les E2E web** ne couvraient que le parcours terrain — elles ne cherchaient
+  pas un éditeur, faute de point d'entrée à chercher ;
+- **`editeur-process.api.spec.ts`** teste le contrat d'API, pas l'interface. Il
+  prouve qu'un agent peut configurer un process ; il ne dit rien de l'écran ;
+- **aucune promesse du rapport d'audit** ne portait sur l'atteignabilité.
+
+Correction : deux onglets (« Terrain » par défaut, « Process »), un
+`ProcessWorkbench` qui relie l'éditeur à l'API, et **10 scénarios E2E web**
+dont le premier est un garde-fou explicite — il échoue si l'éditeur redevient
+inatteignable.
+
+Leçon à retenir : *la couverture et la mutation vérifient le code écrit ; elles
+ne vérifient pas qu'il est branché.* Seul un test de bout en bout qui part de
+l'écran d'accueil le fait.
+
+### D-29 — Trois défauts latents révélés par le simple fait de brancher l'écran
+
+Monter l'éditeur a immédiatement fait tomber trois tests — trois vrais défauts
+que personne n'aurait vus tant que l'écran restait inaccessible :
+
+1. **`currentVersionId` ne bouge jamais.** Ni la publication ni l'ouverture d'un
+   brouillon ne le déplacent. L'écran rechargeait donc la version publiée
+   par-dessus le brouillon qu'il venait d'ouvrir, et repassait en lecture seule
+   sans explication. Corrigé en lisant la **liste des versions** et en prenant la
+   dernière.
+2. **`select` n'était pas dans la règle des 44 px**, et WebKit ignore
+   `min-height` sur une liste déroulante native : sous Safari iOS elle tombait à
+   22 px. Les seules listes de l'application vivaient dans l'éditeur — le test
+   de cibles tactiles n'en avait jamais rencontré une.
+3. **Le canvas se mettait à l'échelle au lieu de défiler.** `width="100%"` sur le
+   SVG réduisait tout le graphe pour le faire tenir : à dix étapes, les nœuds
+   tombaient sous 20 px. Le commentaire du CSS annonçait pourtant un défilement.
+   Corrigé — cadre défilant, graphe à taille réelle.
+
+Et un quatrième, introduit par la correction elle-même : l'onglet actif en blanc
+sur `--accent` ne donnait que **6,57:1**, sous le seuil AAA de 7:1. Le test de
+contraste l'a refusé avant tout commit.
 
 ---
 

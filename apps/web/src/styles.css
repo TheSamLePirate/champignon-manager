@@ -66,12 +66,32 @@ h2 {
   font-size: 1.25rem;
 }
 
+/*
+ * `select` manquait ici. Les seules listes déroulantes de l'application vivent
+ * dans l'éditeur de process, resté inatteignable jusqu'au câblage (D-28) : le
+ * test des cibles de 44 px n'en avait donc jamais rencontré une.
+ */
 button,
-input {
+input,
+select {
   min-height: var(--cible-min);
   font-size: 1.05rem;
   border-radius: 10px;
   border: 2px solid transparent;
+}
+
+select {
+  /*
+   * WebKit ignore `min-height` sur un `select` en apparence native : sous
+   * Safari iOS la liste retombait à 22 px, moitié moins que la cible visée.
+   * On reprend donc le rendu à la main.
+   */
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 1rem;
+  background: var(--surface);
+  color: var(--texte);
+  border-color: var(--texte-doux);
 }
 
 button {
@@ -249,12 +269,19 @@ label {
   margin-bottom: var(--espace);
 }
 
-.canvas {
+/*
+ * Un process large défile horizontalement **dans son cadre**, jamais la page —
+ * et sans jamais réduire les nœuds : on doit pouvoir les viser avec des gants.
+ */
+.canvas__cadre {
   background: var(--surface);
   border-radius: 12px;
-  /* Un process large défile horizontalement dans son cadre, jamais la page. */
   max-width: 100%;
   overflow-x: auto;
+}
+
+.canvas {
+  display: block;
 }
 
 .canvas__empty {
@@ -394,4 +421,53 @@ button.danger {
 .editor__locked {
   margin: var(--espace) 0;
   color: var(--texte-doux);
+}
+
+/*
+ * Onglets.
+ *
+ * Deux vues seulement : « Terrain » (le geste quotidien) et « Process » (la
+ * configuration, rare). L'onglet courant se signale par `aria-current`, donc
+ * pour le lecteur d'écran comme pour l'œil — une couleur seule ne suffirait
+ * pas, et ne passerait pas le critère 1.4.1.
+ */
+.onglets {
+  display: flex;
+  gap: 8px;
+  margin: var(--espace) 0;
+}
+
+.onglet {
+  flex: 1;
+  min-height: var(--cible-min);
+  background: var(--surface);
+  color: var(--texte-doux);
+  border: 2px solid transparent;
+}
+
+.onglet[aria-current='page'] {
+  /*
+   * Pas de fond accentué : blanc sur --accent ne donne que 6,57:1, sous le
+   * seuil AAA de 7:1 que l'application s'est fixé — le test de contraste l'a
+   * refusé. L'onglet courant se signale donc par la couleur pleine du texte et
+   * un soulignement épais, qui restent lisibles à travers la condensation.
+   */
+  background: var(--surface);
+  color: var(--texte);
+  border-color: var(--accent);
+  border-bottom-width: 4px;
+  font-weight: 700;
+}
+
+.workbench__choix {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: var(--espace) 0;
+}
+
+.workbench__version,
+.workbench__vide {
+  color: var(--texte-doux);
+  margin: var(--espace) 0;
 }

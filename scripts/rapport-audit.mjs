@@ -191,6 +191,17 @@ const PROMESSES = [
     origine: 'docs/23 §2',
   },
   {
+    promesse: 'L’éditeur de process est atteignable depuis l’application',
+    preuve:
+      'e2e/editeur-process.web.spec.ts — « l’éditeur est atteignable depuis l’application, sans passer par l’API »',
+    origine: 'suivi D-28',
+  },
+  {
+    promesse: 'Une version publiée s’édite en lecture seule, et se modifie en créant une version',
+    preuve: 'e2e/editeur-process.web.spec.ts — « une version publiée s’affiche en lecture seule »',
+    origine: 'docs/21 §2',
+  },
+  {
     promesse: 'Une sauvegarde se restaure à l’identique — vérifié, pas supposé',
     preuve:
       'scripts/sauvegarde.mjs — restauration dans une base jetable et recomptage de chaque collection ; échec au moindre écart',
@@ -217,6 +228,12 @@ const RESERVES = [
     detail:
       'api et persistence sont couverts à 100 % mais hors barrière de mutation. Mesure élargie au 08/08/2026 : 85,5 % global.',
     origine: 'suivi D-8',
+  },
+  {
+    sujet: 'Rien ne vérifie qu’un composant est branché',
+    detail:
+      'La couverture et la mutation portent sur le code écrit, pas sur son accessibilité depuis l’application. L’éditeur de process est resté orphelin — construit, testé à 100 %, monté nulle part — jusqu’à ce qu’un lecteur le remarque (D-28). Seul un scénario end-to-end partant de l’écran d’accueil ferme cette faille, et il n’en existe aujourd’hui que pour les écrans connus.',
+    origine: 'suivi D-28',
   },
   {
     sujet: 'Ce rapport n’est vérifié par aucun test',

@@ -290,6 +290,26 @@ describe('process', () => {
     await makeClient(fetchImpl).publishProcessVersion('v-1');
     expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/process-versions/v-1/publish`);
   });
+
+  /**
+   * La liste des versions est la source de la version courante : le
+   * `currentVersionId` du modèle n'est pas déplacé par une publication.
+   */
+  it('liste les versions d’un process', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: [] })));
+    await makeClient(fetchImpl).listProcessVersions('t 1/2');
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/process-templates/t%201%2F2/versions`);
+  });
+
+  /** Modifier un process publié passe obligatoirement par un nouveau brouillon. */
+  it('ouvre un brouillon à partir d’une version', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).draftProcessVersion('v 1/2');
+
+    // L'identifiant est encodé : il vient du serveur, pas d'une saisie sûre.
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/process-versions/v%201%2F2/draft`);
+  });
 });
 
 describe('createQueueSender', () => {

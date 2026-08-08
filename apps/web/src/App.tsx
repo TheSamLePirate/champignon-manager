@@ -3,6 +3,7 @@ import type { CultureUnit, DomainEvent } from '@champi/contracts';
 import { StatusBanner } from './components/StatusBanner.js';
 import { ScanPanel, type RecognisedScan } from './components/ScanPanel.js';
 import { UnitSheet, type NextStep } from './components/UnitSheet.js';
+import { ProcessWorkbench } from './components/ProcessWorkbench.js';
 import type { ApiClient, MutationResult } from './lib/api-client.js';
 import type { OfflineQueue } from './lib/offline-queue.js';
 import type { ScanEnvironment } from './lib/scanner.js';
@@ -13,6 +14,12 @@ import type { ScanEnvironment } from './lib/scanner.js';
  * Pas d'écran de connexion (docs/21 §6) : l'application s'ouvre directement sur
  * le travail. Le scan est la navigation principale — en chambre, on arrive
  * toujours par une étiquette, jamais par une liste.
+ *
+ * Deux vues seulement, et « Terrain » est celle par défaut : configurer un
+ * process est rare, scanner une unité est le geste de tous les jours. La
+ * configuration reste néanmoins **atteignable depuis l'application**, et pas
+ * seulement par l'API — l'éditeur graphique est resté un temps orphelin,
+ * construit et testé mais monté nulle part (déviation D-28).
  */
 
 export interface AppProps {
@@ -28,7 +35,11 @@ interface LoadedUnit {
   readonly nominalNext: readonly NextStep[];
 }
 
+/** Les deux vues de l'application. */
+type Vue = 'terrain' | 'process';
+
 export function App({ client, queue, environment, online }: AppProps): React.JSX.Element {
+  const [vue, setVue] = useState<Vue>('terrain');
   const [loaded, setLoaded] = useState<LoadedUnit | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -137,12 +148,41 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
 
       <StatusBanner pendingCount={pendingCount} failedCount={failedCount} online={online} />
 
-      <ScanPanel
-        environment={environment}
-        onScan={(input) => {
-          void openUnit(input);
-        }}
-      />
+      <nav className="onglets" aria-label="Vues de l’application">
+        <button
+          type="button"
+          className="onglet"
+          aria-current={vue === 'terrain' ? 'page' : undefined}
+          onClick={() => {
+            setVue('terrain');
+            setMessage(null);
+          }}
+        >
+          Terrain
+        </button>
+        <button
+          type="button"
+          className="onglet"
+          aria-current={vue === 'process' ? 'page' : undefined}
+          onClick={() => {
+            setVue('process');
+            setMessage(null);
+          }}
+        >
+          Process
+        </button>
+      </nav>
+
+      {vue === 'process' && <ProcessWorkbench client={client} onMessage={setMessage} />}
+
+      {vue === 'terrain' && (
+        <ScanPanel
+          environment={environment}
+          onScan={(input) => {
+            void openUnit(input);
+          }}
+        />
+      )}
 
       {message !== null && (
         <p className="message" role="status">
@@ -150,7 +190,7 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
         </p>
       )}
 
-      {loaded !== null && (
+      {vue === 'terrain' && loaded !== null && (
         <UnitSheet
           unit={loaded.unit}
           events={loaded.events}

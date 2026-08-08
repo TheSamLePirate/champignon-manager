@@ -151,6 +151,20 @@ export class ApiClient {
     return this.get('/api/process-templates');
   }
 
+  /**
+   * Toutes les versions d'un process.
+   *
+   * C'est la **seule** source fiable de la version courante : le
+   * `currentVersionId` du modèle pointe sur la version créée à l'origine et
+   * n'est pas déplacé par une publication. Se fier à lui rechargeait la version
+   * publiée par-dessus le brouillon qu'on venait d'ouvrir.
+   */
+  listProcessVersions(
+    templateId: string,
+  ): Promise<ApiResult<{ id: string; versionNumber: number; status: string; graph: unknown }[]>> {
+    return this.get(`/api/process-templates/${encodeURIComponent(templateId)}/versions`);
+  }
+
   getProcessVersion(
     id: string,
   ): Promise<ApiResult<{ id: string; status: string; versionNumber: number; graph: unknown }>> {
@@ -170,6 +184,18 @@ export class ApiClient {
 
   publishProcessVersion(versionId: string): Promise<MutationResult<{ status: string }>> {
     return this.post(`/api/process-versions/${encodeURIComponent(versionId)}/publish`, {});
+  }
+
+  /**
+   * Ouvre un brouillon à partir d'une version.
+   *
+   * C'est le **seul** moyen de modifier un process déjà publié : la version
+   * publiée reste immuable, et les unités qui y sont épinglées ne bougent pas.
+   */
+  draftProcessVersion(
+    versionId: string,
+  ): Promise<MutationResult<{ id: string; versionNumber: number }>> {
+    return this.post(`/api/process-versions/${encodeURIComponent(versionId)}/draft`, {});
   }
 
   advance(

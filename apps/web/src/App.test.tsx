@@ -387,3 +387,84 @@ describe('résolution de QR — chemins d’échec', () => {
     expect(await screen.findByText('Token illisible.')).toBeInTheDocument();
   });
 });
+
+/**
+ * Navigation entre les deux vues.
+ *
+ * Ces tests existent à cause d'un défaut réel (D-28) : l'éditeur de process
+ * était entièrement construit et testé, mais **monté nulle part**. Aucune
+ * barrière ne l'avait vu — la couverture mesure les lignes exécutées, pas
+ * l'accessibilité depuis l'application.
+ */
+describe('vues', () => {
+  const withProcess = (overrides: Partial<ApiClient> = {}): ApiClient =>
+    fakeClient({
+      listProcessTemplates: () =>
+        Promise.resolve({
+          ok: true,
+          data: [{ id: 't-1', name: 'Pleurote', currentVersionId: 'v-1' }],
+        }),
+      listProcessVersions: () =>
+        Promise.resolve({
+          ok: true,
+          data: [
+            { id: 'v-1', versionNumber: 1, status: 'draft', graph: { steps: [], transitions: [] } },
+          ],
+        }),
+      ...overrides,
+    });
+
+  it('ouvre sur le terrain, pas sur la configuration', () => {
+    render(<App client={withProcess()} queue={makeQueue()} environment={capable} online={true} />);
+
+    expect(screen.getByRole('button', { name: 'Terrain' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: 'Process' })).not.toHaveAttribute('aria-current');
+    expect(screen.queryByRole('heading', { name: 'Process' })).toBeNull();
+  });
+
+  it('donne accès à l’éditeur de process depuis l’application', async () => {
+    render(<App client={withProcess()} queue={makeQueue()} environment={capable} online={true} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Process' }));
+
+    // Le canvas est monté : c'est très exactement ce qui manquait.
+    expect(await screen.findByRole('heading', { name: 'Éditeur de process' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Process' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('revient au terrain sans perdre le scanner', async () => {
+    render(<App client={withProcess()} queue={makeQueue()} environment={capable} online={true} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Process' }));
+    await screen.findByRole('heading', { name: 'Éditeur de process' });
+    await userEvent.click(screen.getByRole('button', { name: 'Terrain' }));
+
+    expect(screen.getByLabelText(/saisis le code/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Éditeur de process' })).toBeNull();
+  });
+
+  it('efface le message en changeant de vue — il appartenait à l’autre écran', async () => {
+    const client = withProcess({
+      getUnit: () => mutationFailed({ code: 'NOT_FOUND', message: 'Unité inconnue.' }),
+    });
+    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+
+    await scan('SUB-2026-0042');
+    expect(await screen.findByText('Unité inconnue.')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Process' }));
+    expect(screen.queryByText('Unité inconnue.')).toBeNull();
+  });
+
+  it('affiche dans le bandeau les messages venus de la configuration', async () => {
+    const client = withProcess({
+      listProcessTemplates: () =>
+        mutationFailed({ code: 'NOT_FOUND', message: 'Base injoignable.' }),
+    });
+    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Process' }));
+
+    expect(await screen.findByText('Base injoignable.')).toBeInTheDocument();
+  });
+});
