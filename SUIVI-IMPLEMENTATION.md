@@ -12,7 +12,7 @@
 | 3 | Persistance MongoDB, transactions, migrations | 4–5 j | ✅ **terminé** |
 | 4 | API Hono, OpenAPI, idempotence, erreurs | 5–6 j | ✅ **terminé** |
 | 5 | QR, publicCode, printJobs, Nimbot B21 | 3–4 j | ✅ **terminé** |
-| 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⬜ |
+| 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⚠️ **terminé, capture caméra reportée** |
 | 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ⬜ |
 | 8 | Récolte → produit → traçabilité | 4–5 j | ⬜ |
 | 9 | Éditeur de process graphique | 11–15 j | ⬜ |
@@ -26,7 +26,7 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests | — | **497** |
+| Tests | — | **583** |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **91,43 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
@@ -228,9 +228,46 @@ déclenchées, pas seulement mortes :
 servi de détecteur de code défensif faux, qu'un seuil à 95 % aurait laissé
 passer sans bruit.
 
+### D-11 — ⚠️ Capture caméra reportée avec le spike iOS
+
+**Prévu** : scanner QR fonctionnel au lot 6.
+**Livré** : tout sauf la boucle de capture caméra.
+
+**Pourquoi** : `getUserMedia` sous Safari iOS via `tailscale serve` n'a jamais
+été validé sur un iPhone réel — c'est le dernier spike ouvert du projet
+(`docs/22` §9). Écrire une boucle de capture non validée aurait produit du code
+invérifiable, et surtout un **bouton qui ne fait rien**.
+
+**Ce qui est livré à la place** :
+- un **diagnostic** qui nomme la cause probable au lieu d'un message générique.
+  Sous iOS, la cause n°1 est un contexte non sécurisé — et elle est réparable
+  par l'opérateur lui-même (ouvrir l'adresse `.ts.net` plutôt qu'une IP) ;
+- la **saisie manuelle du code** comme repli permanent, qui mène exactement au
+  même endroit que le scan ;
+- un message honnête à l'écran : « la capture caméra sera activée après
+  validation sur iPhone ».
+
+**Impact** : aucun sur le parcours — le travail terrain reste possible sans
+caméra. À reprendre dès qu'un iPhone est disponible sur le tailnet.
+
+### D-12 — Un affordance cassé corrigé par le typage
+
+Le bouton « Scanner un QR » appelait `onScan('')`, ce qui affichait « Code non
+reconnu » : un bouton qui promettait une action et rendait une erreur.
+
+Corrigé en rendant le cas impossible **au niveau du type** : `ScanPanel` ne
+remonte que des entrées déjà interprétées (`token` ou `public-code`), jamais
+« inconnu ». L'appelant n'a donc plus de branche d'erreur à traiter — et il n'y
+a plus de code mort à couvrir.
+
 ---
 
 ## Prochaine étape
+
+**Lot 7 — Suivi d'unité.** Fiche complète, timeline événementielle, avancement
+d'étape depuis l'interface, observations et mesures avec photo.
+
+*(Le lot 6 est terminé : voir ci-dessous.)*
 
 **Lot 6 — Socle web.** Vite/React, layout mobile pensé pour des gants et 90 %
 d'humidité, scanner QR web via HTTPS Tailscale (spike à faire ici), file
