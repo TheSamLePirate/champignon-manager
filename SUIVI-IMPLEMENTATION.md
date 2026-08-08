@@ -15,7 +15,7 @@
 | 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⚠️ **terminé, capture caméra reportée** |
 | 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ✅ **terminé** |
 | 8 | Récolte → produit → traçabilité | 4–5 j | ✅ **terminé** |
-| 9 | Éditeur de process graphique | 11–15 j | ⬜ |
+| 9 | Éditeur de process graphique | 11–15 j | ✅ **terminé** |
 | 10 | MCP + CLI + parité de surface | 4–5 j | ⬜ |
 | 11 | E2E, rapport d'audit, mutation, perfs Pi | 7–9 j | 🟡 **E2E faits, rapport et perfs Pi à venir** |
 | 12 | Intégration, déploiement Pi, mise en service | 4–5 j | ⬜ |
@@ -26,10 +26,10 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **799** |
-| Scénarios end-to-end | — | **76** (API, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **975** |
+| Scénarios end-to-end | — | **88** (API, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
-| Score de mutation global | ≥ 90 % | **91,32 %** |
+| Score de mutation global | ≥ 90 % | **91,78 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
 | Score de mutation `contracts` | ≥ 90 % | ⚠️ **84,97 %** (voir D-4) |
 | Avertissements lint | 0 | **0** |
@@ -336,13 +336,44 @@ sans le dire serait pire que de refuser de répondre.
 Deux tests E2E vérifient ce refus en supprimant volontairement une récolte puis
 une unité de la base.
 
+### D-18 — Canvas SVG écrit à la main plutôt qu'une bibliothèque de graphe
+
+`docs/22` §3.2 mentionnait React Flow. Le canvas est finalement du **SVG écrit
+à la main**.
+
+**Pourquoi** : le process du cultivateur fait six étapes. Une bibliothèque de
+graphe apporterait du glisser-déposer sophistiqué, du zoom et du panoramique —
+et une surface d'intégration difficile à couvrir à 100 % sans simuler des
+internes. Le rendu maison reste déterministe, testable en `happy-dom`, et sans
+dépendance.
+
+**Ce qu'on perd** : zoom, panoramique, glisser-déposer fluide. À réévaluer si
+un process dépasse la vingtaine d'étapes — mais le modèle réel en compte dix.
+
+**Choix d'interaction lié** : relier deux étapes se fait en **deux clics**
+(« relier », puis clic sur la cible) et non en glisser-déposer. Nettement plus
+fiable avec des gants humides sur un écran couvert de condensation — et cela
+évite `setPointerCapture`, qui vole le clic des nœuds (piège déjà rencontré sur
+l'atlas Mermaid).
+
+### D-19 — Deux replis qui auraient menti sur une consigne de culture
+
+Le panneau de propriétés ramenait une saisie illisible à `0` :
+`parseOptionalNumber(value) ?? 0`. Vider le champ « température » aurait donc
+enregistré **0 °C** — une consigne fausse, silencieuse, sur un paramètre qui
+décide d'une culture.
+
+Corrigé : une valeur illisible ne modifie rien. C'est le même motif que D-10 —
+la barrière à 100 % a servi de détecteur de repli défensif faux, pas seulement
+de mesure de couverture. Troisième occurrence.
+
 ---
 
 ## Prochaine étape
 
-**Lot 9 — Éditeur de process graphique.** Le poste le plus lourd de la tranche
-(11–15 j) : canvas nœuds/arêtes, panneau de propriétés, validation en direct,
-publication, diff de versions, import/export du **même JSON** que l'API.
+**Lot 10 — MCP + CLI.** Serveur MCP exposant les opérations métier, CLI
+JSON-in/JSON-out, et le **test de parité de surface** qui échoue dès qu'une
+route est ajoutée sans être exposée aux deux.
 
 *(Le lot 6 est terminé : voir ci-dessous.)*
 
