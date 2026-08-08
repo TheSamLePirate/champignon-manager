@@ -1,0 +1,73 @@
+name: CI
+
+# Barrière de qualité. Chaque étape correspond à un engagement de docs/22 :
+# le format et le lint tiennent les règles d'architecture (cœur pur, pas
+# d'exclusion de couverture), la couverture est à 100 % strict, et le score de
+# mutation est ce qui empêche ce 100 % d'être une métrique vanité.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualite:
+    name: Format, lint, types, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Installer les dépendances
+        run: bun install --frozen-lockfile
+
+      - name: Format
+        run: bun run format:check
+
+      - name: Lint (zéro avertissement toléré)
+        run: bun run lint
+
+      - name: Types
+        run: bun run typecheck
+
+      - name: Tests et couverture (seuil 100 %)
+        run: bun run test:coverage
+
+      - name: Publier le rapport de couverture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: couverture
+          path: coverage/
+          retention-days: 14
+
+  mutation:
+    name: Score de mutation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Installer les dépendances
+        run: bun install --frozen-lockfile
+
+      - name: Tests de mutation (rupture sous 90 %)
+        run: bunx stryker run
+
+      - name: Publier le rapport de mutation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation
+          path: reports/mutation/
+          retention-days: 14

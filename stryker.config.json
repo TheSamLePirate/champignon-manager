@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Le score de mutation est ce qui rend le 100 % de couverture honnête (docs/22 §2.3). Un test qui ne détecte pas l'inversion d'une condition n'est pas un test.",
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "reporters": [
+    "html",
+    "clear-text",
+    "progress"
+  ],
+  "htmlReporter": {
+    "fileName": "reports/mutation/index.html"
+  },
+  "coverageAnalysis": "perTest",
+  "mutate": [
+    "packages/domain/src/**/*.ts",
+    "packages/contracts/src/**/*.ts",
+    "!packages/**/*.test.ts",
+    "!packages/**/index.ts",
+    "!packages/**/__testing__/**"
+  ],
+  "thresholds": {
+    "high": 95,
+    "low": 90,
+    "break": 90
+  },
+  "timeoutMS": 20000,
+  "concurrency": 4,
+  "plugins": [
+    "@stryker-mutator/vitest-runner"
+  ]
+}
