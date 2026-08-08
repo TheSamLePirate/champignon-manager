@@ -14,7 +14,7 @@
 | 5 | QR, publicCode, printJobs, Nimbot B21 | 3–4 j | ✅ **terminé** |
 | 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⚠️ **terminé, capture caméra reportée** |
 | 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ✅ **terminé** |
-| 8 | Récolte → produit → traçabilité | 4–5 j | ⬜ |
+| 8 | Récolte → produit → traçabilité | 4–5 j | ✅ **terminé** |
 | 9 | Éditeur de process graphique | 11–15 j | ⬜ |
 | 10 | MCP + CLI + parité de surface | 4–5 j | ⬜ |
 | 11 | E2E, rapport d'audit, mutation, perfs Pi | 7–9 j | 🟡 **E2E faits, rapport et perfs Pi à venir** |
@@ -26,10 +26,10 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **730** |
-| Scénarios end-to-end | — | **65** (API, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **799** |
+| Scénarios end-to-end | — | **76** (API, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
-| Score de mutation global | ≥ 90 % | **91,25 %** |
+| Score de mutation global | ≥ 90 % | **91,32 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
 | Score de mutation `contracts` | ≥ 90 % | ⚠️ **84,97 %** (voir D-4) |
 | Avertissements lint | 0 | **0** |
@@ -324,14 +324,25 @@ appelants, y compris un agent qui passerait par l'API sans jamais ouvrir
 l'interface. Une règle métier appliquée seulement dans l'UI n'est pas une règle,
 c'est une suggestion.
 
+### D-17 — La traçabilité échoue plutôt que de rendre un résultat partiel
+
+Choix de conception : `traceUpstream` **échoue** si une récolte ou une unité
+citée par un produit est introuvable, au lieu d'omettre la contribution.
+
+Une chaîne incomplète est plus dangereuse qu'une absence de chaîne : elle a
+l'air complète. Face à un contrôle sanitaire, rendre trois origines sur quatre
+sans le dire serait pire que de refuser de répondre.
+
+Deux tests E2E vérifient ce refus en supprimant volontairement une récolte puis
+une unité de la base.
+
 ---
 
 ## Prochaine étape
 
-**Lot 8 — Récolte → produit → traçabilité.** Enregistrement des récoltes par
-flush (poids en grammes, qualité, pertes avec cause), création de produits
-finaux avec proportions exactes, et remontée depuis un produit jusqu'aux unités
-d'origine.
+**Lot 9 — Éditeur de process graphique.** Le poste le plus lourd de la tranche
+(11–15 j) : canvas nœuds/arêtes, panneau de propriétés, validation en direct,
+publication, diff de versions, import/export du **même JSON** que l'API.
 
 *(Le lot 6 est terminé : voir ci-dessous.)*
 
