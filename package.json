@@ -29,7 +29,7 @@
     "api:start": "bun run --filter '@champi/api' start",
     "web:dev": "bun run --filter '@champi/web' dev",
     "e2e": "playwright test",
-    "build": "bun run --filter '@champi/web' build && bun run --filter '@champi/api' build:server",
+    "build": "bun run --filter '@champi/web' build && bun run --filter '@champi/api' build:server && bun run --filter '@champi/cli' build",
     "start": "node packages/api/dist/server.mjs",
     "e2e:report": "playwright show-report reports/e2e"
   },

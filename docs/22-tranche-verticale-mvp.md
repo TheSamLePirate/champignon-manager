@@ -11,7 +11,7 @@
 | Ce qu'on livre | Un chemin complet **process → unité → QR → scan → suivi → récolte → produit → traçabilité**, avec **éditeur de process graphique** |
 | Ce qu'on ne livre pas | Lignée (clone/transfert/division), actions de masse, multi-espèces avancé, dashboards, Inkbird, Reolink |
 | Qualité visée | **100 % de couverture** avec score de mutation, E2E, rapport d'audit automatisé |
-| Pilotable par un LLM | **Oui, à 100 %** — API typée + serveur MCP + CLI + dry-run partout |
+| Pilotable par un LLM | **Oui, à 100 %** — API typée + **CLI** + dry-run partout. ⚠️ **Pas de serveur MCP** (décision du 08/08/2026) : le CLI est la surface d'agent. |
 | Charge estimée | **62 à 78 jours-dev** (~13 à 16 semaines en solo) |
 
 ⚠️ **Interprétation de « AAA »** : lu comme **qualité d'ingénierie de premier ordre**, cohérent avec l'usage « AAA response pour le mieux ». Ce n'est **pas** lu comme une conformité **WCAG 2.2 niveau AAA**. L'accessibilité retenue est décrite en §7.3 : WCAG 2.2 **AA** en plancher, plus les critères AAA qui servent réellement en chambre de culture (contraste 7:1, taille de cible). Si la conformité WCAG AAA formelle est visée, il faut le dire : cela ajoute de l'audit, des tests dédiés et des contraintes de design (≈ +6 à 8 jours).
@@ -74,8 +74,7 @@ packages/
   persistence/  Adaptateurs MongoDB. Traduction document ⇄ domaine. Pas de règle métier.
   api/          Hono. Routage, validation, idempotence, erreurs. Pas de règle métier.
   printing/     Adaptateur Nimbot B21. Isolable en process Node si Bun coince.
-  mcp/          Serveur MCP. Expose le domaine aux LLM.
-  cli/          CLI JSON-in/JSON-out.
+  cli/          CLI JSON-in/JSON-out — la surface d'agent (pas de serveur MCP).
 apps/
   web/          Vite + React. Composants purs + hooks d'accès.
 ```
@@ -172,32 +171,51 @@ Objectif : **tout ce qu'un humain peut faire dans l'interface, un LLM doit pouvo
 
 L'absence d'authentification (`21` §6), qui est un coût côté sécurité, est ici un **avantage direct** : un agent n'a besoin que d'une URL de base sur le tailnet.
 
-### 4.1 Les quatre surfaces
+### 4.1 Les trois surfaces
 
 | Surface | Public | Rôle |
 | --- | --- | --- |
 | **Web** | cultivateur, iPhone | Saisie terrain, scan, éditeur graphique |
 | **API HTTP/JSON** | tout | Source de vérité. OpenAPI 3.1 généré depuis Zod |
-| **Serveur MCP** | Claude Code et agents | Outils typés, branchement direct |
-| **CLI** | scripts, agents, humain | JSON in / JSON out, code de sortie fiable |
+| **CLI** | **agents**, scripts, humain | JSON in / JSON out, code de sortie fiable |
 
-**Règle** : aucune opération n'existe dans une seule surface. Web, MCP et CLI appellent **la même API**, qui appelle **le même domaine**. Une fonctionnalité absente de l'API est une fonctionnalité qui n'existe pas.
+⚠️ **Mise à jour du 08/08/2026 — pas de serveur MCP.** Le CLI est la surface d'agent. Cela simplifie (deux surfaces au lieu de trois) mais **élève l'exigence sur le CLI** : c'est désormais la seule porte d'entrée d'un agent, donc sa découvrabilité et la qualité de ses erreurs ne sont plus un confort, elles sont la promesse.
 
-### 4.2 Serveur MCP — le branchement natif
+**Règle** : aucune opération n'existe dans une seule surface. Web et CLI appellent **la même API**, qui appelle **le même domaine**. Une fonctionnalité absente de l'API est une fonctionnalité qui n'existe pas.
 
-Package `@champi/mcp`, démarré avec l'application. Outils exposés :
+### 4.2 Le CLI — la surface d'agent
+
+Paquet `@champi/cli`, binaire `champi`. Une commande par opération d'API,
+**nommée à l'identique**, ce qui rend le catalogue mémorisable :
 
 ```
-champi_process_list          champi_unit_create           champi_harvest_record
-champi_process_get           champi_unit_get              champi_product_create
-champi_process_create        champi_unit_advance_step     champi_trace_upstream
-champi_process_publish       champi_unit_observe          champi_trace_downstream
-champi_process_diff          champi_unit_measure          champi_label_print
-champi_room_list             champi_unit_move             champi_state_summary
-champi_room_create           champi_unit_search           champi_audit_verify
+discover              unit:create           harvest:record
+help                  unit:get              harvest:list
+process:list          unit:list             product:create
+process:create        unit:timeline         product:trace
+process:versions      unit:next-steps       qr:assign
+version:get           unit:advance          qr:resolve
+version:publish       unit:observe          label:print
+version:draft         unit:measure          printer:test
+version:graph         unit:audit            unit:trace
+                      unit:observation-kinds
 ```
 
-Chaque outil : description explicite, schéma d'entrée Zod, exemples, et **erreurs actionnables**. Ainsi Claude Code pilote l'application sans écrire une ligne de HTTP.
+Conventions, toutes vérifiables par un agent sans documentation externe :
+
+- **JSON en entrée et en sortie.** `--json '<corps>'` pour les mutations, JSON
+  sur la sortie standard, JSON sur la sortie d'erreur. Jamais de texte libre.
+- **Code de sortie fiable** : 0 en cas de succès, 1 sinon.
+- **`--dry-run`** sur toute mutation qui l'accepte ; le CLI **refuse** le
+  drapeau sur une lecture, en listant les commandes qui le prennent.
+- **Clé d'idempotence générée par défaut** : un agent qui réessaie est protégé
+  même s'il n'y a pas pensé. `--idempotency-key` pour la fixer.
+- **`champi help`** rend le catalogue complet, les conventions et les recettes ;
+  `champi help <commande>` détaille une commande.
+- **Erreurs guidantes** : une commande inconnue propose les commandes proches,
+  un paramètre manquant donne l'usage exact.
+- **La réponse de l'API est rendue telle quelle** : le CLI n'interprète rien,
+  donc il ne peut pas diverger.
 
 ### 4.3 Les sept propriétés qui rendent l'API réellement utilisable par un agent
 
@@ -224,8 +242,8 @@ Servi à la racine : présentation de l'application, du modèle métier (unité,
 
 La promesse « 100 % pilotable par un LLM » est **testée**, pas seulement affirmée :
 
-- **test de parité de surface** : toute opération de l'API a un outil MCP et une commande CLI correspondants. Il échoue dès qu'on ajoute une route sans l'exposer.
-- **test de parcours agent** : un scénario E2E rejoue le parcours complet du §1 **uniquement via MCP**, sans ouvrir le navigateur. S'il passe, la promesse tient.
+- **test de parité de surface** : le catalogue `API_OPERATIONS` est la source unique — il alimente `/api/_discover` **et** les commandes du CLI. Un test E2E compare ce que le serveur annonce à ce que le binaire sait faire, **sur le système qui tourne**. Il échoue dès qu'une route est ajoutée sans commande.
+- **test de parcours agent** : un scénario E2E rejoue le parcours complet du §1 **uniquement par le CLI**, en sous-processus, sans ouvrir le navigateur. S'il passe, la promesse tient.
 
 ---
 
@@ -270,7 +288,7 @@ Non construites : `alerts` (tranche 3), `inventoryMovements` (tranche 3). Jamais
 
 1. **Parcours nominal complet** (§1, étapes 1→12) dans un navigateur desktop.
 2. **Parcours mobile** — le même, en émulation iPhone, **scan de QR inclus** (caméra simulée avec une image de QR injectée).
-3. **Parcours agent** — le même, **uniquement via MCP** (§4.5).
+3. **Parcours agent** — le même, **uniquement par le CLI** (§4.5).
 4. **Parcours dégradé** — coupure réseau au milieu d'une saisie, retry avec la même `Idempotency-Key` : vérifie qu'**aucun doublon** n'est créé et qu'aucun événement n'est perdu.
 5. **Parcours d'audit de traçabilité** — voir §6.3.
 
@@ -303,7 +321,7 @@ Produit à chaque exécution CI, publié en artefact HTML :
 | Mutation | Score par package, mutants survivants listés |
 | E2E | Les 5 scénarios, captures, traces Playwright |
 | Traçabilité | Résultat des 7 assertions du §6.3 |
-| Parité de surface | API ⇄ MCP ⇄ CLI : opérations manquantes |
+| Parité de surface | API ⇄ CLI : opérations sans commande |
 | Accessibilité | axe-core sur chaque écran, contrastes mesurés |
 | Performance | Temps de chargement fiche unité, mesurés **sur Raspberry Pi**, pas sur Mac |
 | Contrat API | Diff OpenAPI vs version précédente, ruptures signalées |
@@ -363,7 +381,7 @@ Unité : **jour-dev** = une journée de travail concentrée, un développeur exp
 | 7 | Suivi d'unité | 5–6 | Fiche, timeline, avancement d'étape, observation, mesure, photo |
 | 8 | Récolte → produit | 4–5 | Récolte pondérée, produit, traçabilité ascendante et descendante |
 | 9 | **Éditeur graphique** | **11–15** | Canvas, propriétés, validation, publication, diff, import/export, modèle par défaut |
-| 10 | MCP + CLI | 4–5 | Serveur MCP, CLI, parité de surface, `llms.txt` |
+| 10 | CLI | 4–5 | CLI, parité de surface, aide découvrable. *(Serveur MCP écarté le 08/08/2026.)* |
 | 11 | E2E + audit | 7–9 | 5 scénarios, rapport d'audit, mutation à 90 %, perfs sur Pi |
 | 12 | Intégration, mise en service | 4–5 | Déploiement Pi, sauvegardes, documentation, recette terrain |
 | | **Total** | **62–78** | **≈ 13 à 16 semaines en solo** |
@@ -376,7 +394,7 @@ Information, pas objection — la décision reste la tienne :
 | --- | --- | --- |
 | **Éditeur graphique** (vs formulaire) | **+7 à 10 j** | Le cultivateur construit et modifie son process visuellement. Sans éditeur, l'app démarre vide et est inutilisable (`21`) — un formulaire suffirait techniquement, le canvas est un choix de confort |
 | **100 % couverture + mutation** | **+9 à 12 j** | Régression quasi impossible sur le métier. Contrainte d'architecture saine. Le coût est réel mais **décroissant** : il se paie surtout sur les lots 2-4 |
-| **MCP + CLI + parité** | **+4 à 5 j** | L'application devient pilotable par Claude Code. Sert aussi aux tests, à la reprise de données et au support |
+| **CLI + parité** | **+3 à 4 j** | L'application devient pilotable par un agent. Sert aussi aux scripts, à la reprise de données et au support. Moins cher que prévu : le serveur MCP a été écarté |
 | **E2E + rapport d'audit** | **+5 à 6 j** | Preuve automatisée que la traçabilité tient. C'est aussi le mécanisme qui manquait à P2-3 |
 
 Sans ces quatre exigences, la même tranche fonctionnelle coûterait ≈ **35 à 45 jours**. L'écart est le prix de la qualité demandée — il est justifié pour un outil de production destiné à durer, il ne le serait pas pour une démo.

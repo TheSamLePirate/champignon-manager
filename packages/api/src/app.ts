@@ -46,6 +46,7 @@ import type {
 } from '@champi/persistence';
 import type { PrintQueue } from '@champi/printing';
 import { errorBody, statusForError } from './errors.js';
+import { API_OPERATIONS, API_RECIPES } from './operations.js';
 import { IdempotencyStore } from './idempotency.js';
 
 /**
@@ -226,36 +227,10 @@ export function createApp(deps: AppDependencies): Hono {
           'Les mutations exigent expectedVersion. Un décalage renvoie 409 CONFLICT avec la version courante.',
       },
       state: { unitsByStage: countByStage },
-      operations: [
-        { method: 'GET', path: '/api/units/:reference', purpose: 'Fiche complète d’une unité' },
-        {
-          method: 'GET',
-          path: '/api/units/:reference/timeline',
-          purpose: 'Journal d’événements ordonné',
-        },
-        {
-          method: 'GET',
-          path: '/api/units/:reference/next-steps',
-          purpose: 'Étapes nominales atteignables',
-        },
-        {
-          method: 'POST',
-          path: '/api/units/:reference/advance',
-          purpose: 'Faire avancer une unité (toute transition possible, écart confirmé)',
-        },
-        {
-          method: 'GET',
-          path: '/api/units/:reference/audit',
-          purpose: 'Vérifier que le journal et l’état stocké concordent',
-        },
-        { method: 'GET', path: '/api/units?stage=', purpose: 'Lister par stade' },
-      ],
-      recipes: {
-        'faire avancer une unité':
-          '1) GET /api/units/:code pour lire sa version. 2) GET /api/units/:code/next-steps. 3) POST /api/units/:code/advance?dryRun=true pour vérifier. 4) même POST sans dryRun, avec Idempotency-Key.',
-        'vérifier la traçabilité':
-          'GET /api/units/:code/audit — renvoie les divergences détectées.',
-      },
+      // Catalogue unique : c'est lui que le test de parité compare aux
+      // commandes du CLI (docs/22 §4.5).
+      operations: API_OPERATIONS,
+      recipes: API_RECIPES,
     });
   });
 
