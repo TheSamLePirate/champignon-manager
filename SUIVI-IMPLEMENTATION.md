@@ -164,6 +164,21 @@ C'était mon jeu de test qui était faux — mais **c'est exactement la classe d
 bug que ce mécanisme existe pour attraper**, et il l'a attrapée avant la
 première ligne d'API.
 
+### D-9 — La CI livrée au lot 1 était cassée
+
+Les deux jobs lançaient la suite complète **sans base de données**. Les tests
+d'intégration de la persistance et de l'API auraient échoué au premier push :
+la CI n'avait jamais tourné, seulement été écrite.
+
+**Corrigé** : les deux jobs démarrent le replica set, attendent qu'il réponde,
+et l'arrêtent en fin de job. Le pipeline complet a été **rejoué en local** dans
+l'ordre exact de la CI — format, lint, types, couverture, mutation — avant
+d'être considéré comme bon.
+
+**À retenir** : écrire un fichier de CI n'est pas la même chose que l'avoir
+vérifiée. Pour les lots suivants, rejouer le pipeline localement avant de
+clore le lot.
+
 ### D-8 — ⚠️ Mutation : périmètre étendu puis ramené à la spec
 
 **Ce que j'ai fait** : après le lot 4, j'ai étendu de ma propre initiative le
