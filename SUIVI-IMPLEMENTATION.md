@@ -10,7 +10,7 @@
 | 1 | Socle monorepo, TS strict, Docker, CI, lint | 3–4 j | ✅ **terminé** |
 | 2 | Contrats Zod + domaine pur (100 % + mutation) | 7–9 j | ✅ **terminé** |
 | 3 | Persistance MongoDB, transactions, migrations | 4–5 j | ✅ **terminé** |
-| 4 | API Hono, OpenAPI, idempotence, erreurs | 5–6 j | ⬜ |
+| 4 | API Hono, OpenAPI, idempotence, erreurs | 5–6 j | ✅ **terminé** |
 | 5 | QR, publicCode, printJobs, Nimbot B21 | 3–4 j | ⬜ |
 | 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⬜ |
 | 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ⬜ |
@@ -26,7 +26,7 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests | — | **332** |
+| Tests | — | **378** |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **91,45 %** |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
@@ -164,10 +164,41 @@ C'était mon jeu de test qui était faux — mais **c'est exactement la classe d
 bug que ce mécanisme existe pour attraper**, et il l'a attrapée avant la
 première ligne d'API.
 
+### D-8 — ⚠️ Mutation : périmètre étendu puis ramené à la spec
+
+**Ce que j'ai fait** : après le lot 4, j'ai étendu de ma propre initiative le
+périmètre de mutation à `api` et `persistence`, au-delà de ce que prévoit
+`docs/22` §6.1 (`domain` + `contracts`).
+
+**Résultat mesuré** : score global **85,5 %** — sous le seuil de rupture.
+Détail : `domain` 93,3 %, `contracts` 85,0 %, **`api` 78,1 %**,
+**`persistence` 65,4 %**.
+
+**Diagnostic** : les suites d'`api` et `persistence` étaient plus faibles sur
+les assertions de message. Une passe de renforcement a été faite (messages,
+indices, chemins d'erreur, plus un vrai test des index MongoDB — l'unicité de
+`publicCode` est ce qui empêche deux unités de porter le même QR), mais
+l'essentiel des survivants restants sont des chaînes de messages français dont
+l'épinglage exhaustif est un long travail à faible valeur de détection.
+
+**Détail technique utile** : les mutants de `ensureIndexes()` survivaient parce
+que le code exécuté en `beforeAll` n'est attribué à aucun test par l'analyse de
+couverture par test de Stryker. Corrigé en appelant `ensureIndexes()` dans les
+tests qui le vérifient.
+
+**Décision** : la barrière CI revient au périmètre spécifié (`domain` +
+`contracts`, **91,45 %**). La mesure élargie est consignée en commentaire dans
+`stryker.config.json` pour ne pas être oubliée.
+
+**À faire** : renforcer les assertions de message d'`api` et `persistence` avant
+d'élargir la barrière. Ce n'est pas urgent — la couverture reste à 100 % et le
+comportement métier, lui, est couvert à 93 % en mutation.
+
 ---
 
 ## Prochaine étape
 
-**Lot 4 — API Hono.** Routage, OpenAPI généré depuis Zod, `Idempotency-Key`,
-verrou optimiste exposé, erreurs actionnables avec valeurs valides dans le
-`hint`, endpoint `/api/_discover`, et `dryRun` universel.
+**Lot 5 — QR, publicCode, printJobs, Nimbot B21.** Registre de QR à token
+opaque, génération de codes publics, file d'impression avec réimpression du
+**même** token, et adaptateur imprimante avec transport injecté (un faux en
+test, le BLE en production).
