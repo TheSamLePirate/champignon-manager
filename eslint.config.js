@@ -34,7 +34,7 @@ export default tseslint.config(
         // TypeScript composite ; on les rattache explicitement pour qu'ils
         // soient tout de même vérifiés.
         projectService: {
-          allowDefaultProject: ['*.config.ts', '*.config.js', '*.config.mjs'],
+          allowDefaultProject: ['*.config.ts', '*.config.js', '*.config.mjs', 'apps/*/*.config.ts'],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -143,7 +143,7 @@ export default tseslint.config(
     // TypeScript composite. Les règles typées ne peuvent donc pas s'y appliquer :
     // on les désactive plutôt que de fabriquer un projet artificiel pour trois
     // fichiers sans logique métier.
-    files: ['*.config.ts', '*.config.js', '*.config.mjs'],
+    files: ['*.config.ts', '*.config.js', '*.config.mjs', 'apps/*/*.config.ts'],
     extends: [tseslint.configs.disableTypeChecked],
     rules: { 'no-restricted-syntax': 'off' },
   },

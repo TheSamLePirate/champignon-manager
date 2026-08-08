@@ -1,0 +1,163 @@
+/*
+ * Feuille de style unique, pensée pour la chambre de culture.
+ *
+ * Contraintes réelles (docs/22 §7.1 et §7.3) : iPhone à une main, gants
+ * humides, 90 % d'humidité, écran vu à travers un film de condensation.
+ * D'où les trois partis pris :
+ *
+ * 1. contraste 7:1 (critère WCAG AAA 1.4.6), pas 4.5:1 ;
+ * 2. cibles tactiles de 44 px minimum (AAA 2.5.5), largement espacées ;
+ * 3. typographie grande par défaut — on ne lit pas de près avec les mains
+ *    occupées.
+ */
+
+:root {
+  --fond: #0f1115;
+  --surface: #1a1d24;
+  --texte: #f5f7fa; /* 15.8:1 sur --fond */
+  --texte-doux: #c4cbd6; /* 9.7:1 sur --fond */
+  --accent: #7fd1a3;
+  --alerte: #ff8f7a;
+  --attente: #ffd166;
+  --cible-min: 44px;
+  --espace: 16px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --fond: #ffffff;
+    --surface: #f2f4f7;
+    --texte: #11141a; /* 16.9:1 */
+    --texte-doux: #3d4552; /* 9.1:1 */
+    --accent: #0a6b41;
+    --alerte: #a01f00;
+    --attente: #6b4c00;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  /* Empêche le zoom involontaire au double-tap avec des gants. */
+  touch-action: manipulation;
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--espace);
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+h2 {
+  font-size: 1.25rem;
+}
+
+button,
+input {
+  min-height: var(--cible-min);
+  font-size: 1.05rem;
+  border-radius: 10px;
+  border: 2px solid transparent;
+}
+
+button {
+  min-width: var(--cible-min);
+  padding: 0 1.25rem;
+  background: var(--accent);
+  color: var(--fond);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: var(--surface);
+  color: var(--texte-doux);
+  cursor: not-allowed;
+}
+
+/* Focus toujours visible : l'application se pilote aussi au clavier. */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+input {
+  width: 100%;
+  padding: 0 0.75rem;
+  background: var(--surface);
+  color: var(--texte);
+  border-color: var(--texte-doux);
+}
+
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--texte-doux);
+}
+
+.banner {
+  padding: 0.9rem var(--espace);
+  border-radius: 10px;
+  margin-bottom: var(--espace);
+  font-weight: 600;
+}
+.banner--error {
+  background: var(--alerte);
+  color: var(--fond);
+}
+.banner--pending {
+  background: var(--attente);
+  color: #11141a;
+}
+.banner--offline {
+  background: var(--surface);
+  color: var(--texte);
+}
+
+.scan {
+  background: var(--surface);
+  padding: var(--espace);
+  border-radius: 12px;
+}
+
+.scan__button {
+  width: 100%;
+  min-height: 64px;
+  font-size: 1.2rem;
+}
+
+.scan__manual {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.scan__help,
+.scan__unavailable {
+  color: var(--texte-doux);
+  margin: 0;
+}
+
+/* Respecte le réglage système : pas d'animation imposée. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
