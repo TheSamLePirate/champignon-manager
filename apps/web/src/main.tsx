@@ -4,6 +4,15 @@ import { App } from './App.js';
 import { ApiClient, createQueueSender } from './lib/api-client.js';
 import { LocalStorageQueueStorage, OfflineQueue } from './lib/offline-queue.js';
 import { readScanEnvironment } from './lib/scanner.js';
+// Atkinson Hyperlegible, dessinée par le Braille Institute pour la basse
+// vision : ses lettres sont volontairement dissemblables (I/l/1, O/0, b/d).
+// Choisie ici pour la raison qui l'a fait naître — un écran lu à bout de bras à
+// travers un film de condensation. Servies en local, jamais depuis un CDN : la
+// ferme tourne sur son propre réseau.
+import '@fontsource/atkinson-hyperlegible/latin-400.css';
+import '@fontsource/atkinson-hyperlegible/latin-700.css';
+import '@fontsource/atkinson-hyperlegible-mono/latin-400.css';
+import '@fontsource/atkinson-hyperlegible-mono/latin-700.css';
 import './styles.css';
 
 /**
@@ -35,6 +44,7 @@ if (container !== null) {
         queue={queue}
         environment={readScanEnvironment(window)}
         online={window.navigator.onLine}
+        now={() => new Date().toISOString()}
       />
     </StrictMode>,
   );

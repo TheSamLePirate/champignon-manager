@@ -4,6 +4,8 @@ import { StatusBanner } from './components/StatusBanner.js';
 import { ScanPanel, type RecognisedScan } from './components/ScanPanel.js';
 import { UnitSheet, type NextStep } from './components/UnitSheet.js';
 import { ProcessWorkbench } from './components/ProcessWorkbench.js';
+import { ObservationForm, type ObservationDraft } from './components/ObservationForm.js';
+import { MeasureForm, type MeasureDraft } from './components/MeasureForm.js';
 import type { ApiClient, MutationResult } from './lib/api-client.js';
 import type { OfflineQueue } from './lib/offline-queue.js';
 import type { ScanEnvironment } from './lib/scanner.js';
@@ -27,6 +29,8 @@ export interface AppProps {
   readonly queue: OfflineQueue;
   readonly environment: ScanEnvironment;
   readonly online: boolean;
+  /** Horloge. Elle n'existe qu'ici : le reste de l'interface la reçoit. */
+  readonly now: () => string;
 }
 
 interface LoadedUnit {
@@ -38,8 +42,12 @@ interface LoadedUnit {
 /** Les deux vues de l'application. */
 type Vue = 'terrain' | 'process';
 
-export function App({ client, queue, environment, online }: AppProps): React.JSX.Element {
+/** Formulaire ouvert sous la fiche. Un seul à la fois : l'écran reste lisible. */
+type Saisie = 'aucune' | 'observation' | 'mesure';
+
+export function App({ client, queue, environment, online, now }: AppProps): React.JSX.Element {
   const [vue, setVue] = useState<Vue>('terrain');
+  const [saisie, setSaisie] = useState<Saisie>('aucune');
   const [loaded, setLoaded] = useState<LoadedUnit | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -118,6 +126,7 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
     async (result: MutationResult<unknown>, reference: string) => {
       if ('queued' in result) {
         setMessage('Saisie conservée sur l’appareil — elle partira au retour du réseau.');
+        setSaisie('aucune');
         refreshQueueCounts();
         return;
       }
@@ -125,6 +134,9 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
         setMessage(result.error.hint ?? result.error.message);
         return;
       }
+      // La saisie a abouti : on referme le formulaire plutôt que de laisser
+      // l'opérateur se demander s'il doit le refaire.
+      setSaisie('aucune');
       await loadUnit(reference);
     },
     [loadUnit, refreshQueueCounts],
@@ -175,15 +187,6 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
 
       {vue === 'process' && <ProcessWorkbench client={client} onMessage={setMessage} />}
 
-      {vue === 'terrain' && (
-        <ScanPanel
-          environment={environment}
-          onScan={(input) => {
-            void openUnit(input);
-          }}
-        />
-      )}
-
       {message !== null && (
         <p className="message" role="status">
           {message}
@@ -195,6 +198,7 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
           unit={loaded.unit}
           events={loaded.events}
           nominalNext={loaded.nominalNext}
+          nowIso={now()}
           busy={busy}
           onAdvance={(stepId) => {
             void runAction(
@@ -203,21 +207,56 @@ export function App({ client, queue, environment, online }: AppProps): React.JSX
             );
           }}
           onObserve={() => {
-            void runAction(
-              () =>
-                client.observe(loaded.unit.publicCode, { kind: 'colonisation', severity: 'low' }),
-              loaded.unit.publicCode,
-            );
+            setSaisie(saisie === 'observation' ? 'aucune' : 'observation');
           }}
           onMeasure={() => {
-            void runAction(
-              () =>
-                client.measure(loaded.unit.publicCode, {
-                  metric: 'temperature_c',
-                  numericValue: 24,
-                }),
-              loaded.unit.publicCode,
-            );
+            setSaisie(saisie === 'mesure' ? 'aucune' : 'mesure');
+          }}
+        >
+          {saisie === 'observation' && (
+            <ObservationForm
+              unit={loaded.unit}
+              nowIso={now()}
+              busy={busy}
+              onCancel={() => {
+                setSaisie('aucune');
+              }}
+              onSubmit={(draft: ObservationDraft) => {
+                void runAction(
+                  () => client.observe(loaded.unit.publicCode, draft),
+                  loaded.unit.publicCode,
+                );
+              }}
+            />
+          )}
+          {saisie === 'mesure' && (
+            <MeasureForm
+              busy={busy}
+              onCancel={() => {
+                setSaisie('aucune');
+              }}
+              onSubmit={(draft: MeasureDraft) => {
+                void runAction(
+                  () => client.measure(loaded.unit.publicCode, draft),
+                  loaded.unit.publicCode,
+                );
+              }}
+            />
+          )}
+        </UnitSheet>
+      )}
+
+      {/*
+       * Le scanner passe **après** la fiche dès qu'une unité est ouverte : en
+       * chambre, on arrive par une étiquette et ce qu'on veut lire ensuite est
+       * l'unité, pas le champ de saisie qui vient de servir.
+       */}
+      {vue === 'terrain' && (
+        <ScanPanel
+          environment={environment}
+          compact={loaded !== null}
+          onScan={(input) => {
+            void openUnit(input);
           }}
         />
       )}

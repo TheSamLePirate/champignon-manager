@@ -22,9 +22,20 @@ export type RecognisedScan =
 export interface ScanPanelProps {
   readonly environment: ScanEnvironment;
   readonly onScan: (input: RecognisedScan) => void;
+  /**
+   * Une fiche est déjà ouverte : le panneau se réduit à l'essentiel.
+   *
+   * Le diagnostic caméra a été lu une fois, il n'a pas à réoccuper l'écran
+   * sous chaque unité consultée.
+   */
+  readonly compact?: boolean;
 }
 
-export function ScanPanel({ environment, onScan }: ScanPanelProps): React.JSX.Element {
+export function ScanPanel({
+  environment,
+  onScan,
+  compact = false,
+}: ScanPanelProps): React.JSX.Element {
   const [manual, setManual] = useState('');
   const capability = diagnoseScanning(environment);
   const interpreted = interpretScan(manual);
@@ -32,9 +43,9 @@ export function ScanPanel({ environment, onScan }: ScanPanelProps): React.JSX.El
 
   return (
     <section className="scan" aria-labelledby="scan-title">
-      <h2 id="scan-title">Scanner une étiquette</h2>
+      <h2 id="scan-title">{compact ? 'Scanner une autre étiquette' : 'Scanner une étiquette'}</h2>
 
-      {capability.available ? (
+      {compact ? null : capability.available ? (
         // ⚠️ La capture caméra n'est pas encore branchée : elle attend la
         // validation de `getUserMedia` sous Safari iOS via `tailscale serve`,
         // dernier spike ouvert du projet (docs/22 §9). Annoncer honnêtement
@@ -63,7 +74,7 @@ export function ScanPanel({ environment, onScan }: ScanPanelProps): React.JSX.El
           }
         }}
       >
-        <label htmlFor="scan-manual">Ou saisis le code de l’étiquette</label>
+        <label htmlFor="scan-manual">Code de l’étiquette</label>
         <input
           id="scan-manual"
           name="manual"

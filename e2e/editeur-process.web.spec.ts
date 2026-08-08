@@ -73,7 +73,7 @@ test.describe('accès à l’éditeur', () => {
     await ouvrirProcess(page);
     await page.getByRole('button', { name: 'Terrain' }).click();
 
-    await expect(page.getByLabel(/saisis le code/i)).toBeVisible();
+    await expect(page.getByLabel(/code de l/i)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Éditeur de process' })).toBeHidden();
   });
 });

@@ -33,7 +33,7 @@ test.describe('conformité WCAG 2.2 AA', () => {
     const unit = await createUnit(request, process.versionId, { name: 'Bloc accessibilité' });
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
     await expect(page.getByRole('heading', { name: 'Bloc accessibilité' })).toBeVisible();
 
@@ -45,7 +45,7 @@ test.describe('conformité WCAG 2.2 AA', () => {
 
   test('un message d’erreur reste accessible', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill('SUB-2026-999999');
+    await page.getByLabel(/code de l/i).fill('SUB-2026-999999');
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
     await expect(page.getByRole('status').last()).toBeVisible();
 
@@ -79,7 +79,7 @@ test.describe('critères AAA retenus pour la chambre de culture', () => {
     const unit = await createUnit(request, process.versionId);
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
     await expect(page.getByRole('heading', { name: 'Bloc pleurote E2E' })).toBeVisible();
 

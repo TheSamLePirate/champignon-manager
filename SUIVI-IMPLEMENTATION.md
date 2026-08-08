@@ -26,8 +26,8 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **1068** |
-| Scénarios end-to-end | — | **133** (API, CLI, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **1112** |
+| Scénarios end-to-end | — | **135** (API, CLI, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **92,23 %** |
 | Mutants sans couverture | 0 | **0** (voir D-24) |
@@ -598,6 +598,48 @@ que personne n'aurait vus tant que l'écran restait inaccessible :
 Et un quatrième, introduit par la correction elle-même : l'onglet actif en blanc
 sur `--accent` ne donnait que **6,57:1**, sous le seuil AAA de 7:1. Le test de
 contraste l'a refusé avant tout commit.
+
+### D-30 — Refonte UI/UX : la matière comme repère, et deux saisies qui n'existaient pas
+
+Refonte demandée après le câblage de l'éditeur. Trois choses seulement méritent
+d'être retenues.
+
+**1. Le repère de la fiche est devenu la chaîne de propagation.** Cinq stades
+fixes — ce sont ceux du contrat, pas une configuration — chacun teinté de la
+matière correspondante : ivoire de la gélose, ambre de la culture liquide, blé
+du grain, brun du substrat, gris nacré de la fructification. La couleur ne dit
+jamais rien seule : l'état est aussi une forme (plein, cerclé, creux) et un mot
+lu par les lecteurs d'écran. C'est le seul endroit de l'application où ces
+teintes apparaissent.
+
+**2. Observer et mesurer étaient des boutons en trompe-l'œil.** `onObserve`
+postait `{ kind: 'colonisation', severity: 'low' }` et `onMeasure`
+`{ metric: 'temperature_c', numericValue: 24 }` — des valeurs figées dans le
+code. Deux formulaires réels les remplacent : type d'observation filtré par le
+stade (la **même fonction pure** que le serveur), gravité à trois niveaux,
+précision libre, et la photo obligatoire sur contamination **refusée par l'écran
+avant de l'être par le serveur**. Le premier test écrit a d'ailleurs échoué :
+le type par défaut était « contamination », donc le bouton s'ouvrait désactivé.
+
+**3. L'interface parlait le langage du modèle.** Le journal affichait
+`temperature_c`, `colonisation`, `low`, `inoculation → incubation` — des noms de
+champs. Il affiche maintenant « Température : 23.5 °C », « Colonisation —
+gravité légère », « Inoculation → Incubation ». Les identifiants restent la
+vérité stockée ; ils ne sont plus ce qu'on lit.
+
+Typographie : **Atkinson Hyperlegible**, dessinée par le Braille Institute pour
+la basse vision — lettres volontairement dissemblables (I/l/1, O/0). Choisie
+pour la raison qui l'a fait naître, pas pour son style : un écran lu à bout de
+bras à travers un film de condensation. Servie en local, jamais depuis un CDN.
+
+Quatre replis morts de plus supprimés au passage (`find(...) ?? [0]`,
+`kinds[0] ?? 'autre'`, deux `?? identifiant` sur des énumérations fermées) —
+même famille que D-10, D-19, D-21, D-24.
+
+Ce que la refonte **ne fait pas** : le scan caméra reste non branché, et le
+stockage des photos n'existe toujours pas. La confirmation « J'ai pris la
+photo » enregistre une référence horodatée et le dit franchement à l'écran :
+l'image reste sur le téléphone.
 
 ---
 

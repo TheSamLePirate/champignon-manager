@@ -75,7 +75,14 @@ export function ProcessEditor({
 
   return (
     <section className="editor" aria-labelledby="editor-title">
-      <h2 id="editor-title">Éditeur de process</h2>
+      {/*
+       * Sous-titre de section, pas titre concurrent : la vue s'appelle déjà
+       * « Process » juste au-dessus, et deux titres de même poids qui disent
+       * la même chose ne hiérarchisent rien.
+       */}
+      <h3 id="editor-title" className="editor__titre">
+        Éditeur de process
+      </h3>
 
       {readOnly ? (
         <p className="editor__locked" role="status">

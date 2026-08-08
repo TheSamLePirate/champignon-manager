@@ -78,7 +78,7 @@ describe('ScanPanel', () => {
 
   it('garde la saisie manuelle disponible même sans caméra', () => {
     render(<ScanPanel environment={{ ...capable, hasMediaDevices: false }} onScan={vi.fn()} />);
-    expect(screen.getByLabelText(/saisis le code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/code de l/i)).toBeInTheDocument();
   });
 
   it('guide la saisie tant que rien n’est tapé', () => {
@@ -89,20 +89,20 @@ describe('ScanPanel', () => {
 
   it('confirme un code d’unité reconnu', async () => {
     render(<ScanPanel environment={capable} onScan={vi.fn()} />);
-    await userEvent.type(screen.getByLabelText(/saisis le code/i), 'SUB-2026-0042');
+    await userEvent.type(screen.getByLabelText(/code de l/i), 'SUB-2026-0042');
     expect(screen.getByText(/Reconnu : code d’unité/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ouvrir la fiche' })).toBeEnabled();
   });
 
   it('reconnaît un token de QR saisi à la main', async () => {
     render(<ScanPanel environment={capable} onScan={vi.fn()} />);
-    await userEvent.type(screen.getByLabelText(/saisis le code/i), 'ABCDEFGHJKMNPQRSTUVWXY');
+    await userEvent.type(screen.getByLabelText(/code de l/i), 'ABCDEFGHJKMNPQRSTUVWXY');
     expect(screen.getByText(/Reconnu : code QR/)).toBeInTheDocument();
   });
 
   it('signale une saisie non reconnue sans bloquer le champ', async () => {
     render(<ScanPanel environment={capable} onScan={vi.fn()} />);
-    await userEvent.type(screen.getByLabelText(/saisis le code/i), 'bonjour');
+    await userEvent.type(screen.getByLabelText(/code de l/i), 'bonjour');
     expect(screen.getByText(/Code non reconnu/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ouvrir la fiche' })).toBeDisabled();
   });
@@ -111,14 +111,14 @@ describe('ScanPanel', () => {
   it('normalise la saisie avant de l’envoyer', async () => {
     const onScan = vi.fn();
     render(<ScanPanel environment={capable} onScan={onScan} />);
-    await userEvent.type(screen.getByLabelText(/saisis le code/i), '  sub-2026-0042 ');
+    await userEvent.type(screen.getByLabelText(/code de l/i), '  sub-2026-0042 ');
     await userEvent.click(screen.getByRole('button', { name: 'Ouvrir la fiche' }));
     expect(onScan).toHaveBeenCalledWith({ kind: 'public-code', value: 'SUB-2026-0042' });
   });
 
   it('vide le champ après une ouverture réussie', async () => {
     render(<ScanPanel environment={capable} onScan={vi.fn()} />);
-    const input = screen.getByLabelText(/saisis le code/i);
+    const input = screen.getByLabelText(/code de l/i);
     await userEvent.type(input, 'SUB-2026-0042{Enter}');
     expect(input).toHaveValue('');
   });
@@ -126,7 +126,7 @@ describe('ScanPanel', () => {
   it('n’ouvre rien quand le formulaire est validé avec un code invalide', async () => {
     const onScan = vi.fn();
     render(<ScanPanel environment={capable} onScan={onScan} />);
-    await userEvent.type(screen.getByLabelText(/saisis le code/i), 'bonjour{Enter}');
+    await userEvent.type(screen.getByLabelText(/code de l/i), 'bonjour{Enter}');
     expect(onScan).not.toHaveBeenCalled();
   });
 });

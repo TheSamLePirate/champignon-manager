@@ -7,6 +7,9 @@ import type { ApiClient } from './lib/api-client.js';
 import { OfflineQueue, type QueuedMutation, type QueueStorage } from './lib/offline-queue.js';
 import type { ScanEnvironment } from './lib/scanner.js';
 
+/** Horloge fixe : « depuis 12 jours » ne doit pas dépendre du jour du test. */
+const NOW = () => '2026-08-13T09:00:00.000Z';
+
 const capable: ScanEnvironment = {
   isSecureContext: true,
   hasMediaDevices: true,
@@ -89,12 +92,20 @@ function mutationFailed(error: AppError) {
 }
 
 async function scan(value: string): Promise<void> {
-  await userEvent.type(screen.getByLabelText(/saisis le code/i), `${value}{Enter}`);
+  await userEvent.type(screen.getByLabelText(/code de l/i), `${value}{Enter}`);
 }
 
 describe('App', () => {
   it('s’ouvre directement sur le travail, sans écran de connexion', () => {
-    render(<App client={fakeClient()} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App
+        client={fakeClient()}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+      />,
+    );
     expect(screen.getByRole('heading', { name: 'Champignon Manager' })).toBeInTheDocument();
     // Décision docs/21 §6 : il n'y a pas d'authentification du tout.
     expect(screen.queryByLabelText(/mot de passe/i)).toBeNull();
@@ -102,12 +113,20 @@ describe('App', () => {
   });
 
   it('affiche la fiche après une saisie de code public', async () => {
-    render(<App client={fakeClient()} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App
+        client={fakeClient()}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+      />,
+    );
     await scan('SUB-2026-0042');
 
     expect(await screen.findByRole('heading', { name: 'Pleurote bloc 1' })).toBeInTheDocument();
     expect(screen.getByText('SUB-2026-0042')).toBeInTheDocument();
-    expect(screen.getByText('incubation')).toBeInTheDocument();
+    expect(screen.getByText('Incubation')).toBeInTheDocument();
   });
 
   /**
@@ -126,6 +145,7 @@ describe('App', () => {
         queue={makeQueue()}
         environment={capable}
         online={true}
+        now={NOW}
       />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
@@ -145,6 +165,7 @@ describe('App', () => {
         queue={makeQueue()}
         environment={capable}
         online={true}
+        now={NOW}
       />,
     );
     await scan('SUB-2026-0042');
@@ -163,7 +184,9 @@ describe('App', () => {
         }),
     });
 
-    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+    );
     await scan('SUB-2026-9999');
 
     expect(await screen.findByText('Vérifie le code public.')).toBeInTheDocument();
@@ -174,7 +197,9 @@ describe('App', () => {
       getUnit: () => mutationFailed({ code: 'NOT_FOUND', message: 'Rien à cet endroit.' }),
     });
 
-    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+    );
     await scan('SUB-2026-9999');
 
     expect(await screen.findByText('Rien à cet endroit.')).toBeInTheDocument();
@@ -185,7 +210,9 @@ describe('App', () => {
       resolveQr: () => Promise.resolve({ ok: true as const, data: { qr: {}, target: null } }),
     });
 
-    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+    );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
 
     expect(await screen.findByText(/aucune unité connue/)).toBeInTheDocument();
@@ -202,7 +229,9 @@ describe('App', () => {
       queuedAt: '2026-08-08T10:00:00.000Z',
     });
 
-    render(<App client={fakeClient()} queue={queue} environment={capable} online={true} />);
+    render(
+      <App client={fakeClient()} queue={queue} environment={capable} online={true} now={NOW} />,
+    );
     // Le panneau de scan porte lui aussi un `status` : on cible le bandeau.
     const banners = screen.getAllByRole('status');
     expect(banners.some((b) => b.textContent.includes('en attente d’envoi'))).toBe(true);
@@ -222,6 +251,7 @@ describe('App', () => {
         queue={makeQueue()}
         environment={capable}
         online={true}
+        now={NOW}
       />,
     );
     expect(flushQueue).toHaveBeenCalled();
@@ -237,6 +267,7 @@ describe('App', () => {
         queue={makeQueue()}
         environment={capable}
         online={false}
+        now={NOW}
       />,
     );
     expect(flushQueue).not.toHaveBeenCalled();
@@ -250,10 +281,11 @@ describe('App', () => {
         queue={makeQueue()}
         environment={capable}
         online={true}
+        now={NOW}
       />,
     );
 
-    const input = screen.getByLabelText(/saisis le code/i);
+    const input = screen.getByLabelText(/code de l/i);
     await userEvent.type(input, 'bonjour');
     // Le bouton reste désactivé : rien ne part.
     expect(screen.getByRole('button', { name: 'Ouvrir la fiche' })).toBeDisabled();
@@ -263,7 +295,9 @@ describe('App', () => {
 
 describe('actions depuis la fiche', () => {
   async function openSheet(client: ApiClient): Promise<void> {
-    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+    );
     await scan('SUB-2026-0042');
     await screen.findByRole('heading', { name: 'Pleurote bloc 1' });
   }
@@ -277,25 +311,103 @@ describe('actions depuis la fiche', () => {
     expect(advance).toHaveBeenCalledWith('SUB-2026-0042', 'fructification', 0);
   });
 
-  it('enregistre une observation', async () => {
+  /**
+   * L'observation n'est plus envoyée en aveugle : l'opérateur choisit ce qu'il
+   * a vu et à quelle gravité. C'est le formulaire qui porte la saisie, et non
+   * plus des valeurs figées dans le code.
+   */
+  it('enregistre l’observation saisie dans le formulaire', async () => {
     const observe = vi.fn(mutationOk);
     await openSheet(fakeClient({ observe }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Ajouter une observation' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Noter une observation' }));
+    await userEvent.selectOptions(screen.getByLabelText('Ce que tu vois'), 'odeur');
+    await userEvent.click(screen.getByRole('radio', { name: 'Moyen' }));
+    await userEvent.type(screen.getByLabelText(/Précision/), 'odeur aigre');
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer l’observation' }));
+
     expect(observe).toHaveBeenCalledWith('SUB-2026-0042', {
-      kind: 'colonisation',
-      severity: 'low',
+      kind: 'odeur',
+      severity: 'medium',
+      note: 'odeur aigre',
     });
   });
 
-  it('enregistre une mesure', async () => {
+  it('referme le formulaire une fois la saisie enregistrée', async () => {
+    await openSheet(fakeClient({ observe: vi.fn(mutationOk) }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Noter une observation' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer l’observation' }));
+
+    await vi.waitFor(() => {
+      expect(screen.queryByLabelText('Ce que tu vois')).toBeNull();
+    });
+  });
+
+  it('referme le formulaire sur « Annuler » sans rien envoyer', async () => {
+    const observe = vi.fn(mutationOk);
+    await openSheet(fakeClient({ observe }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Noter une observation' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.queryByLabelText('Ce que tu vois')).toBeNull();
+    expect(observe).not.toHaveBeenCalled();
+  });
+
+  it('referme le formulaire si l’on rappuie sur le même bouton', async () => {
+    await openSheet(fakeClient());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Noter une observation' }));
+    expect(screen.getByLabelText('Ce que tu vois')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Noter une observation' }));
+
+    expect(screen.queryByLabelText('Ce que tu vois')).toBeNull();
+  });
+
+  it('referme la mesure si l’on rappuie sur le même bouton', async () => {
+    await openSheet(fakeClient());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Relever une mesure' }));
+    expect(screen.getByLabelText(/Valeur en/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Relever une mesure' }));
+
+    expect(screen.queryByLabelText(/Valeur en/)).toBeNull();
+  });
+
+  it('referme la mesure sur « Annuler » sans rien envoyer', async () => {
     const measure = vi.fn(mutationOk);
     await openSheet(fakeClient({ measure }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Ajouter une mesure' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Relever une mesure' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.queryByLabelText(/Valeur en/)).toBeNull();
+    expect(measure).not.toHaveBeenCalled();
+  });
+
+  it('n’ouvre qu’un formulaire à la fois', async () => {
+    await openSheet(fakeClient());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Noter une observation' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Relever une mesure' }));
+
+    expect(screen.queryByLabelText('Ce que tu vois')).toBeNull();
+    expect(screen.getByLabelText(/Valeur en/)).toBeInTheDocument();
+  });
+
+  it('enregistre la mesure saisie dans le formulaire', async () => {
+    const measure = vi.fn(mutationOk);
+    await openSheet(fakeClient({ measure }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Relever une mesure' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Humidité' }));
+    await userEvent.type(screen.getByLabelText(/Valeur en/), '92');
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer la mesure' }));
+
     expect(measure).toHaveBeenCalledWith('SUB-2026-0042', {
-      metric: 'temperature_c',
-      numericValue: 24,
+      metric: 'humidity_pct',
+      numericValue: 92,
     });
   });
 
@@ -340,7 +452,9 @@ describe('actions depuis la fiche', () => {
     await openSheet(fakeClient({ getUnit }));
     const callsBefore = getUnit.mock.calls.length;
 
-    await userEvent.click(screen.getByRole('button', { name: 'Ajouter une mesure' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Relever une mesure' }));
+    await userEvent.type(screen.getByLabelText(/Valeur en/), '24');
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer la mesure' }));
     await vi.waitFor(() => {
       expect(getUnit.mock.calls.length).toBeGreaterThan(callsBefore);
     });
@@ -371,7 +485,9 @@ describe('résolution de QR — chemins d’échec', () => {
           hint: 'Étiquette d’une autre installation ?',
         }),
     });
-    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+    );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
 
     expect(await screen.findByText('Étiquette d’une autre installation ?')).toBeInTheDocument();
@@ -381,7 +497,9 @@ describe('résolution de QR — chemins d’échec', () => {
     const client = fakeClient({
       resolveQr: () => mutationFailed({ code: 'NOT_FOUND', message: 'Token illisible.' }),
     });
-    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+    );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
 
     expect(await screen.findByText('Token illisible.')).toBeInTheDocument();
@@ -415,7 +533,15 @@ describe('vues', () => {
     });
 
   it('ouvre sur le terrain, pas sur la configuration', () => {
-    render(<App client={withProcess()} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App
+        client={withProcess()}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+      />,
+    );
 
     expect(screen.getByRole('button', { name: 'Terrain' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('button', { name: 'Process' })).not.toHaveAttribute('aria-current');
@@ -423,7 +549,15 @@ describe('vues', () => {
   });
 
   it('donne accès à l’éditeur de process depuis l’application', async () => {
-    render(<App client={withProcess()} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App
+        client={withProcess()}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+      />,
+    );
 
     await userEvent.click(screen.getByRole('button', { name: 'Process' }));
 
@@ -433,13 +567,21 @@ describe('vues', () => {
   });
 
   it('revient au terrain sans perdre le scanner', async () => {
-    render(<App client={withProcess()} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App
+        client={withProcess()}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+      />,
+    );
 
     await userEvent.click(screen.getByRole('button', { name: 'Process' }));
     await screen.findByRole('heading', { name: 'Éditeur de process' });
     await userEvent.click(screen.getByRole('button', { name: 'Terrain' }));
 
-    expect(screen.getByLabelText(/saisis le code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/code de l/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Éditeur de process' })).toBeNull();
   });
 
@@ -447,7 +589,9 @@ describe('vues', () => {
     const client = withProcess({
       getUnit: () => mutationFailed({ code: 'NOT_FOUND', message: 'Unité inconnue.' }),
     });
-    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+    );
 
     await scan('SUB-2026-0042');
     expect(await screen.findByText('Unité inconnue.')).toBeInTheDocument();
@@ -461,7 +605,9 @@ describe('vues', () => {
       listProcessTemplates: () =>
         mutationFailed({ code: 'NOT_FOUND', message: 'Base injoignable.' }),
     });
-    render(<App client={client} queue={makeQueue()} environment={capable} online={true} />);
+    render(
+      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+    );
 
     await userEvent.click(screen.getByRole('button', { name: 'Process' }));
 

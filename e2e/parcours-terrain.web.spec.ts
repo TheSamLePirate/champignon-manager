@@ -22,7 +22,7 @@ test.describe('ouverture de l’application', () => {
 
   test('propose immédiatement la saisie du code', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByLabel(/saisis le code/i)).toBeVisible();
+    await expect(page.getByLabel(/code de l/i)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ouvrir la fiche' })).toBeDisabled();
   });
 });
@@ -33,7 +33,7 @@ test.describe('consultation d’une unité', () => {
     const unit = await createUnit(request, process.versionId, { name: 'Bloc du test web' });
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
 
     await expect(page.getByRole('heading', { name: 'Bloc du test web' })).toBeVisible();
@@ -47,7 +47,7 @@ test.describe('consultation d’une unité', () => {
     const unit = await createUnit(request, process.versionId);
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(`  ${unit.publicCode.toLowerCase()} `);
+    await page.getByLabel(/code de l/i).fill(`  ${unit.publicCode.toLowerCase()} `);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
 
     await expect(page.getByText(unit.publicCode)).toBeVisible();
@@ -60,7 +60,7 @@ test.describe('consultation d’une unité', () => {
     const token = ((await qr.json()) as { data: { token: string } }).data.token;
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(token);
+    await page.getByLabel(/code de l/i).fill(token);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
 
     // Le repli manuel mène exactement au même endroit que le scan.
@@ -69,7 +69,7 @@ test.describe('consultation d’une unité', () => {
 
   test('affiche l’indice du serveur pour un code inconnu', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill('SUB-2026-999999');
+    await page.getByLabel(/code de l/i).fill('SUB-2026-999999');
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
 
     await expect(page.getByText(/code public|identifiant technique/i).first()).toBeVisible();
@@ -83,7 +83,7 @@ test.describe('consultation d’une unité', () => {
     });
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill('bonjour');
+    await page.getByLabel(/code de l/i).fill('bonjour');
 
     await expect(page.getByText(/Code non reconnu/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ouvrir la fiche' })).toBeDisabled();
@@ -99,7 +99,7 @@ test.describe('utilisabilité en chambre', () => {
   test('les cibles tactiles font au moins 44 px', async ({ page }) => {
     await page.goto('/');
 
-    const input = page.getByLabel(/saisis le code/i);
+    const input = page.getByLabel(/code de l/i);
     const button = page.getByRole('button', { name: 'Ouvrir la fiche' });
 
     const inputBox = await input.boundingBox();
@@ -122,10 +122,10 @@ test.describe('utilisabilité en chambre', () => {
 
   test('le focus reste visible au clavier', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).focus();
+    await page.getByLabel(/code de l/i).focus();
 
     const outline = await page
-      .getByLabel(/saisis le code/i)
+      .getByLabel(/code de l/i)
       .evaluate((element) => getComputedStyle(element).outlineStyle);
     expect(outline).not.toBe('none');
   });
@@ -169,7 +169,7 @@ test.describe('scanner', () => {
     // Aucun bouton « Scanner » tant que la capture n'est pas validée.
     await expect(page.getByRole('button', { name: 'Scanner un QR' })).toHaveCount(0);
     // Mais la saisie manuelle, elle, est toujours là.
-    await expect(page.getByLabel(/saisis le code/i)).toBeVisible();
+    await expect(page.getByLabel(/code de l/i)).toBeVisible();
   });
 });
 
@@ -183,7 +183,7 @@ test.describe('suivi d’une unité depuis le navigateur', () => {
     const unit = await createUnit(request, process.versionId, { name: 'Bloc suivi' });
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
 
     await expect(page.getByRole('heading', { name: 'Bloc suivi' })).toBeVisible();
@@ -197,11 +197,11 @@ test.describe('suivi d’une unité depuis le navigateur', () => {
     const unit = await createUnit(request, process.versionId, { name: 'Bloc avancé' });
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
     await page.getByRole('button', { name: /Passer à « Incubation »/ }).click();
 
-    await expect(page.getByText('inoculation → incubation')).toBeVisible();
+    await expect(page.getByText('Inoculation → Incubation')).toBeVisible();
     // La fiche se recharge : la suite proposée est maintenant la fructification.
     await expect(page.getByRole('button', { name: /Passer à « Fructification »/ })).toBeVisible();
   });
@@ -211,14 +211,42 @@ test.describe('suivi d’une unité depuis le navigateur', () => {
     const unit = await createUnit(request, process.versionId, { name: 'Bloc observé' });
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
 
-    await page.getByRole('button', { name: 'Ajouter une observation' }).click();
-    await expect(page.getByText(/colonisation — gravité low/)).toBeVisible();
+    // L'observation se saisit : type, gravité, précision. Rien n'est envoyé
+    // en aveugle — c'est l'opérateur qui décrit ce qu'il a devant lui.
+    await page.getByRole('button', { name: 'Noter une observation' }).click();
+    await page.getByLabel('Ce que tu vois').selectOption('odeur');
+    await page.getByRole('radio', { name: 'Moyen' }).check();
+    await page.getByRole('button', { name: 'Enregistrer l’observation' }).click();
+    await expect(page.getByText(/Odeur — gravité moyenne/)).toBeVisible();
 
-    await page.getByRole('button', { name: 'Ajouter une mesure' }).click();
-    await expect(page.getByText(/temperature_c : 24/)).toBeVisible();
+    await page.getByRole('button', { name: 'Relever une mesure' }).click();
+    await page.getByLabel(/Valeur en/).fill('21,5');
+    await page.getByRole('button', { name: 'Enregistrer la mesure' }).click();
+    await expect(page.getByText(/Température : 21.5 °C/)).toBeVisible();
+  });
+
+  /**
+   * La seule saisie obligatoire de l'application (`q12_4`), tenue par l'écran
+   * avant de l'être par le serveur.
+   */
+  test('refuse d’enregistrer une contamination sans photo', async ({ page, request }) => {
+    const process = await createPublishedProcess(request);
+    const unit = await createUnit(request, process.versionId, { name: 'Bloc contaminé' });
+
+    await page.goto('/');
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
+    await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
+    await page.getByRole('button', { name: 'Noter une observation' }).click();
+    await page.getByLabel('Ce que tu vois').selectOption('contamination');
+
+    await expect(page.getByRole('button', { name: 'Enregistrer l’observation' })).toBeDisabled();
+    await expect(page.getByText(/seule saisie obligatoire/)).toBeVisible();
+
+    await page.getByRole('button', { name: 'J’ai pris la photo' }).click();
+    await expect(page.getByRole('button', { name: 'Enregistrer l’observation' })).toBeEnabled();
   });
 
   /** Une observation enrichit l'historique sans toucher à l'état métier. */
@@ -227,10 +255,11 @@ test.describe('suivi d’une unité depuis le navigateur', () => {
     const unit = await createUnit(request, process.versionId);
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
-    await page.getByRole('button', { name: 'Ajouter une observation' }).click();
-    await expect(page.getByText(/colonisation/)).toBeVisible();
+    await page.getByRole('button', { name: 'Noter une observation' }).click();
+    await page.getByRole('button', { name: 'Enregistrer l’observation' }).click();
+    await expect(page.getByText(/Colonisation/)).toBeVisible();
 
     const after = await request.get(`/api/units/${unit.publicCode}`);
     const body = (await after.json()) as { data: { currentStepId: string; status: string } };
@@ -243,12 +272,14 @@ test.describe('suivi d’une unité depuis le navigateur', () => {
     const unit = await createUnit(request, process.versionId);
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
-    await page.getByRole('button', { name: 'Ajouter une mesure' }).click();
-    await expect(page.getByText(/temperature_c/)).toBeVisible();
+    await page.getByRole('button', { name: 'Relever une mesure' }).click();
+    await page.getByLabel(/Valeur en/).fill('24');
+    await page.getByRole('button', { name: 'Enregistrer la mesure' }).click();
+    await expect(page.getByText(/Température/)).toBeVisible();
     await page.getByRole('button', { name: /Passer à « Incubation »/ }).click();
-    await expect(page.getByText('inoculation → incubation')).toBeVisible();
+    await expect(page.getByText('Inoculation → Incubation')).toBeVisible();
 
     // L'assertion centrale du rapport d'audit, après un parcours réellement
     // piloté par l'interface.
@@ -266,11 +297,15 @@ test.describe('suivi d’une unité depuis le navigateur', () => {
     const unit = await createUnit(request, process.versionId);
 
     await page.goto('/');
-    await page.getByLabel(/saisis le code/i).fill(unit.publicCode);
+    await page.getByLabel(/code de l/i).fill(unit.publicCode);
     await page.getByRole('button', { name: 'Ouvrir la fiche' }).click();
 
-    const action = page.getByRole('button', { name: 'Ajouter une observation' });
-    const box = await action.boundingBox();
-    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // L'action principale est plus grande que le minimum : c'est celle qu'on
+    // vise en premier, avec des gants.
+    const principale = page.getByRole('button', { name: /Passer à/ });
+    expect((await principale.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(56);
+
+    const secondaire = page.getByRole('button', { name: 'Noter une observation' });
+    expect((await secondaire.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
   });
 });

@@ -1,12 +1,21 @@
-import type { CultureUnit, DomainEvent } from '@champi/contracts';
+import type { CultureUnit, DomainEvent, Severity } from '@champi/contracts';
+import { StageRail, STAGE_LABEL } from './StageRail.js';
+import { formatAnciennete, libelleEtape } from '../lib/duree.js';
 
 /**
  * Fiche d'unité.
  *
- * Ce que l'opérateur regarde en chambre, une unité devant lui : où elle en est,
- * ce qu'elle a vécu, et ce qu'il peut faire ensuite. Les actions les plus
- * fréquentes — avancer, observer, peser — sont en haut ; le reste attend
- * (docs/22 §7.1).
+ * Ce que l'opérateur a sous les yeux, un sac devant lui, à travers un film de
+ * condensation. L'écran répond dans cet ordre, parce que c'est l'ordre des
+ * questions :
+ *
+ * 1. **quel objet ?** — l'en-tête reprend l'étiquette imprimée sur le sac :
+ *    même code, même casse, même monospace. L'écran et l'objet se répondent ;
+ * 2. **où en est-il ?** — la chaîne de propagation, puis l'étape courante et
+ *    depuis quand ;
+ * 3. **qu'est-ce que je fais ?** — les actions, en pleine largeur.
+ *
+ * L'historique vient en dernier : on le consulte, on ne le pilote pas.
  */
 
 export interface NextStep {
@@ -18,19 +27,15 @@ export interface UnitSheetProps {
   readonly unit: CultureUnit;
   readonly events: readonly DomainEvent[];
   readonly nominalNext: readonly NextStep[];
+  /** Horloge injectée : « depuis 12 jours » se calcule, il ne se devine pas. */
+  readonly nowIso: string;
   readonly onAdvance: (stepId: string) => void;
   readonly onObserve: () => void;
   readonly onMeasure: () => void;
   readonly busy?: boolean;
+  /** Formulaire ouvert sous les actions, le cas échéant. */
+  readonly children?: React.ReactNode;
 }
-
-const STAGE_LABEL: Readonly<Record<CultureUnit['stage'], string>> = {
-  gelose: 'Gélose',
-  liquid_culture: 'Culture liquide',
-  grain: 'Ballot de grain',
-  substrate: 'Ballot de substrat',
-  fruiting: 'Fructification',
-};
 
 const STATUS_LABEL: Readonly<Record<CultureUnit['status'], string>> = {
   active: 'En cours',
@@ -53,29 +58,74 @@ const EVENT_LABEL: Readonly<Record<DomainEvent['type'], string>> = {
   'event.compensated': 'Correction',
 };
 
+/**
+ * Vocabulaire affiché.
+ *
+ * Le journal montrait jusqu'ici les identifiants du modèle — `temperature_c`,
+ * `colonisation`, `low`. Ce sont des noms de champs, pas des mots que le
+ * cultivateur emploie. L'écran parle sa langue ; le journal, lui, garde les
+ * identifiants, qui restent la vérité stockée.
+ */
+type Metrique = 'temperature_c' | 'humidity_pct' | 'weight';
+
+/** Exhaustif : la métrique est une énumération fermée, l'indexation est totale. */
+const METRIQUE_LABEL: Readonly<Record<Metrique, { nom: string; unite: string }>> = {
+  temperature_c: { nom: 'Température', unite: '°C' },
+  humidity_pct: { nom: 'Humidité', unite: '%' },
+  weight: { nom: 'Poids', unite: 'g' },
+};
+
+const OBSERVATION_LABEL: Readonly<Record<string, string>> = {
+  contamination: 'Contamination',
+  colonisation: 'Colonisation',
+  odeur: 'Odeur',
+  couleur_suspecte: 'Couleur suspecte',
+  humidite_visuelle: 'Humidité visible',
+  taille: 'Taille',
+  couleur: 'Couleur',
+  autre: 'Autre',
+};
+
+const GRAVITE_LABEL: Readonly<Record<Severity, string>> = {
+  low: 'légère',
+  medium: 'moyenne',
+  critical: 'critique',
+};
+
 /** Date lisible : le jour et l'heure suffisent en chambre. */
 function formatMoment(iso: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso);
   if (match === null) {
     return iso;
   }
-  const [, year = '', month = '', day = '', hour = '', minute = ''] = match;
-  return `${day}/${month}/${year} à ${hour}:${minute}`;
+  return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)} à ${iso.slice(11, 16)}`;
 }
 
 /** Résumé d'un événement, en une ligne lisible. */
 export function describeEvent(event: DomainEvent): string {
   switch (event.type) {
-    case 'unit.step_advanced':
-      return event.payload.followedNominalPath
-        ? `${event.payload.fromStepId} → ${event.payload.toStepId}`
-        : `${event.payload.fromStepId} → ${event.payload.toStepId} (écart au process)`;
-    case 'unit.observed':
-      return `${event.payload.kind} — gravité ${event.payload.severity}`;
-    case 'unit.measured':
-      return event.payload.quantity !== undefined
-        ? `${event.payload.metric} : ${String(event.payload.quantity.value)} ${event.payload.quantity.unit}`
-        : `${event.payload.metric} : ${String(event.payload.numericValue ?? '')}`;
+    case 'unit.step_advanced': {
+      const trajet = `${libelleEtape(event.payload.fromStepId)} → ${libelleEtape(event.payload.toStepId)}`;
+      return event.payload.followedNominalPath ? trajet : `${trajet} (écart au process)`;
+    }
+    case 'unit.observed': {
+      // Le type d'observation reste une chaîne libre dans le contrat : un
+      // événement peut en porter un que l'interface ne connaît pas. On l'affiche
+      // alors tel quel plutôt que de le taire.
+      const kind = OBSERVATION_LABEL[event.payload.kind] ?? event.payload.kind;
+      return `${kind} — gravité ${GRAVITE_LABEL[event.payload.severity]}`;
+    }
+    case 'unit.measured': {
+      const metrique = METRIQUE_LABEL[event.payload.metric];
+      if (event.payload.quantity !== undefined) {
+        return `${metrique.nom} : ${String(event.payload.quantity.value)} ${event.payload.quantity.unit}`;
+      }
+      // Une mesure sans valeur ne devrait pas exister — l'API la refuse. Si
+      // l'histoire en contient une, on nomme la grandeur sans inventer de chiffre.
+      return event.payload.numericValue === undefined
+        ? metrique.nom
+        : `${metrique.nom} : ${String(event.payload.numericValue)} ${metrique.unite}`;
+    }
     case 'unit.moved':
       return `vers ${event.payload.to.roomId}`;
     case 'unit.status_changed':
@@ -93,35 +143,39 @@ export function UnitSheet({
   unit,
   events,
   nominalNext,
+  nowIso,
   onAdvance,
   onObserve,
   onMeasure,
   busy = false,
+  children,
 }: UnitSheetProps): React.JSX.Element {
   const terminal = unit.status !== 'active' && unit.status !== 'archived';
+  const anciennete = formatAnciennete(unit.currentStepEnteredAt, nowIso);
 
   return (
     <section className="unit" aria-labelledby="unit-title">
-      <h2 id="unit-title">{unit.name}</h2>
+      {/*
+       * L'en-tête reprend l'étiquette collée sur le sac : le code d'abord, en
+       * monospace espacé, parce que c'est lui qu'on compare à l'objet en main.
+       */}
+      <header className="etiquette">
+        <p className="etiquette__code">{unit.publicCode}</p>
+        <h2 id="unit-title" className="etiquette__nom">
+          {unit.name}
+        </h2>
+        <p className="etiquette__type">{STAGE_LABEL[unit.stage]}</p>
+      </header>
 
-      <dl className="unit__facts">
-        <div>
-          <dt>Code</dt>
-          <dd>{unit.publicCode}</dd>
-        </div>
-        <div>
-          <dt>Type</dt>
-          <dd>{STAGE_LABEL[unit.stage]}</dd>
-        </div>
-        <div>
-          <dt>Étape</dt>
-          <dd>{unit.currentStepId}</dd>
-        </div>
-        <div>
-          <dt>Statut</dt>
-          <dd>{STATUS_LABEL[unit.status]}</dd>
-        </div>
-      </dl>
+      <StageRail stage={unit.stage} />
+
+      <div className="etat">
+        <p className="etat__etape">{libelleEtape(unit.currentStepId)}</p>
+        <p className="etat__meta">
+          <span className={`pastille pastille--${unit.status}`}>{STATUS_LABEL[unit.status]}</span>
+          {anciennete !== null && <span className="etat__depuis">{anciennete}</span>}
+        </p>
+      </div>
 
       {terminal ? (
         <p className="unit__closed" role="status">
@@ -130,11 +184,11 @@ export function UnitSheet({
         </p>
       ) : (
         <div className="unit__actions">
-          <h3>Actions</h3>
           {nominalNext.map((step) => (
             <button
               key={step.id}
               type="button"
+              className="bouton--principal"
               disabled={busy}
               onClick={() => {
                 onAdvance(step.id);
@@ -143,11 +197,11 @@ export function UnitSheet({
               Passer à « {step.name} »
             </button>
           ))}
-          <button type="button" disabled={busy} onClick={onObserve}>
-            Ajouter une observation
+          <button type="button" className="bouton--secondaire" disabled={busy} onClick={onObserve}>
+            Noter une observation
           </button>
-          <button type="button" disabled={busy} onClick={onMeasure}>
-            Ajouter une mesure
+          <button type="button" className="bouton--secondaire" disabled={busy} onClick={onMeasure}>
+            Relever une mesure
           </button>
           {nominalNext.length === 0 && (
             <p className="unit__hint">
@@ -157,11 +211,13 @@ export function UnitSheet({
         </div>
       )}
 
-      <h3>Historique</h3>
+      {children}
+
+      <h3 className="unit__titre-section">Historique</h3>
       {events.length === 0 ? (
-        <p>Aucun événement enregistré.</p>
+        <p className="unit__hint">Aucun événement enregistré.</p>
       ) : (
-        <ol className="unit__timeline">
+        <ol className="unit__timeline" aria-label="Historique de l’unité">
           {events.map((event) => {
             const detail = describeEvent(event);
             return (
