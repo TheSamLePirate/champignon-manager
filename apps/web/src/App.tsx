@@ -12,6 +12,7 @@ import { LabelPanel } from './components/LabelPanel.js';
 import { PhotoPanel } from './components/PhotoPanel.js';
 import { HarvestView } from './components/HarvestView.js';
 import { HarvestForm, type HarvestDraft } from './components/HarvestForm.js';
+import { TracePanel } from './components/TracePanel.js';
 import type { ApiClient, MutationResult } from './lib/api-client.js';
 import type { OfflineQueue } from './lib/offline-queue.js';
 import type { ScanEnvironment } from './lib/scanner.js';
@@ -62,7 +63,7 @@ type Vue = 'terrain' | 'recoltes' | 'process';
 const STAGES: readonly Stage[] = ['gelose', 'liquid_culture', 'grain', 'substrate', 'fruiting'];
 
 /** Formulaire ouvert. Un seul à la fois : l'écran reste lisible à bout de bras. */
-type Saisie = 'aucune' | 'observation' | 'mesure' | 'creation' | 'recolte';
+type Saisie = 'aucune' | 'observation' | 'mesure' | 'creation' | 'recolte' | 'lignee';
 
 /** Étiquette d'une unité, telle que l'écran la connaît. */
 interface Etiquette {
@@ -192,7 +193,7 @@ export function App({
    * de sacs.
    */
   useEffect(() => {
-    if (saisie === 'creation') {
+    if (saisie === 'creation' || saisie === 'lignee') {
       void chargerProcess();
     }
   }, [saisie, chargerProcess]);
@@ -528,6 +529,33 @@ export function App({
               )}
             </>
           )}
+
+          {saisie === 'lignee' ? (
+            <UnitForm
+              processes={processes}
+              parent={loaded.unit}
+              busy={busy}
+              onCancel={() => {
+                setSaisie('aucune');
+              }}
+              onSubmit={(draft: UnitDraft) => {
+                void creerUnite(draft);
+              }}
+            />
+          ) : (
+            <button
+              type="button"
+              className="bouton--secondaire"
+              disabled={busy}
+              onClick={() => {
+                setSaisie('lignee');
+              }}
+            >
+              Repiquer ou cloner
+            </button>
+          )}
+
+          <TracePanel client={client} reference={loaded.unit.publicCode} onMessage={setMessage} />
 
           <LabelPanel
             token={etiquette?.token ?? null}

@@ -139,6 +139,77 @@ describe('ouverture', () => {
   });
 });
 
+describe('création d’un process', () => {
+  /**
+   * Partir d'une page blanche condamnerait à tout ressaisir. On repart du
+   * modèle de `docs/20`, que l'éditeur permet ensuite de tailler.
+   */
+  it('crée un process à partir du modèle par défaut', async () => {
+    const createProcessTemplate = vi.fn((_nom: string, _graphe: unknown) =>
+      Promise.resolve({ ok: true, data: { template: { id: 't-2' }, version: { id: 'v-9' } } }),
+    );
+    const { onMessage } = renderWorkbench(
+      fakeClient({
+        createProcessTemplate:
+          createProcessTemplate as unknown as ApiClient['createProcessTemplate'],
+      }),
+    );
+
+    await userEvent.type(await screen.findByLabelText('Nouveau process'), 'Shiitake sur bûche');
+    await userEvent.click(screen.getByRole('button', { name: /Créer à partir du modèle/ }));
+
+    await waitFor(() => {
+      const [nom, graphe] = createProcessTemplate.mock.calls[0] ?? [];
+      expect(nom).toBe('Shiitake sur bûche');
+      // Le graphe livré n'est pas vide : c'est le modèle par défaut, avec ses
+      // étapes et leur provenance.
+      expect((graphe as { steps: unknown[] }).steps.length).toBeGreaterThan(0);
+    });
+    expect(onMessage).toHaveBeenCalledWith(expect.stringContaining('en brouillon'));
+  });
+
+  it('exige un nom avant de créer', async () => {
+    renderWorkbench();
+
+    expect(await screen.findByRole('button', { name: /Créer à partir du modèle/ })).toBeDisabled();
+  });
+
+  it('remonte le refus du serveur à la création', async () => {
+    const { onMessage } = renderWorkbench(
+      fakeClient({
+        createProcessTemplate: () =>
+          Promise.resolve({
+            ok: false,
+            error: { code: 'CONFLICT', message: 'Nom déjà pris.' },
+            offline: false,
+          }),
+      }),
+    );
+
+    await userEvent.type(await screen.findByLabelText('Nouveau process'), 'Pleurote');
+    await userEvent.click(screen.getByRole('button', { name: /Créer à partir du modèle/ }));
+
+    await waitFor(() => {
+      expect(onMessage).toHaveBeenCalledWith('Nom déjà pris.');
+    });
+  });
+
+  it('refuse de créer un process hors ligne', async () => {
+    const { onMessage } = renderWorkbench(
+      fakeClient({
+        createProcessTemplate: () => Promise.resolve({ ok: true, queued: true, pendingCount: 1 }),
+      }),
+    );
+
+    await userEvent.type(await screen.findByLabelText('Nouveau process'), 'Pleurote');
+    await userEvent.click(screen.getByRole('button', { name: /Créer à partir du modèle/ }));
+
+    await waitFor(() => {
+      expect(onMessage).toHaveBeenCalledWith(expect.stringContaining('hors ligne'));
+    });
+  });
+});
+
 describe('choix du process', () => {
   it('charge les versions du process sélectionné', async () => {
     const listProcessVersions = vi.fn(() => Promise.resolve({ ok: true, data: [brouillon] }));

@@ -4,6 +4,7 @@ export * from './process/graph.js';
 export * from './process/alarms.js';
 export * from './process/version.js';
 export * from './unit/advance.js';
+export * from './unit/lineage.js';
 export * from './harvest/harvest.js';
 export * from './trace/replay.js';
 export * from './qr/public-code.js';

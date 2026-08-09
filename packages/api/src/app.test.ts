@@ -1166,16 +1166,102 @@ describe('création d’unité', () => {
     expect(body.data.event.type).toBe('unit.created');
   });
 
-  it('marque une unité issue d’un parent comme transfert', async () => {
+  /**
+   * Lignée.
+   *
+   * L'API déduisait « transfert » dans tous les cas et laissait la génération à
+   * zéro : un clone de cinquième génération était indiscernable d'une souche
+   * d'origine. C'est précisément ce que la traçabilité doit distinguer.
+   */
+  async function creerParent(stage: string): Promise<{ id: string; publicCode: string }> {
     const response = await post('/api/units', {
-      name: 'Enfant',
+      name: `Mère ${stage}`,
+      stage,
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+    });
+    const body = (await response.json()) as {
+      data: { unit: { id: string; publicCode: string } };
+    };
+    return body.data.unit;
+  }
+
+  it('déduit un clone quand le stade ne change pas', async () => {
+    const parent = await creerParent('substrate');
+
+    const response = await post('/api/units', {
+      name: 'Clone',
       stage: 'substrate',
       processVersionId: 'pv-1',
       stepId: 'inoculation',
-      parentUnitId: 'u-1',
+      parentUnitId: parent.publicCode,
+    });
+    const body = (await response.json()) as {
+      data: { unit: { lineageRelation: string; generation: number; parentUnitId: string } };
+    };
+
+    expect(body.data.unit.lineageRelation).toBe('clone');
+    expect(body.data.unit.generation).toBe(1);
+    // Le parent est stocké par son identifiant, même désigné par son code public.
+    expect(body.data.unit.parentUnitId).toBe(parent.id);
+  });
+
+  it('déduit un transfert quand le stade change', async () => {
+    const parent = await creerParent('grain');
+
+    const response = await post('/api/units', {
+      name: 'Transféré',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+      parentUnitId: parent.id,
     });
     const body = (await response.json()) as { data: { unit: { lineageRelation: string } } };
+
     expect(body.data.unit.lineageRelation).toBe('transfer');
+  });
+
+  it('respecte une division déclarée', async () => {
+    const parent = await creerParent('substrate');
+
+    const response = await post('/api/units', {
+      name: 'Moitié',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+      parentUnitId: parent.id,
+      lineageRelation: 'split',
+    });
+    const body = (await response.json()) as { data: { unit: { lineageRelation: string } } };
+
+    expect(body.data.unit.lineageRelation).toBe('split');
+  });
+
+  it('refuse un ascendant inexistant plutôt que de le croire sur parole', async () => {
+    const response = await post('/api/units', {
+      name: 'Orpheline',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+      parentUnitId: 'jamais-creee',
+    });
+    const body = (await response.json()) as { error: { hint: string; path: string } };
+
+    expect(response.status).toBe(404);
+    expect(body.error.path).toBe('parentUnitId');
+    expect(body.error.hint).toContain('code public');
+  });
+
+  it('refuse une relation de lignée incohérente avec l’absence de parent', async () => {
+    const response = await post('/api/units', {
+      name: 'Clone sans mère',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+      lineageRelation: 'clone',
+    });
+
+    expect(response.status).toBe(400);
   });
 
   it('conserve le poids de substrat, dénominateur du rendement', async () => {

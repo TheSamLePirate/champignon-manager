@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ProcessGraph } from '@champi/contracts';
 import { ProcessEditor } from './ProcessEditor.js';
+import { defaultProcessGraph } from '@champi/domain';
 import type { ApiClient, MutationResult } from '../lib/api-client.js';
 
 /**
@@ -53,6 +54,7 @@ export function ProcessWorkbench({ client, onMessage }: ProcessWorkbenchProps): 
    */
   const [publishedRef, setPublishedRef] = useState<ProcessGraph | null>(null);
   const [busy, setBusy] = useState(false);
+  const [nouveauNom, setNouveauNom] = useState('');
 
   /** Traite une écriture : la file locale n'a pas de sens sur un process. */
   const settle = useCallback(
@@ -160,6 +162,34 @@ export function ProcessWorkbench({ client, onMessage }: ProcessWorkbenchProps): 
     [client, settle, loadLatest],
   );
 
+  /**
+   * Crée un process, à partir du modèle par défaut.
+   *
+   * Partir d'une page blanche condamnerait à tout ressaisir : durées,
+   * températures, enchaînement des flushs. On repart donc du modèle de
+   * `docs/20`, que l'éditeur permet ensuite de tailler — et chaque étape garde
+   * sa `provenance`, donc on voit ce qui est inventé.
+   */
+  const creer = useCallback(async () => {
+    setBusy(true);
+    try {
+      const result = await client.createProcessTemplate(nouveauNom.trim(), defaultProcessGraph());
+      if ('queued' in result) {
+        onMessage('Création impossible hors ligne — un process vient toujours du serveur.');
+        return;
+      }
+      if (!result.ok) {
+        onMessage(result.error.hint ?? result.error.message);
+        return;
+      }
+      setNouveauNom('');
+      await loadTemplates();
+      onMessage(`Process « ${nouveauNom.trim()} » créé, en brouillon. Ajuste-le puis publie-le.`);
+    } finally {
+      setBusy(false);
+    }
+  }, [client, nouveauNom, loadTemplates, onMessage]);
+
   const save = useCallback(
     async (versionId: string, graph: ProcessGraph) => {
       setBusy(true);
@@ -225,6 +255,29 @@ export function ProcessWorkbench({ client, onMessage }: ProcessWorkbenchProps): 
           Aucun process enregistré.
         </p>
       )}
+
+      <div className="workbench__creation">
+        <div className="champ">
+          <label htmlFor="process-nouveau">Nouveau process</label>
+          <input
+            id="process-nouveau"
+            type="text"
+            value={nouveauNom}
+            placeholder="Shiitake sur bûche"
+            onChange={(event) => {
+              setNouveauNom(event.target.value);
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          className="bouton--secondaire"
+          disabled={busy || nouveauNom.trim() === ''}
+          onClick={() => void creer()}
+        >
+          Créer à partir du modèle par défaut
+        </button>
+      </div>
 
       {version !== null && draftGraph !== null && (
         <>

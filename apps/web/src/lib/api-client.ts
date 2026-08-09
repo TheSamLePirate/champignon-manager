@@ -13,20 +13,37 @@ export interface HarvestRecord {
 
 /** Remontée d'un produit vers les unités qui l'ont produit. */
 export interface ProductTrace {
-  readonly product: { id: string; publicCode: string; name: string };
-  readonly origins: readonly {
-    readonly harvestId: string;
+  readonly productId: string;
+  readonly productPublicCode: string;
+  readonly producedAt: string;
+  readonly contributions: readonly {
     readonly unitId: string;
-    readonly share: number;
+    readonly unitPublicCode: string;
+    readonly harvestId: string;
+    readonly flushNumber: number;
+    readonly sharePct: number;
+    readonly grams: number;
   }[];
-  readonly units?: readonly CultureUnit[];
+  /** `true` si une seule unité est à l'origine du produit. */
+  readonly singleOrigin: boolean;
 }
 
-/** Lignée d'une unité : ses ascendants et ses descendants. */
+/**
+ * Descendance d'une unité : ce qu'elle a produit.
+ *
+ * On descend d'un bloc vers ses récoltes et les produits qui en sont issus —
+ * l'autre sens, du produit vers les blocs, est rendu par `ProductTrace`.
+ */
 export interface UnitTrace {
-  readonly upstream?: readonly CultureUnit[];
-  readonly downstream?: readonly CultureUnit[];
-  readonly complete?: boolean;
+  readonly unitId: string;
+  readonly unitPublicCode: string;
+  readonly harvestCount: number;
+  readonly totalHarvestedGrams: number;
+  readonly products: readonly {
+    readonly productId: string;
+    readonly publicCode: string;
+    readonly sharePct: number;
+  }[];
 }
 import type { OfflineQueue, SendOutcome } from './offline-queue.js';
 

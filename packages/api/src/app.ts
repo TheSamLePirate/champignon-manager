@@ -16,6 +16,7 @@ import {
 import {
   advanceUnit,
   buildUnitLabel,
+  deriveLineage,
   netHarvestWeight,
   PREFIX_HARVEST,
   PREFIX_PRODUCT,
@@ -162,6 +163,12 @@ const createUnitBodySchema = z.object({
   processVersionId: z.string().min(1),
   stepId: z.string().min(1),
   parentUnitId: z.string().min(1).nullable().default(null),
+  /**
+   * Relation de lignée. Déduite du stade si absente : même stade → clone,
+   * stade différent → transfert. La **division** ne se devine pas et doit
+   * donc être dite.
+   */
+  lineageRelation: z.enum(['origin', 'clone', 'transfer', 'split']).optional(),
   substrateWeight: z
     .object({
       value: z.number().finite().nonnegative(),
@@ -485,6 +492,40 @@ export function createApp(deps: AppDependencies): Hono {
     }
 
     const nowIso = deps.now();
+    /*
+     * Lignée.
+     *
+     * Le parent est **vérifié**, pas cru sur parole : une unité rattachée à un
+     * ascendant inexistant casserait toute remontée ultérieure, et rien ne
+     * l'aurait signalé au moment de la création.
+     */
+    const parent =
+      parsed.data.parentUnitId === null
+        ? null
+        : await deps.units.findByIdOrPublicCode(parsed.data.parentUnitId);
+    if (parsed.data.parentUnitId !== null && parent === null) {
+      return c.json(
+        errorBody(
+          appError('NOT_FOUND', `L'unité mère « ${parsed.data.parentUnitId} » n'existe pas.`, {
+            hint: 'Donne le code public ou l’identifiant d’une unité existante.',
+            path: 'parentUnitId',
+          }),
+        ),
+        404,
+      );
+    }
+
+    const lineage = deriveLineage({
+      ...(parent === null ? {} : { parent }),
+      stage: parsed.data.stage,
+      ...(parsed.data.lineageRelation === undefined
+        ? {}
+        : { relation: parsed.data.lineageRelation }),
+    });
+    if (!lineage.ok) {
+      return c.json(errorBody(lineage.error), statusForError(lineage.error.code));
+    }
+
     const year = Number(nowIso.slice(0, 4));
     const code = await deps.qr.allocatePublicCode(prefixForStage(parsed.data.stage), year);
     if (!code.ok) {
@@ -497,9 +538,9 @@ export function createApp(deps: AppDependencies): Hono {
       name: parsed.data.name,
       stage: parsed.data.stage,
       status: 'active',
-      parentUnitId: parsed.data.parentUnitId,
-      lineageRelation: parsed.data.parentUnitId === null ? 'origin' : 'transfer',
-      generation: 0,
+      parentUnitId: parent === null ? null : parent.id,
+      lineageRelation: lineage.value.lineageRelation,
+      generation: lineage.value.generation,
       processVersionId: parsed.data.processVersionId,
       currentStepId: parsed.data.stepId,
       currentStepEnteredAt: nowIso,

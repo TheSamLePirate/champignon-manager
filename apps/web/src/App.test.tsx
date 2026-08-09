@@ -89,6 +89,19 @@ function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
         offline: false,
       }),
     photoUrl: (photoId: string) => `/api/photos/${photoId}`,
+    traceUnit: () =>
+      Promise.resolve({
+        ok: true,
+        data: {
+          unitId: 'u-1',
+          unitPublicCode: 'SUB-2026-0042',
+          harvestCount: 0,
+          totalHarvestedGrams: 0,
+          products: [],
+        },
+      }),
+    auditUnit: () =>
+      Promise.resolve({ ok: true, data: { verified: true, divergences: [], eventCount: 1 } }),
     listHarvests: () =>
       Promise.resolve({
         ok: true,
@@ -1192,6 +1205,42 @@ describe('terrain', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
 
     expect(screen.getByRole('button', { name: 'Peser une récolte' })).toBeInTheDocument();
+  });
+
+  /** Le cœur du modèle : une unité naît d'une autre (clone, repiquage, division). */
+  it('crée une unité fille depuis la fiche du parent', async () => {
+    const createUnit = vi.fn(() => Promise.resolve({ ok: true, data: { unit } }));
+    afficher(clientTerrain({ createUnit }));
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Repiquer ou cloner' }));
+
+    // Le formulaire annonce de quelle unité il part.
+    expect(await screen.findByRole('heading', { name: /SUB-2026-0042/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Créer l’unité' }));
+
+    await waitFor(() => {
+      expect(createUnit).toHaveBeenCalledWith(expect.objectContaining({ parentUnitId: 'u-1' }));
+    });
+  });
+
+  it('referme le formulaire de lignée sur annulation', async () => {
+    afficher();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Repiquer ou cloner' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Annuler' }));
+
+    expect(screen.getByRole('button', { name: 'Repiquer ou cloner' })).toBeInTheDocument();
+  });
+
+  it('remonte la traçabilité depuis la fiche', async () => {
+    afficher();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Remonter la trace' }));
+
+    expect(await screen.findByText(/1 événements rejoués/)).toBeInTheDocument();
   });
 
   it('ouvre l’onglet Récoltes', async () => {

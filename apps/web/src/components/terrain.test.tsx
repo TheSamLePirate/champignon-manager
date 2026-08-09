@@ -280,6 +280,55 @@ describe('création d’une unité', () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ parentUnitId: 'u-1' }));
   });
 
+  /**
+   * La division ne se devine pas : deux sacs issus d'un même bloc restent au
+   * même stade qu'un clone. Elle se choisit donc explicitement.
+   */
+  it('permet de déclarer une division plutôt que de la laisser déduire', async () => {
+    const onSubmit = vi.fn();
+    render(
+      <UnitForm
+        processes={process}
+        parent={unite()}
+        busy={false}
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    await userEvent.selectOptions(screen.getByLabelText(/Lien avec/), 'split');
+    await userEvent.click(screen.getByRole('button', { name: 'Créer l’unité' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ lineageRelation: 'split' }));
+  });
+
+  it('laisse l’application déduire la relation par défaut', async () => {
+    const onSubmit = vi.fn();
+    render(
+      <UnitForm
+        processes={process}
+        parent={unite()}
+        busy={false}
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    await userEvent.selectOptions(screen.getByLabelText(/Lien avec/), 'clone');
+    await userEvent.selectOptions(screen.getByLabelText(/Lien avec/), '');
+    await userEvent.click(screen.getByRole('button', { name: 'Créer l’unité' }));
+
+    // Rien n'est envoyé : c'est le serveur qui déduit clone ou transfert.
+    const envoye = onSubmit.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect('lineageRelation' in envoye).toBe(false);
+  });
+
+  it('n’affiche pas de choix de lignée sans parent', () => {
+    render(<UnitForm processes={process} busy={false} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+    expect(screen.queryByLabelText(/Lien avec/)).toBeNull();
+  });
+
   /** Une unité est toujours épinglée à une version : sans process, rien n'est possible. */
   it('explique l’impasse quand aucun process n’est publié', () => {
     render(<UnitForm processes={[]} busy={false} onSubmit={vi.fn()} onCancel={vi.fn()} />);

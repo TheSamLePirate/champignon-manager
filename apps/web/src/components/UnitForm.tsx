@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { CultureUnit, ProcessGraph, Stage } from '@champi/contracts';
+import type { CultureUnit, LineageRelation, ProcessGraph, Stage } from '@champi/contracts';
 import { STAGE_LABEL, STAGE_ORDER } from './StageRail.js';
 
 /**
@@ -24,6 +24,7 @@ export interface UnitDraft {
   readonly processVersionId: string;
   readonly stepId: string;
   readonly parentUnitId?: string;
+  readonly lineageRelation?: LineageRelation;
   readonly substrateWeight?: { value: number; unit: 'kg'; kind: 'substrate' };
 }
 
@@ -62,6 +63,14 @@ export function UnitForm({
   const versionId = choix ?? processes[0]?.versionId ?? '';
   const [stepId, setStepId] = useState('');
   const [poids, setPoids] = useState('');
+  /**
+   * Relation de lignée. `null` = laisser l'application déduire.
+   *
+   * Même stade → clone, stade différent → transfert. La **division** ne se
+   * devine pas — deux sacs issus d'un bloc restent au même stade qu'un clone —
+   * donc elle se choisit à la main.
+   */
+  const [relation, setRelation] = useState<LineageRelation | null>(null);
 
   const choisi = processes.find((candidat) => candidat.versionId === versionId);
   const etapes = choisi?.graph.steps.filter((etape) => etape.stage === stage) ?? [];
@@ -105,6 +114,7 @@ export function UnitForm({
           processVersionId: versionId,
           stepId,
           ...(parent === undefined ? {} : { parentUnitId: parent.id }),
+          ...(relation === null ? {} : { lineageRelation: relation }),
           ...(poids.trim() === ''
             ? {}
             : {
@@ -197,6 +207,26 @@ export function UnitForm({
               </p>
             )}
           </div>
+
+          {parent !== undefined && (
+            <div className="champ">
+              <label htmlFor="unite-lignee">Lien avec « {parent.name} »</label>
+              <select
+                id="unite-lignee"
+                value={relation ?? ''}
+                onChange={(event) => {
+                  setRelation(
+                    event.target.value === '' ? null : (event.target.value as LineageRelation),
+                  );
+                }}
+              >
+                <option value="">Déduire du stade</option>
+                <option value="clone">Clone — même stade, la mère survit</option>
+                <option value="transfer">Transfert — passage au stade suivant</option>
+                <option value="split">Division — séparation physique</option>
+              </select>
+            </div>
+          )}
 
           <div className="champ">
             <label htmlFor="unite-poids">Poids de substrat en kg (facultatif)</label>
