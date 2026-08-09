@@ -146,6 +146,12 @@ const PROMESSES = [
     origine: 'docs/21 §2',
   },
   {
+    promesse: 'Une chaîne de production entière se déroule et se vérifie',
+    preuve:
+      'scripts/audit-chaine.mjs — gélose → clone → culture liquide → grain → blocs → flushs → produit, 11 vérifications contre une pile réelle, rapport publié en CI',
+    origine: 'docs/23 §8',
+  },
+  {
     promesse: 'On remonte d’une barquette aux blocs, avec la part exacte',
     preuve: 'e2e/spore-a-assiette.api.spec.ts — « remonte d’une barquette au bloc »',
     origine: 'q14_5 — « du spore à l’assiette »',

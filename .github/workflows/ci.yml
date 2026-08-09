@@ -154,6 +154,27 @@ jobs:
       - name: Scénarios end-to-end
         run: bun run e2e
 
+      # L'audit de chaîne déroule une production entière contre la pile réelle,
+      # puis vérifie que la traçabilité tient de bout en bout. Les E2E prouvent
+      # des propriétés isolées ; celui-ci prouve qu'elles tiennent ensemble sur
+      # une histoire complète.
+      - name: Audit de chaîne complète
+        run: |
+          CHAMPI_DB_NAME=champignon_audit PORT=3200 node packages/api/dist/server.mjs &
+          for i in $(seq 1 30); do
+            curl -sf -m 2 http://127.0.0.1:3200/api/health > /dev/null && break
+            sleep 2
+          done
+          node scripts/audit-chaine.mjs --url http://127.0.0.1:3200
+
+      - name: Publier l'audit de chaîne
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-chaine
+          path: reports/audit-chaine/
+          retention-days: 90
+
       - name: Publier le rapport E2E
         if: always()
         uses: actions/upload-artifact@v4

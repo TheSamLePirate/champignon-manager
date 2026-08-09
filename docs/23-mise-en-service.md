@@ -265,7 +265,44 @@ Trois propriétés qui rendent l'outil utilisable sans documentation :
 
 ---
 
-## 8. Recette de mise en service
+## 8. Audit de chaîne complète
+
+Un script déroule **une production entière** contre le serveur qui tourne —
+gélose, clone, culture liquide, ballot de grain, blocs, fructification, flushs,
+produit final — puis vérifie que la traçabilité tient de bout en bout.
+
+```bash
+bun run audit:chaine                       # contre http://127.0.0.1:3000
+node scripts/audit-chaine.mjs \
+  --url https://champi-pi.<tailnet>.ts.net \
+  --blocs 5 --flushs 3 --espece 'Shiitake'
+```
+
+Il produit `reports/audit-chaine/audit-chaine.md` : un rapport autonome où
+chaque ligne porte **ce qui a été observé** et **ce que cela prouve**. Il sort en
+erreur au moindre écart, et publie son rapport même en cas d'échec — c'est
+précisément le jour où il casse qu'on en a besoin.
+
+Onze vérifications, dont les quatre qui portent le métier :
+
+| Vérification | Ce qu'elle protège |
+| --- | --- |
+| Clone / transfert / génération | Un clone de cinquième génération doit rester distinguable d'une souche d'origine. |
+| Remontée du produit aux blocs | « Du spore à l'assiette » : un rappel doit désigner les blocs exacts, avec leur part. |
+| Reconstruction depuis le journal | L'état stocké n'est qu'une commodité de lecture ; le journal fait foi. |
+| Rendement biologique | Il exige le poids de substrat ; sans lui l'application dit pourquoi, plutôt que zéro. |
+
+**Ce que l'audit ne prouve pas**, et qu'il annonce lui-même : rien sur le
+matériel (si le transport d'impression est celui en mémoire, aucune étiquette ne
+sort), rien sur la durée (les étapes sont franchies en secondes, pas en
+semaines — les alarmes ne sont donc pas éprouvées), rien sur la charge.
+
+C'est un bon premier geste après une mise en service : il traverse toute
+l'application en quelques secondes et dit ce qui tient.
+
+---
+
+## 9. Recette de mise en service
 
 À dérouler une fois sur la machine du cultivateur. Chaque ligne est vérifiable.
 
@@ -289,7 +326,7 @@ sur le Pi — et l'impression **depuis le Pi**, que le conteneur ne permet pas
 
 ---
 
-## 9. Mise à jour
+## 10. Mise à jour
 
 ```bash
 git pull

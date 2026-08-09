@@ -26,10 +26,10 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **1233** |
-| Scénarios end-to-end | — | **155** (API, CLI, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **1302** |
+| Scénarios end-to-end | — | **175** (API, CLI, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
-| Score de mutation global | ≥ 90 % | **91,95 %** |
+| Score de mutation global | ≥ 90 % | **91,72 %** |
 | Mutants sans couverture | 0 | **0** (voir D-24) |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
 | Score de mutation `contracts` | ≥ 90 % | ⚠️ **84,97 %** (voir D-4) |
@@ -785,6 +785,65 @@ d'arrêt de caméra dupliquée entre le bouton et le démontage.
 L'onglet « Récoltes » n'est **pas** livré dans cette vague : une troisième
 langue qui dirait « à venir » serait exactement le défaut de D-28, un
 affordance qui ne mène nulle part. Il arrivera avec son contenu.
+
+### D-35 — Vagues 2 et 3 : le métier entier passe à l'écran
+
+Suite de D-34. L'interface couvre désormais ce que l'API sait faire.
+
+**Récoltes et produits** : peser un flush depuis la fiche (poids, qualité,
+pertes avec cause), composer un produit à partir de plusieurs récoltes dont les
+proportions se calculent au prorata. Le rendement biologique s'affiche, ou dit
+pourquoi il ne peut pas.
+
+**Lignée et traçabilité** : repiquer ou cloner depuis une fiche, remonter ce
+qu'un bloc a produit, et lancer le **contrôle d'audit du journal** — la promesse
+centrale du projet, désormais vérifiable par le cultivateur et plus seulement
+en CI.
+
+**Deux vrais défauts du serveur** trouvés en écrivant les E2E :
+
+1. **`generation` était figée à 0.** Un clone de cinquième génération était
+   indiscernable d'une souche d'origine — exactement ce que la traçabilité doit
+   distinguer, et le cultivateur clone sans limite de génération.
+2. **La relation de lignée était toujours « transfert ».** Cloner une gélose
+   était enregistré comme un transfert. La règle vit maintenant dans le domaine
+   (`deriveLineage`) : même stade → clone, stade différent → transfert, division
+   déclarée car elle ne se devine pas.
+
+Et le parent n'était **pas vérifié** : une unité pouvait se rattacher à un
+ascendant inexistant sans que rien ne le signale.
+
+**Un défaut de performance introduit puis corrigé** : la vue terrain chargeait
+tous les process à chaque affichage, une requête par modèle plus une par
+version, pour une information qui ne sert qu'à créer une unité. Chargement
+différé. La correction en a révélé un second — le formulaire figeait la version
+au montage, et le bouton « Créer » ne s'activait plus jamais.
+
+### D-36 — L'audit de chaîne complète
+
+`scripts/audit-chaine.mjs` déroule une production entière contre une pile réelle
+— gélose, clone, culture liquide, ballot de grain, N blocs, fructification,
+flushs, produit final, avec QR, étiquettes, photos, observations et mesures —
+puis vérifie onze points, dont la remontée du produit aux blocs et la
+reconstruction de chaque unité depuis son journal.
+
+Il est **configurable** (`--blocs`, `--flushs`, `--espece`, `--url`) et s'adapte
+au process publié qu'il trouve, sans supposer le modèle par défaut. Le rapport
+produit porte pour chaque ligne **ce qui a été observé** et **ce que cela
+prouve** — et il est écrit même en cas d'échec, parce que c'est le jour où ça
+casse qu'on en a besoin.
+
+Ce qu'il dit ne pas prouver, et qui compte autant : rien sur le matériel, rien
+sur la durée (les étapes sont franchies en secondes, donc les alarmes ne sont
+pas éprouvées), rien sur la charge.
+
+Premier déroulé réel : **11/11**, 27 événements rejoués, remontée à 99,9 % —
+l'écart tenant à l'arrondi des parts au dixième de pour cent.
+
+Le verrou optimiste a d'ailleurs fait son travail pendant l'écriture : la photo
+ajoutée à l'étiquetage incrémentait la version, et l'avancement suivant partait
+d'une version périmée. Le script relit l'unité, comme devrait le faire tout
+appelant.
 
 ---
 

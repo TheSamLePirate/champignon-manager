@@ -36,7 +36,8 @@
     "sauvegarde": "node scripts/sauvegarde.mjs sauvegarder",
     "prod:up": "docker compose -f docker/docker-compose.prod.yml up -d --build",
     "prod:down": "docker compose -f docker/docker-compose.prod.yml down",
-    "prod:logs": "docker compose -f docker/docker-compose.prod.yml logs -f app"
+    "prod:logs": "docker compose -f docker/docker-compose.prod.yml logs -f app",
+    "audit:chaine": "node scripts/audit-chaine.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
