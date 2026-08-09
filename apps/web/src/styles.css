@@ -1099,3 +1099,39 @@ legend {
   border: 2px solid var(--trait);
   background: var(--creux);
 }
+
+/* --- Récoltes --- */
+
+.recoltes {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Une récolte se coche pour entrer dans un mélange : la case est une vraie cible. */
+.carte--choix {
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'case nom'
+    'case etape';
+  column-gap: 0.85rem;
+  align-items: center;
+}
+
+.carte--choix input[type='checkbox'] {
+  grid-area: case;
+  width: 26px;
+  height: 26px;
+  min-height: 26px;
+  margin: 0;
+  accent-color: var(--mycelium);
+}
+
+.carte--choix .carte__nom {
+  grid-area: nom;
+}
+.carte--choix .carte__etape {
+  grid-area: etape;
+}

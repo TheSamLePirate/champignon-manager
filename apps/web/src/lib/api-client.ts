@@ -1,4 +1,33 @@
 import type { AppError, CultureUnit, DomainEvent } from '@champi/contracts';
+
+/** Récolte, telle que l'API la rend. */
+export interface HarvestRecord {
+  readonly id: string;
+  readonly unitId: string;
+  readonly flushNumber: number;
+  readonly weight: { value: number; unit: string; kind: string };
+  readonly quality: 'A' | 'B' | 'C';
+  readonly losses: readonly { weight: { value: number; unit: string }; cause: string }[];
+  readonly harvestedAt: string;
+}
+
+/** Remontée d'un produit vers les unités qui l'ont produit. */
+export interface ProductTrace {
+  readonly product: { id: string; publicCode: string; name: string };
+  readonly origins: readonly {
+    readonly harvestId: string;
+    readonly unitId: string;
+    readonly share: number;
+  }[];
+  readonly units?: readonly CultureUnit[];
+}
+
+/** Lignée d'une unité : ses ascendants et ses descendants. */
+export interface UnitTrace {
+  readonly upstream?: readonly CultureUnit[];
+  readonly downstream?: readonly CultureUnit[];
+  readonly complete?: boolean;
+}
 import type { OfflineQueue, SendOutcome } from './offline-queue.js';
 
 /**
@@ -206,6 +235,70 @@ export class ApiClient {
   /** Adresse d'affichage d'une photo. Le navigateur la met en cache pour toujours. */
   photoUrl(photoId: string): string {
     return `${this.options.baseUrl}/api/photos/${encodeURIComponent(photoId)}`;
+  }
+
+  /**
+   * Récoltes d'une unité, avec son rendement biologique.
+   *
+   * Le rendement n'est calculable que si le poids de substrat a été saisi à
+   * l'inoculation : le serveur dit **pourquoi** il manque plutôt que de rendre
+   * un zéro trompeur.
+   */
+  listHarvests(reference: string): Promise<
+    ApiResult<{
+      harvests: HarvestRecord[];
+      biologicalEfficiencyPct: number | null;
+      yieldUnavailableReason: string | null;
+    }>
+  > {
+    return this.get(`/api/units/${encodeURIComponent(reference)}/harvests`);
+  }
+
+  recordHarvest(
+    reference: string,
+    body: {
+      flushNumber: number;
+      weight: { value: number; unit: string; kind: 'harvest' };
+      quality: 'A' | 'B' | 'C';
+      losses: { weight: { value: number; unit: string; kind: 'harvest' }; cause: string }[];
+    },
+  ): Promise<MutationResult<{ harvest: HarvestRecord; netWeight: { value: number } }>> {
+    return this.post(`/api/units/${encodeURIComponent(reference)}/harvests`, body);
+  }
+
+  /**
+   * Crée un produit final à partir d'une ou plusieurs récoltes.
+   *
+   * Les parts doivent totaliser 1 — c'est le domaine qui le vérifie, et c'est
+   * ce qui rend la remontée « barquette → blocs » exacte plutôt qu'approchée.
+   */
+  createProduct(body: {
+    name: string;
+    quantity: { value: number; unit: string; kind: 'product' };
+    origins: {
+      harvestId: string;
+      weight: { value: number; unit: string; kind: 'harvest' };
+      share: number;
+    }[];
+  }): Promise<MutationResult<{ product: { id: string; publicCode: string; name: string } }>> {
+    return this.post('/api/products', body);
+  }
+
+  /** Remonte d'un produit aux unités qui l'ont produit. */
+  traceProduct(reference: string): Promise<ApiResult<ProductTrace>> {
+    return this.get(`/api/products/${encodeURIComponent(reference)}/trace`);
+  }
+
+  /** Remonte la lignée d'une unité, de son origine à ses descendants. */
+  traceUnit(reference: string): Promise<ApiResult<UnitTrace>> {
+    return this.get(`/api/units/${encodeURIComponent(reference)}/trace`);
+  }
+
+  /** Contrôle d'audit : l'état stocké est-il reconstructible depuis le journal ? */
+  auditUnit(
+    reference: string,
+  ): Promise<ApiResult<{ verified: boolean; divergences: unknown[]; eventCount: number }>> {
+    return this.get(`/api/units/${encodeURIComponent(reference)}/audit`);
   }
 
   listProcessTemplates(): Promise<

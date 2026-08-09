@@ -363,6 +363,54 @@ describe('process', () => {
     );
   });
 
+  it('liste les récoltes d’une unité', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).listHarvests('FRU-2026-0001');
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units/FRU-2026-0001/harvests`);
+  });
+
+  it('enregistre une récolte avec ses pertes', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    const corps = {
+      flushNumber: 1,
+      weight: { value: 820, unit: 'g' as const, kind: 'harvest' as const },
+      quality: 'A' as const,
+      losses: [{ weight: { value: 40, unit: 'g', kind: 'harvest' as const }, cause: 'overripe' }],
+    };
+    await makeClient(fetchImpl).recordHarvest('FRU-2026-0001', corps);
+
+    expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual(corps);
+  });
+
+  it('crée un produit à partir de plusieurs récoltes', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).createProduct({
+      name: 'Barquette',
+      quantity: { value: 400, unit: 'g', kind: 'product' },
+      origins: [{ harvestId: 'h-1', weight: { value: 400, unit: 'g', kind: 'harvest' }, share: 1 }],
+    });
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/products`);
+  });
+
+  it('remonte d’un produit à ses unités', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).traceProduct('PRD-2026-0001');
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/products/PRD-2026-0001/trace`);
+  });
+
+  it('remonte la lignée d’une unité', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).traceUnit('SUB-2026-0042');
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units/SUB-2026-0042/trace`);
+  });
+
+  it('demande le contrôle d’audit d’une unité', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).auditUnit('SUB-2026-0042');
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units/SUB-2026-0042/audit`);
+  });
+
   it('publie une version', async () => {
     const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
     await makeClient(fetchImpl).publishProcessVersion('v-1');

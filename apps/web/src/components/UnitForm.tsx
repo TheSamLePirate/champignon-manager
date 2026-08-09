@@ -51,7 +51,15 @@ export function UnitForm({
 }: UnitFormProps): React.JSX.Element {
   const [name, setName] = useState(parent === undefined ? '' : `${parent.name} — suite`);
   const [stage, setStage] = useState<Stage>(parent?.stage ?? 'substrate');
-  const [versionId, setVersionId] = useState(processes[0]?.versionId ?? '');
+  /*
+   * Le process retenu est **dérivé**, pas figé au montage.
+   *
+   * Les process arrivent après le premier rendu — ils ne se chargent qu'à
+   * l'ouverture de ce formulaire. Un état initialisé à `processes[0]` restait
+   * donc vide pour toujours, et le bouton « Créer » ne s'activait jamais.
+   */
+  const [choix, setChoix] = useState<string | null>(null);
+  const versionId = choix ?? processes[0]?.versionId ?? '';
   const [stepId, setStepId] = useState('');
   const [poids, setPoids] = useState('');
 
@@ -156,7 +164,7 @@ export function UnitForm({
               id="unite-process"
               value={versionId}
               onChange={(event) => {
-                setVersionId(event.target.value);
+                setChoix(event.target.value);
               }}
             >
               {processes.map((candidat) => (

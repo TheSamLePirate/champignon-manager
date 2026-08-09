@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { sixStepGraph } from './helpers.js';
 
 /**
  * L'éditeur de process, vu depuis le navigateur.
@@ -112,16 +113,31 @@ test.describe('édition graphique', () => {
     await expect(page.getByLabel('Nom', { exact: true })).toHaveValue(/Incubation/);
   });
 
-  test('une version publiée s’affiche en lecture seule', async ({ page }) => {
-    await ouvrirProcess(page);
+  /**
+   * Ce scénario crée **son propre** process publié.
+   *
+   * S'appuyer sur le modèle amorcé le rendait dépendant des autres tests : dès
+   * que l'un d'eux ouvrait un brouillon, la dernière version n'était plus
+   * publiée et l'assertion perdait son objet.
+   */
+  test('une version publiée s’affiche en lecture seule', async ({ page, request }) => {
+    const nom = `Process figé ${String(Date.now())}`;
+    const cree = await request.post('/api/process-templates', {
+      data: { name: nom, graph: sixStepGraph() },
+    });
+    const { data } = (await cree.json()) as { data: { version: { id: string } } };
+    await request.post(`/api/process-versions/${data.version.id}/publish`);
 
-    const verrou = page.getByText('Version publiée — lecture seule.');
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Process' }).click();
+    await expect(page.getByRole('heading', { name: 'Éditeur de process' })).toBeVisible();
+    await page.getByLabel('Process à configurer').selectOption({ label: nom });
+
+    await expect(page.getByText('Version publiée — lecture seule.')).toBeVisible();
     // Immuable : aucun formulaire d'édition, et un chemin explicite pour
     // repartir — qui crée une version, jamais ne réécrit celle-ci.
-    if (await verrou.isVisible()) {
-      await expect(page.getByLabel('Nouvelle étape', { exact: true })).toBeHidden();
-      await expect(page.getByRole('button', { name: /^Modifier/ })).toBeVisible();
-    }
+    await expect(page.getByLabel('Nouvelle étape', { exact: true })).toBeHidden();
+    await expect(page.getByRole('button', { name: /^Modifier/ })).toBeVisible();
   });
 });
 

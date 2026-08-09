@@ -89,6 +89,11 @@ function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
         offline: false,
       }),
     photoUrl: (photoId: string) => `/api/photos/${photoId}`,
+    listHarvests: () =>
+      Promise.resolve({
+        ok: true,
+        data: { harvests: [], biologicalEfficiencyPct: null, yieldUnavailableReason: null },
+      }),
     ...overrides,
   } as unknown as ApiClient;
 }
@@ -1104,6 +1109,97 @@ describe('terrain', () => {
       'src',
       '/api/photos/ph-1',
     );
+  });
+
+  /** Peser un flush se fait devant le bloc, donc depuis sa fiche. */
+  it('pèse une récolte depuis la fiche d’une unité en fructification', async () => {
+    const fruiting = { ...unit, stage: 'fruiting' as const, publicCode: 'FRU-2026-0001' };
+    const recordHarvest = vi.fn(mutationOk);
+    afficher(
+      clientTerrain({
+        listUnits: (stage: string) =>
+          Promise.resolve({ ok: true, data: stage === 'fruiting' ? [fruiting] : [] }),
+        getUnit: () => Promise.resolve({ ok: true, data: fruiting }),
+        recordHarvest,
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Peser une récolte' }));
+    await userEvent.type(screen.getByLabelText(/Poids récolté/), '820');
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer la récolte' }));
+
+    await waitFor(() => {
+      expect(recordHarvest).toHaveBeenCalledWith(
+        'FRU-2026-0001',
+        expect.objectContaining({ flushNumber: 1, quality: 'A' }),
+      );
+    });
+  });
+
+  it('ne propose pas de peser une unité qui n’est pas en fructification', async () => {
+    afficher();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+
+    // Un ballot de substrat ne produit rien : l'action n'a pas lieu d'être.
+    expect(screen.queryByRole('button', { name: 'Peser une récolte' })).toBeNull();
+  });
+
+  it('déduit le numéro du prochain flush du journal', async () => {
+    const fruiting = { ...unit, stage: 'fruiting' as const };
+    const recolte: DomainEvent = {
+      id: 'e-h1',
+      type: 'harvest.recorded',
+      occurredAt: '2026-08-10T08:00:00.000Z',
+      recordedAt: '2026-08-10T08:00:00.000Z',
+      source: 'manual',
+      unitId: 'u-1',
+      payload: {
+        harvestId: 'h-1',
+        flushNumber: 1,
+        weight: { value: 800, unit: 'g', kind: 'harvest' },
+      },
+    };
+    afficher(
+      clientTerrain({
+        listUnits: (stage: string) =>
+          Promise.resolve({ ok: true, data: stage === 'fruiting' ? [fruiting] : [] }),
+        getUnit: () => Promise.resolve({ ok: true, data: fruiting }),
+        getTimeline: () => Promise.resolve({ ok: true, data: [recolte] }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Peser une récolte' }));
+
+    // Un flush déjà pesé : on propose le suivant plutôt que de le faire deviner.
+    expect(screen.getByLabelText('Flush')).toHaveValue('2');
+  });
+
+  it('referme le formulaire de récolte sur annulation', async () => {
+    const fruiting = { ...unit, stage: 'fruiting' as const };
+    afficher(
+      clientTerrain({
+        listUnits: (stage: string) =>
+          Promise.resolve({ ok: true, data: stage === 'fruiting' ? [fruiting] : [] }),
+        getUnit: () => Promise.resolve({ ok: true, data: fruiting }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Peser une récolte' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.getByRole('button', { name: 'Peser une récolte' })).toBeInTheDocument();
+  });
+
+  it('ouvre l’onglet Récoltes', async () => {
+    afficher();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Récoltes' }));
+
+    expect(await screen.findByRole('heading', { name: 'Récoltes' })).toBeInTheDocument();
   });
 
   it('survit à une liste indisponible sans écran blanc', async () => {

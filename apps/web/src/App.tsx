@@ -10,6 +10,8 @@ import { UnitList } from './components/UnitList.js';
 import { UnitForm, type ProcessChoice, type UnitDraft } from './components/UnitForm.js';
 import { LabelPanel } from './components/LabelPanel.js';
 import { PhotoPanel } from './components/PhotoPanel.js';
+import { HarvestView } from './components/HarvestView.js';
+import { HarvestForm, type HarvestDraft } from './components/HarvestForm.js';
 import type { ApiClient, MutationResult } from './lib/api-client.js';
 import type { OfflineQueue } from './lib/offline-queue.js';
 import type { ScanEnvironment } from './lib/scanner.js';
@@ -48,14 +50,19 @@ interface LoadedUnit {
   readonly nominalNext: readonly NextStep[];
 }
 
-/** Les vues de l'application. « Récoltes » arrive avec la vague 2. */
-type Vue = 'terrain' | 'process';
+/**
+ * Les trois vues.
+ *
+ * « Terrain » par défaut : c'est le geste quotidien. « Récoltes » regroupe ce
+ * qui sort de la ferme, « Process » la configuration, qui est rare.
+ */
+type Vue = 'terrain' | 'recoltes' | 'process';
 
 /** Les cinq stades, dans l'ordre de la chaîne de propagation. */
 const STAGES: readonly Stage[] = ['gelose', 'liquid_culture', 'grain', 'substrate', 'fruiting'];
 
 /** Formulaire ouvert. Un seul à la fois : l'écran reste lisible à bout de bras. */
-type Saisie = 'aucune' | 'observation' | 'mesure' | 'creation';
+type Saisie = 'aucune' | 'observation' | 'mesure' | 'creation' | 'recolte';
 
 /** Étiquette d'une unité, telle que l'écran la connaît. */
 interface Etiquette {
@@ -168,13 +175,27 @@ export function App({
     [client],
   );
 
-  // La liste et les process se chargent à l'ouverture de la vue terrain.
+  // La liste se charge à l'ouverture de la vue terrain.
   useEffect(() => {
     if (vue === 'terrain') {
       void chargerListe();
+    }
+  }, [vue, chargerListe]);
+
+  /*
+   * Les process ne se chargent qu'à l'ouverture du formulaire de création.
+   *
+   * Les charger avec la liste coûtait une requête par modèle **plus** une par
+   * version, à chaque affichage du terrain — pour une information dont on ne se
+   * sert qu'en créant une unité. Sur une ferme qui tourne depuis des mois, cela
+   * revient à interroger tout l'historique des process pour afficher une liste
+   * de sacs.
+   */
+  useEffect(() => {
+    if (saisie === 'creation') {
       void chargerProcess();
     }
-  }, [vue, chargerListe, chargerProcess]);
+  }, [saisie, chargerProcess]);
 
   const openUnit = useCallback(
     async (input: RecognisedScan) => {
@@ -317,6 +338,15 @@ export function App({
     }
   }, [client]);
 
+  /**
+   * Numéro du prochain flush, déduit du journal.
+   *
+   * On ne demande pas à l'opérateur de se souvenir du dernier : il a les mains
+   * dans le substrat, et un numéro dupliqué serait refusé par le serveur.
+   */
+  const prochainFlush =
+    (loaded?.events ?? []).filter((event) => event.type === 'harvest.recorded').length + 1;
+
   const runAction = useCallback(
     async (action: () => Promise<MutationResult<unknown>>, reference: string) => {
       setBusy(true);
@@ -350,6 +380,17 @@ export function App({
         <button
           type="button"
           className="onglet"
+          aria-current={vue === 'recoltes' ? 'page' : undefined}
+          onClick={() => {
+            setVue('recoltes');
+            setMessage(null);
+          }}
+        >
+          Récoltes
+        </button>
+        <button
+          type="button"
+          className="onglet"
           aria-current={vue === 'process' ? 'page' : undefined}
           onClick={() => {
             setVue('process');
@@ -361,6 +402,8 @@ export function App({
       </nav>
 
       {vue === 'process' && <ProcessWorkbench client={client} onMessage={setMessage} />}
+
+      {vue === 'recoltes' && <HarvestView client={client} onMessage={setMessage} />}
 
       {vue === 'terrain' && loaded === null && saisie !== 'creation' && (
         <>
@@ -453,6 +496,37 @@ export function App({
                 );
               }}
             />
+          )}
+
+          {loaded.unit.stage === 'fruiting' && loaded.unit.status === 'active' && (
+            <>
+              {saisie === 'recolte' ? (
+                <HarvestForm
+                  prochainFlush={prochainFlush}
+                  busy={busy}
+                  onCancel={() => {
+                    setSaisie('aucune');
+                  }}
+                  onSubmit={(draft: HarvestDraft) => {
+                    void runAction(
+                      () => client.recordHarvest(loaded.unit.publicCode, draft),
+                      loaded.unit.publicCode,
+                    );
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="bouton--secondaire"
+                  disabled={busy}
+                  onClick={() => {
+                    setSaisie('recolte');
+                  }}
+                >
+                  Peser une récolte
+                </button>
+              )}
+            </>
           )}
 
           <LabelPanel
