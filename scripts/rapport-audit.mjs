@@ -168,7 +168,8 @@ const PROMESSES = [
   },
   {
     promesse: 'Une réimpression réutilise le même token',
-    preuve: 'e2e/parcours-nominal.api.spec.ts — « la réimpression réutilise le même token »',
+    preuve:
+      'e2e/parcours-nominal.api.spec.ts — « la réimpression réutilise le même token » ; vérifié sur matériel le 09/08/2026 : deux étiquettes imprimées portent le token ZBAKASUB2THMWYV7PUNGJF, printCount 0 → 2, isReprint false → true',
     origine: 'q17_5',
   },
   {

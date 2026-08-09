@@ -683,6 +683,26 @@ taille du texte suit désormais sa longueur, car une étiquette ne défile pas ;
 le pilote referme la connexion à chaque travail, une session BLE oubliée bloquant
 l'imprimante jusqu'à extinction.
 
+**La réimpression a été éprouvée sur matériel** dans la foulée (deux étiquettes
+consommées). C'était la dernière promesse d'impression qu'aucun appareil n'avait
+vérifiée (`q17_5`) :
+
+| Vérification | Résultat |
+| --- | --- |
+| Token du QR, 1ʳᵉ et 2ᵉ impression | `ZBAKASUB2THMWYV7PUNGJF` — **identique** |
+| `isReprint` | `false` → `true` |
+| `printCount` du registre QR | 0 → 1 → 2 |
+| Résolution du token après réimpression | ramène toujours `SUB-2026-0001` |
+| Avertissements du pilote | aucun |
+
+Les deux étiquettes physiques désignent donc la même unité — c'est tout l'objet
+de la règle : regénérer un token casserait le lien avec l'objet déjà en chambre.
+
+À noter : l'impression n'écrit **rien dans le journal d'événements de l'unité**.
+Elle est tracée dans le registre QR (`printCount`). C'est cohérent — imprimer
+une étiquette n'arrive pas à la culture, seulement à son étiquette — mais il
+faut le savoir avant de chercher une trace d'impression dans la fiche.
+
 **Ce qui n'est pas vérifié** : l'impression depuis le Raspberry Pi, et depuis un
 conteneur — que l'image de production ne permet pas, volontairement (modules
 natifs absents, et le BLE en conteneur réclame le D-Bus et le réseau de l'hôte).
