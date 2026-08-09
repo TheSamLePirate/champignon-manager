@@ -161,6 +161,12 @@ const PROMESSES = [
     origine: 'q12_4',
   },
   {
+    promesse: 'L’étiquette sort réellement de la Nimbot B21',
+    preuve:
+      'Vérifié sur matériel le 09/08/2026 : POST /api/units/SUB-2026-0001/label/print → status « printed », une étiquette imprimée (B21_Pro-HC19050441)',
+    origine: 'docs/21 §7',
+  },
+  {
     promesse: 'Une réimpression réutilise le même token',
     preuve: 'e2e/parcours-nominal.api.spec.ts — « la réimpression réutilise le même token »',
     origine: 'q17_5',
@@ -216,6 +222,12 @@ const RESERVES = [
     detail:
       'Les budgets sont vérifiés, mais sur machine de développement. La cible de production est un Pi. Relancer avec CHAMPI_PERF_FACTOR ajusté sur le matériel réel.',
     origine: 'claude-critics.md D11',
+  },
+  {
+    sujet: 'Impression vérifiée sur Mac, pas depuis le Raspberry Pi',
+    detail:
+      'Le pilote Nimbot B21 Pro est branché et une étiquette est réellement sortie le 09/08/2026 (B21_Pro-HC19050441, via POST /label/print). Restent non vérifiés : l’impression depuis le Pi, et depuis un conteneur — que l’image de production ne permet pas volontairement (modules natifs, D-Bus hôte).',
+    origine: 'docs/23 §6',
   },
   {
     sujet: 'Capture caméra non validée sur iPhone',

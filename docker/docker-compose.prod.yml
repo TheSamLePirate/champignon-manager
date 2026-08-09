@@ -41,6 +41,11 @@ services:
       PORT: '3000'
       CHAMPI_MONGO_URL: 'mongodb://mongo:27018/?replicaSet=rs0'
       CHAMPI_DB_NAME: 'champignon'
+      # ⚠️ Pas de CHAMPI_PRINTER_ADDRESS ici : **le conteneur n'imprime pas.**
+      # Le pilote Bluetooth s'appuie sur des modules natifs absents de l'image,
+      # et le BLE depuis un conteneur exige le D-Bus et le réseau de l'hôte —
+      # soit à peu près tout ce que l'isolation apporte. L'impression se fait
+      # depuis l'hôte du Pi (docs/23 §6).
     volumes:
       - ${CHAMPI_DATA:-./data}/fichiers:/app/fichiers
     ports:

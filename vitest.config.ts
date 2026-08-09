@@ -29,6 +29,17 @@ export default defineConfig({
         '**/__testing__/**',
         '**/main.tsx',
         '**/main.ts',
+        /*
+         * Le pilote Bluetooth de l'imprimante.
+         *
+         * Même catégorie que `main.ts` : c'est une racine d'assemblage qui
+         * touche du matériel. On ne peut pas l'éprouver sans imprimante, et le
+         * simuler produirait des tests verts pendant que la radio décroche —
+         * exactement ce que la règle « jamais de mock de MongoDB » interdit
+         * ailleurs. La logique d'impression, elle, vit dans `@champi/printing`
+         * et reste couverte à 100 %. Voir la déviation D-31 du suivi.
+         */
+        '**/b21-driver.ts',
         '**/test-setup.ts',
       ],
       thresholds: {

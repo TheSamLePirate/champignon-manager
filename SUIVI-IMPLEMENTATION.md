@@ -26,7 +26,7 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **1112** |
+| Tests unitaires et d'intégration | — | **1121** |
 | Scénarios end-to-end | — | **135** (API, CLI, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **92,23 %** |
@@ -640,6 +640,56 @@ Ce que la refonte **ne fait pas** : le scan caméra reste non branché, et le
 stockage des photos n'existe toujours pas. La confirmation « J'ai pris la
 photo » enregistre une référence horodatée et le dit franchement à l'écran :
 l'image reste sur le téléphone.
+
+### D-31 — ⚠️ Le pilote d'imprimante est exclu de la couverture
+
+**Première exclusion de couverture accordée à autre chose qu'un point d'entrée**,
+et la seule du dépôt. Elle mérite d'être discutée plutôt que subie.
+
+`packages/api/src/b21-driver.ts` parle à une radio Bluetooth. Il n'existe aucune
+façon de l'éprouver sans imprimante sous la main. Deux issues étaient possibles :
+
+1. **le simuler** — un faux client BLE, des tests verts, et l'illusion d'une
+   couverture. C'est exactement ce que la règle « les tests d'intégration
+   tournent contre un vrai MongoDB, jamais un mock » interdit ailleurs, et pour
+   la même raison : on testerait le simulacre, pas la radio ;
+2. **l'exclure et le réduire au minimum** — c'est le choix fait.
+
+Ce qui reste couvert à 100 % : `@champi/printing` porte la composition de
+l'étiquette (`composeB21Job`) et le transport (`B21Transport`), avec un pilote
+injecté. Ce qui est exclu tient en une fonction de rendu et une séquence
+connexion / impression / déconnexion.
+
+Le fichier est nommé et commenté comme tel, et l'exclusion est motivée dans
+`vitest.config.ts`. **Ne pas élargir ce motif** : c'est la porte par laquelle du
+code non testé entrerait ailleurs.
+
+### D-32 — L'imprimante est branchée, et une étiquette est sortie
+
+Le pilote validé de `../nimbot-lib` a été intégré — pas copié : l'application en
+reprend l'approche, réduite à ce dont elle a besoin, écrite aux règles du dépôt.
+
+Vérifié **sur matériel**, le 09/08/2026, imprimante `B21_Pro-HC19050441` :
+
+1. les modules natifs (`sharp`, pile BLE) **chargent sous Node** — point décisif,
+   puisque le serveur ne tourne pas sous Bun (D-13) ;
+2. `bun build --target=node` les laisse en dépendances externes ;
+3. `GET /api/printer/test` ouvre et referme une vraie session BLE → `reachable: true` ;
+4. `POST /api/units/SUB-2026-0001/label/print` → `status: "printed"`, une
+   tentative, **une étiquette physiquement imprimée**.
+
+Deux corrections nées de l'essai : la légende touchait les bords du ruban — la
+taille du texte suit désormais sa longueur, car une étiquette ne défile pas ; et
+le pilote referme la connexion à chaque travail, une session BLE oubliée bloquant
+l'imprimante jusqu'à extinction.
+
+**Ce qui n'est pas vérifié** : l'impression depuis le Raspberry Pi, et depuis un
+conteneur — que l'image de production ne permet pas, volontairement (modules
+natifs absents, et le BLE en conteneur réclame le D-Bus et le réseau de l'hôte).
+Le compose le dit en clair et `docs/23` §6 propose d'imprimer depuis l'hôte.
+
+La réserve « impression non branchée » du rapport d'audit est donc **remplacée**,
+pas supprimée : elle porte maintenant sur le Pi et le conteneur.
 
 ---
 

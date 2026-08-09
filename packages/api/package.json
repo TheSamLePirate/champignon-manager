@@ -12,13 +12,20 @@
     "@champi/contracts": "workspace:*",
     "@champi/domain": "workspace:*",
     "@champi/persistence": "workspace:*",
-    "hono": "^4.13.1",
-    "zod": "^3.24.0",
     "@champi/printing": "workspace:*",
-    "@hono/node-server": "^2.1.0"
+    "@hono/node-server": "^2.1.0",
+    "@mmote/niimblue-node": "0.0.14",
+    "@mmote/niimbluelib": "0.0.1-alpha.40",
+    "hono": "^4.13.1",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.33.5",
+    "zod": "^3.24.0"
   },
   "scripts": {
-    "build:server": "bun build src/main.ts --target=node --outfile=dist/server.mjs",
+    "build:server": "bun build src/main.ts --target=node --outfile=dist/server.mjs --external sharp --external @mmote/niimblue-node --external @mmote/niimbluelib",
     "start": "node dist/server.mjs"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6"
   }
 }

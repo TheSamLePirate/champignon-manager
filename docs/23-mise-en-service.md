@@ -191,7 +191,58 @@ démêler ensuite — et la traçabilité est précisément ce qu'on sauvegarde.
 
 ---
 
-## 6. Piloter depuis un agent
+## 6. Imprimante Nimbot B21 Pro
+
+Le transport d'impression est **branché** sur le pilote Bluetooth réel. Sans
+adresse d'imprimante, l'application garde son transport en mémoire : les
+étiquettes sont composées et journalisées, mais rien ne sort — c'est le bon
+défaut pour un poste sans imprimante.
+
+```bash
+# Le nom BLE annoncé par l'imprimante ; sur macOS il marche mieux que l'adresse.
+export CHAMPI_PRINTER_ADDRESS='B21_Pro-HC19050441'
+```
+
+Au démarrage, le serveur annonce lequel des deux transports il utilise.
+
+### Vérifier sans consommer de ruban
+
+```bash
+champi printer:test        # ouvre puis referme une vraie session BLE
+champi label:print SUB-2026-0042 --dry-run   # compose l'étiquette sans imprimer
+```
+
+L'étiquette porte les quatre éléments demandés (`q17_4`) : **nom d'unité, type,
+date, code QR**, plus le code public en clair — c'est lui qu'on lit à voix haute
+quand le QR est abîmé. Le QR ne contient **que le token opaque** : une étiquette
+photographiée hors de la ferme n'apprend rien.
+
+### Ce que le conteneur ne fait pas
+
+L'image de production **n'imprime pas**. Deux raisons, et aucune n'est un oubli :
+
+1. le pilote s'appuie sur des modules natifs (`sharp`, pile BLE) qui ne sont pas
+   embarqués dans l'image ;
+2. le Bluetooth depuis un conteneur exige l'accès au D-Bus de l'hôte et au
+   réseau hôte — c'est-à-dire à peu près tout abandonner de l'isolation.
+
+Le plus simple sur le Pi : **imprimer depuis l'hôte**. Faire tourner le serveur
+hors conteneur pour la partie impression, ou lancer un petit service dédié qui
+porte `CHAMPI_PRINTER_ADDRESS`. Tant que ce n'est pas tranché sur place,
+l'impression reste un point de la recette (§7), pas une promesse du conteneur.
+
+### Si l'imprimante ne répond pas
+
+| Symptôme | Cause la plus fréquente |
+| --- | --- |
+| `reachable: false` | L'application NIIMBOT officielle tient la connexion. La fermer. |
+| Connexion refusée sur macOS | Bluetooth non autorisé pour le terminal (Réglages → Confidentialité). |
+| Rien ne sort, voyant rouge | Mauvais type de média : le pilote suppose des étiquettes **à espaces**. |
+| Sur Linux/Pi, échec de permission | `sudo setcap cap_net_raw+eip "$(readlink -f "$(which node)")"` |
+
+---
+
+## 7. Piloter depuis un agent
 
 L'application est utilisable **entièrement en ligne de commande** (décision du
 08/08/2026 : pas de serveur MCP, l'agent passe par le CLI).
@@ -214,7 +265,7 @@ Trois propriétés qui rendent l'outil utilisable sans documentation :
 
 ---
 
-## 7. Recette de mise en service
+## 8. Recette de mise en service
 
 À dérouler une fois sur la machine du cultivateur. Chaque ligne est vérifiable.
 
@@ -225,7 +276,7 @@ Trois propriétés qui rendent l'outil utilisable sans documentation :
 | 3 | Le modèle par défaut est là et publié | `champi process:list` |
 | 4 | L'URL Tailscale s'ouvre en HTTPS sur l'iPhone | Safari, URL MagicDNS |
 | 5 | **Le scan caméra fonctionne sur l'iPhone réel** | Scanner une étiquette imprimée |
-| 6 | L'impression Nimbot B21 fonctionne | `champi printer:test` |
+| 6 | L'imprimante répond **et sort une étiquette** | `champi printer:test`, puis `champi label:print <code>` |
 | 7 | La sauvegarde s'exécute **et se vérifie** | `bun run sauvegarde` |
 | 8 | Une restauration se déroule sans écart | `node scripts/sauvegarde.mjs verifier <archive>` |
 | 9 | Les budgets de performance tiennent **sur le Pi** | `CHAMPI_PERF_FACTOR=6 bun run e2e` |
@@ -236,7 +287,7 @@ figurent comme réserves dans le rapport d'audit.
 
 ---
 
-## 8. Mise à jour
+## 9. Mise à jour
 
 ```bash
 git pull
