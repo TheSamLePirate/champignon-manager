@@ -17,7 +17,8 @@
 | `packages/cli` | `champi` — **la** surface d'agent (pas de serveur MCP) |
 | `packages/printing` | File d'impression, transport injecté |
 | `apps/web` | React 19 + Vite, scanner QR, éditeur de process graphique |
-| `e2e/` | 117 scénarios Playwright : API, CLI, Chrome, WebKit/iPhone |
+| `e2e/` | 175 scénarios Playwright : API, CLI, Chrome, WebKit/iPhone |
+| `scripts/audit-chaine.mjs` | Déroule une **production entière** contre la pile réelle et vérifie la traçabilité de bout en bout (`docs/23` §8) |
 | `docs/`, `claude-critics.md` | Cadrage métier — **toujours la référence**, à tenir à jour |
 | `SUIVI-IMPLEMENTATION.md` | Journal de construction et **27 déviations** au plan |
 | `docs/23-mise-en-service.md` | Déploiement Pi, Tailscale, sauvegarde, recette terrain |
@@ -172,4 +173,5 @@ Dans les docs, marquer ces points **« à confirmer »** plutôt que d'inventer 
 5. ✅ ~~Écrire la tranche verticale~~ — **les douze lots sont livrés.** 1044 tests, 117 scénarios E2E, 100 % de couverture, 92,23 % de mutation, rapport d'audit publié en CI.
 6. ✅ ~~Impression B21 et scan caméra~~ — **vérifiés sur matériel le 09/08/2026** : une étiquette sort de la B21, son QR scanné depuis un iPhone réel (Safari, HTTPS Tailscale) ouvre la fiche. Deux des trois réserves d'origine sont levées.
 7. **Ce qui reste ne se vérifie qu'à la ferme** : budgets de performance rejoués **sur le Raspberry Pi** (`CHAMPI_PERF_FACTOR`), et impression **depuis le Pi** — le conteneur n'imprime volontairement pas (`docs/23` §6). Dérouler la recette de `docs/23` §8.
-8. Ensuite seulement, élargir : stockage des photos (seul le `photoId` est enregistré aujourd'hui), stades amont au-delà du modèle par défaut, alarmes.
+8. ✅ ~~Élargir : photos, parcours utilisateur complet~~ — **les photos sont stockées** (image sur disque, référence au journal), et l'interface couvre désormais tout le métier : liste, création, lignée, étiquettes, récoltes, produits, traçabilité, création de process.
+9. Ce qui reste ouvert : **alarmes** (statuts et rappels, jamais de tâches — `docs/21` §3), emplacements suivis jusqu'à la position, et l'élargissement multi-espèces au-delà du modèle par défaut.
