@@ -1,8 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { CultureUnit, DomainEvent, ProcessGraph } from '@champi/contracts';
 import {
   connect,
   HarvestRepository,
+  PhotoStore,
   ProcessRepository,
   QrRepository,
   UnitRepository,
@@ -28,6 +32,7 @@ let repository: UnitRepository;
 let qr: QrRepository;
 let processes: ProcessRepository;
 let harvests: HarvestRepository;
+let photos: PhotoStore;
 let transport: InMemoryTransport;
 let app: Hono;
 let idCounter = 0;
@@ -129,6 +134,8 @@ beforeAll(async () => {
   qr = new QrRepository(connection);
   processes = new ProcessRepository(connection);
   harvests = new HarvestRepository(connection);
+  // Dossier jetable : les tests écrivent de vraies images sur un vrai disque.
+  photos = new PhotoStore(await mkdtemp(join(tmpdir(), 'champi-api-photos-')));
   transport = new InMemoryTransport();
   await repository.ensureIndexes();
   await qr.ensureIndexes();
@@ -141,6 +148,7 @@ beforeAll(async () => {
     qr,
     processes,
     harvests,
+    photos,
     printQueue: new PrintQueue(transport),
     now: () => NOW,
     newId: () => `evt-${String(++idCounter)}`,
@@ -164,6 +172,7 @@ beforeEach(async () => {
     qr,
     processes,
     harvests,
+    photos,
     printQueue: new PrintQueue(transport),
     now: () => NOW,
     newId: () => `evt-${String(++idCounter)}`,
@@ -870,6 +879,7 @@ describe('dépendances défaillantes', () => {
       qr,
       processes,
       harvests,
+      photos,
       printQueue: new PrintQueue(transport),
       now: () => NOW,
       newId: () => `evt-${String(++idCounter)}`,
@@ -1298,6 +1308,7 @@ describe('propagation des échecs de la couche de persistance', () => {
       qr,
       processes,
       harvests,
+      photos,
       printQueue: new PrintQueue(transport),
       now: () => NOW,
       newId: () => `evt-${String(++idCounter)}`,
@@ -1802,6 +1813,7 @@ describe('course entre deux écritures', () => {
       qr,
       processes,
       harvests,
+      photos,
       printQueue: new PrintQueue(transport),
       now: () => NOW,
       newId: () => `evt-${String(++idCounter)}`,
@@ -2225,5 +2237,246 @@ describe('traçabilité « du spore à l’assiette »', () => {
     };
     expect(response.status).toBe(404);
     expect(body.error.path).toBe('origins.unitId');
+  });
+});
+
+/**
+ * Photos.
+ *
+ * L'image part sur le disque, la **référence** entre dans le journal. C'est ce
+ * qui la rend traçable et rejouable ; une image rangée hors du journal serait
+ * invisible à un audit.
+ */
+describe('lecture du QR', () => {
+  it('rend le QR d’une unité qui en a un', async () => {
+    const created = await app.request('/api/units', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Bloc étiqueté',
+        stage: 'substrate',
+        processVersionId: 'pv-1',
+        stepId: 'inoculation',
+      }),
+    });
+    const { data } = (await created.json()) as { data: { unit: { publicCode: string } } };
+    await app.request(`/api/units/${data.unit.publicCode}/qr`, { method: 'POST' });
+
+    const response = await app.request(`/api/units/${data.unit.publicCode}/qr`);
+    const body = (await response.json()) as { data: { token: string; printCount: number } };
+
+    expect(response.status).toBe(200);
+    expect(body.data.token).toHaveLength(22);
+    expect(body.data.printCount).toBe(0);
+  });
+
+  /** Lire ne doit jamais créer : sinon consulter une fiche attribuerait un QR. */
+  it('répond 404 sans rien créer quand l’unité n’a pas de QR', async () => {
+    const created = await app.request('/api/units', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Bloc sans QR',
+        stage: 'substrate',
+        processVersionId: 'pv-1',
+        stepId: 'inoculation',
+      }),
+    });
+    const { data } = (await created.json()) as { data: { unit: { publicCode: string } } };
+
+    const premier = await app.request(`/api/units/${data.unit.publicCode}/qr`);
+    const second = await app.request(`/api/units/${data.unit.publicCode}/qr`);
+    const body = (await premier.json()) as { error: { hint: string } };
+
+    expect(premier.status).toBe(404);
+    expect(second.status).toBe(404);
+    expect(body.error.hint).toContain('POST');
+  });
+
+  it('répond 404 pour une unité inconnue', async () => {
+    const response = await app.request('/api/units/SUB-2026-9999/qr');
+    expect(response.status).toBe(404);
+  });
+});
+
+describe('photos', () => {
+  /** Un PNG minuscule mais valide. */
+  const PNG =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+  async function unite(): Promise<string> {
+    const created = await app.request('/api/units', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Bloc photographié',
+        stage: 'substrate',
+        processVersionId: 'pv-1',
+        stepId: 'inoculation',
+      }),
+    });
+    const body = (await created.json()) as { data: { unit: { publicCode: string } } };
+    return body.data.unit.publicCode;
+  }
+
+  it('attache une photo et l’inscrit au journal', async () => {
+    const code = await unite();
+
+    const response = await app.request(`/api/units/${code}/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: PNG, contentType: 'image/png', note: 'mycélium en bordure' }),
+    });
+    const body = (await response.json()) as {
+      data: { event: { type: string; payload: { photoId: string; byteSize: number } } };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.event.type).toBe('unit.photo_added');
+    expect(body.data.event.payload.byteSize).toBeGreaterThan(0);
+
+    // Elle apparaît dans le journal de l'unité, comme tout le reste.
+    const timeline = await app.request(`/api/units/${code}/timeline`);
+    const events = (await timeline.json()) as { data: { type: string }[] };
+    expect(events.data.map((event) => event.type)).toContain('unit.photo_added');
+  });
+
+  it('rend l’image avec le type déclaré au journal', async () => {
+    const code = await unite();
+    const posted = await app.request(`/api/units/${code}/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: PNG, contentType: 'image/png' }),
+    });
+    const { data } = (await posted.json()) as { data: { photo: { photoId: string } } };
+
+    const image = await app.request(`/api/photos/${data.photo.photoId}`);
+
+    expect(image.status).toBe(200);
+    // Le type vient du journal, pas de l'extension du fichier.
+    expect(image.headers.get('Content-Type')).toBe('image/png');
+    expect((await image.arrayBuffer()).byteLength).toBeGreaterThan(0);
+  });
+
+  it('accepte une data-URL telle que la produit un canvas', async () => {
+    const code = await unite();
+
+    const response = await app.request(`/api/units/${code}/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: `data:image/png;base64,${PNG}`, contentType: 'image/png' }),
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('décrit l’effet sans écrire en dry-run', async () => {
+    const code = await unite();
+
+    const response = await app.request(`/api/units/${code}/photos?dryRun=true`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: PNG, contentType: 'image/png' }),
+    });
+    const body = (await response.json()) as { dryRun: boolean };
+
+    expect(body.dryRun).toBe(true);
+    const timeline = await app.request(`/api/units/${code}/timeline`);
+    const events = (await timeline.json()) as { data: { type: string }[] };
+    expect(events.data.map((event) => event.type)).not.toContain('unit.photo_added');
+  });
+
+  /**
+   * Deux photos envoyées en même temps sur la même unité : le verrou optimiste
+   * doit en refuser une. Sans cela, la seconde écraserait la version de la
+   * première et un événement disparaîtrait du journal.
+   */
+  it('refuse la seconde de deux photos concurrentes', async () => {
+    const code = await unite();
+
+    const [a, b] = await Promise.all([
+      app.request(`/api/units/${code}/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: PNG, contentType: 'image/png' }),
+      }),
+      app.request(`/api/units/${code}/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: PNG, contentType: 'image/png' }),
+      }),
+    ]);
+
+    const statuts = [a.status, b.status].sort((x, y) => x - y);
+    expect(statuts[0]).toBe(200);
+    expect(statuts[1]).toBe(409);
+  });
+
+  it('refuse un corps sans image, en disant ce qui est attendu', async () => {
+    const code = await unite();
+
+    const response = await app.request(`/api/units/${code}/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentType: 'image/png' }),
+    });
+    const body = (await response.json()) as { error: { hint: string; path: string } };
+
+    expect(response.status).toBe(400);
+    expect(body.error.hint).toContain('data');
+    expect(body.error.path).toBe('data');
+  });
+
+  it('refuse une image vide', async () => {
+    const code = await unite();
+
+    const response = await app.request(`/api/units/${code}/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: '====', contentType: 'image/png' }),
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('refuse une photo sur une unité inconnue', async () => {
+    const response = await app.request('/api/units/SUB-2026-9999/photos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: PNG }),
+    });
+
+    expect(response.status).toBe(404);
+  });
+
+  it('refuse une référence de photo que le journal ne connaît pas', async () => {
+    const response = await app.request('/api/photos/jamais-vue');
+    const body = (await response.json()) as { error: { hint: string } };
+
+    expect(response.status).toBe(404);
+    expect(body.error.hint).toContain('unit.photo_added');
+  });
+
+  /**
+   * Le journal référence l'image mais le fichier manque : c'est une
+   * restauration incomplète, et l'application doit le dire au lieu de servir
+   * une image vide.
+   */
+  it('distingue une photo absente du disque d’une référence inconnue', async () => {
+    const code = await unite();
+    const posted = await app.request(`/api/units/${code}/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: PNG, contentType: 'image/png' }),
+    });
+    const { data } = (await posted.json()) as { data: { photo: { photoId: string } } };
+    await rm(photos.cheminDe(data.photo.photoId, 'image/png'));
+
+    const image = await app.request(`/api/photos/${data.photo.photoId}`);
+    const body = (await image.json()) as { error: { message: string; hint: string } };
+
+    expect(image.status).toBe(404);
+    expect(body.error.message).toContain('absente du disque');
+    expect(body.error.hint).toContain('restauration');
   });
 });

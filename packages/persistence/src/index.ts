@@ -3,3 +3,4 @@ export * from './unit-repository.js';
 export * from './qr-repository.js';
 export * from './process-repository.js';
 export * from './harvest-repository.js';
+export * from './photo-store.js';

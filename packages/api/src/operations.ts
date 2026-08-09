@@ -125,6 +125,19 @@ export const API_OPERATIONS: readonly ApiOperation[] = [
     purpose: 'Lister les observations pertinentes au stade courant',
   },
   {
+    id: 'unit:photo',
+    method: 'POST',
+    path: '/api/units/:reference/photos',
+    purpose: 'Attacher une photo à une unité — l’image sur le disque, sa référence au journal',
+    supportsDryRun: true,
+  },
+  {
+    id: 'photo:get',
+    method: 'GET',
+    path: '/api/photos/:photoId',
+    purpose: 'Relire une photo attachée à une unité',
+  },
+  {
     id: 'unit:measure',
     method: 'POST',
     path: '/api/units/:reference/measurements',
@@ -144,6 +157,12 @@ export const API_OPERATIONS: readonly ApiOperation[] = [
     purpose: 'Descendre aux produits issus de cette unité',
   },
 
+  {
+    id: 'qr:get',
+    method: 'GET',
+    path: '/api/units/:reference/qr',
+    purpose: 'Lire le QR d’une unité sans en attribuer un',
+  },
   {
     id: 'qr:assign',
     method: 'POST',

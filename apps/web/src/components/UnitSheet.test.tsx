@@ -275,6 +275,25 @@ describe('describeEvent', () => {
     expect(describeEvent(event)).toBe('mycogone — gravité moyenne');
   });
 
+  it('résume une photo par sa note, et se tait quand il n’y en a pas', () => {
+    const avecNote: DomainEvent = {
+      ...envelope,
+      id: 'e',
+      type: 'unit.photo_added',
+      payload: { photoId: 'ph-1', contentType: 'image/jpeg', byteSize: 4200, note: 'point vert' },
+    };
+    const sansNote: DomainEvent = {
+      ...envelope,
+      id: 'e',
+      type: 'unit.photo_added',
+      payload: { photoId: 'ph-2', contentType: 'image/jpeg', byteSize: 4200 },
+    };
+
+    expect(describeEvent(avecNote)).toBe('point vert');
+    // Une photo se suffit à elle-même : pas de texte inventé pour meubler.
+    expect(describeEvent(sansNote)).toBe('');
+  });
+
   it('résume un déplacement', () => {
     const event: DomainEvent = {
       ...envelope,

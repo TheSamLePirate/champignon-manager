@@ -979,3 +979,123 @@ legend {
   min-height: var(--cible-large);
   font-size: 1.15rem;
 }
+
+/* --- Liste des unités --- */
+
+/*
+ * L'écran d'accueil du terrain. Groupé par stade, dans l'ordre de la chaîne :
+ * c'est le même repère que sur la fiche, et il se lit comme la ferme
+ * est organisée.
+ */
+.liste {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.liste__stade {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--encre-douce);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.liste__compte {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  background: var(--creux);
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem;
+}
+
+.liste__unites {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Une unité entière est une cible : on l'ouvre avec des gants, pas au stylet. */
+.carte {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.75rem 1rem;
+  background: var(--panneau);
+  color: var(--encre);
+  border: 2px solid var(--trait);
+  text-align: left;
+  font-weight: 400;
+}
+
+.carte__nom {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.carte__code {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: var(--encre-douce);
+}
+
+.carte__etape {
+  font-size: 0.92rem;
+  color: var(--encre-douce);
+}
+
+.liste__vide,
+.liste__attente {
+  margin: 0;
+  padding: 1.25rem;
+  background: var(--panneau);
+  border-radius: var(--rayon);
+  color: var(--encre-douce);
+}
+
+/* --- Étiquette et photos --- */
+
+.etiquette-panneau,
+.photos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Le token se lit et se compare à l'étiquette : même graphie que sur le papier. */
+.etiquette-panneau__token {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+  overflow-wrap: anywhere;
+}
+
+.photos__galerie {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: 0.6rem;
+}
+
+.photos__galerie img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid var(--trait);
+  background: var(--creux);
+}

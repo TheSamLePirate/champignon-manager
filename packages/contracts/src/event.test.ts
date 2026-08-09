@@ -35,6 +35,11 @@ const validPayloads: Record<DomainEventType, Record<string, unknown>> = {
   },
   'unit.moved': { to: { roomId: 'r-1' } },
   'unit.observed': { kind: 'contamination', severity: 'critical' },
+  'unit.photo_added': {
+    photoId: 'ph-1',
+    contentType: 'image/jpeg',
+    byteSize: 48_120,
+  },
   'unit.measured': { metric: 'temperature_c', numericValue: 24 },
   'unit.status_changed': { from: 'active', to: 'contaminated' },
   'harvest.recorded': {
@@ -103,6 +108,7 @@ describe('domainEventSchema — charges utiles obligatoires', () => {
     'unit.moved': ['to'],
     'unit.observed': ['kind', 'severity'],
     'unit.measured': ['metric'],
+    'unit.photo_added': ['photoId', 'contentType', 'byteSize'],
     'unit.status_changed': ['from', 'to'],
     'harvest.recorded': ['harvestId', 'flushNumber', 'weight'],
     'product.created': ['productId', 'harvestIds'],

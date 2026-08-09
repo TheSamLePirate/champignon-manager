@@ -123,9 +123,10 @@ export function replayUnit(events: readonly DomainEvent[]): Result<ReplayedUnitS
         break;
       case 'unit.observed':
       case 'unit.measured':
+      case 'unit.photo_added':
       case 'product.created':
-        // Observations, mesures et produits enrichissent l'historique mais ne
-        // modifient pas l'état courant de l'unité.
+        // Observations, mesures, photos et produits enrichissent l'historique
+        // mais ne modifient pas l'état courant de l'unité.
         break;
     }
   }

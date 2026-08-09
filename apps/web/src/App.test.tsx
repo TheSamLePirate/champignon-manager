@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { AppError, CultureUnit, DomainEvent } from '@champi/contracts';
 import { App } from './App.js';
@@ -16,8 +16,17 @@ const capable: ScanEnvironment = {
 };
 
 /** Caméra et décodeur factices : aucun test n'ouvre de vraie caméra. */
-const CAMERA = () => Promise.resolve({ getTracks: () => [] } as unknown as MediaStream);
+/**
+ * Caméra factice. Un vrai `MediaStream` est nécessaire : `video.srcObject`
+ * vérifie le type, dans le navigateur comme dans happy-dom.
+ */
+const CAMERA = () => {
+  const stream = new MediaStream();
+  Object.defineProperty(stream, 'getTracks', { value: () => [] });
+  return Promise.resolve(stream);
+};
 const DETECTER = () => Promise.resolve([]);
+const CAPTURER = () => 'data:image/jpeg;base64,AAAA';
 
 const unit: CultureUnit = {
   id: 'u-1',
@@ -69,6 +78,17 @@ function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
     observe: mutationOk,
     measure: mutationOk,
     flushQueue: () => Promise.resolve({ sent: 0, remaining: 0, stoppedOnNetwork: false }),
+    // Nouveaux appels de l'écran d'accueil : liste, process publiés, étiquette.
+    listUnits: () => Promise.resolve({ ok: true, data: [] }),
+    listProcessTemplates: () => Promise.resolve({ ok: true, data: [] }),
+    listProcessVersions: () => Promise.resolve({ ok: true, data: [] }),
+    getQr: () =>
+      Promise.resolve({
+        ok: false,
+        error: { code: 'NOT_FOUND', message: 'pas de QR' },
+        offline: false,
+      }),
+    photoUrl: (photoId: string) => `/api/photos/${photoId}`,
     ...overrides,
   } as unknown as ApiClient;
 }
@@ -109,6 +129,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     expect(screen.getByRole('heading', { name: 'Champignon Manager' })).toBeInTheDocument();
@@ -127,6 +148,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('SUB-2026-0042');
@@ -155,6 +177,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
@@ -177,6 +200,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('SUB-2026-0042');
@@ -204,6 +228,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('SUB-2026-9999');
@@ -225,6 +250,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('SUB-2026-9999');
@@ -246,6 +272,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
@@ -273,6 +300,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     // Le panneau de scan porte lui aussi un `status` : on cible le bandeau.
@@ -297,6 +325,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     expect(flushQueue).toHaveBeenCalled();
@@ -315,6 +344,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     expect(flushQueue).not.toHaveBeenCalled();
@@ -331,6 +361,7 @@ describe('App', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
 
@@ -353,6 +384,7 @@ describe('actions depuis la fiche', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('SUB-2026-0042');
@@ -551,6 +583,7 @@ describe('résolution de QR — chemins d’échec', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
@@ -571,6 +604,7 @@ describe('résolution de QR — chemins d’échec', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
@@ -615,6 +649,7 @@ describe('vues', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
 
@@ -633,6 +668,7 @@ describe('vues', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
 
@@ -653,6 +689,7 @@ describe('vues', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
 
@@ -677,6 +714,7 @@ describe('vues', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
 
@@ -701,11 +739,405 @@ describe('vues', () => {
         now={NOW}
         ouvrirCamera={CAMERA}
         detecter={DETECTER}
+        capturer={CAPTURER}
       />,
     );
 
     await userEvent.click(screen.getByRole('button', { name: 'Process' }));
 
     expect(await screen.findByText('Base injoignable.')).toBeInTheDocument();
+  });
+});
+
+/**
+ * L'écran de terrain complet : voir ce qui tourne, démarrer une culture,
+ * étiqueter, imprimer, photographier. Tout cela n'existait qu'en ligne de
+ * commande avant la vague 1.
+ */
+describe('terrain', () => {
+  const graphe = {
+    steps: [
+      {
+        id: 'inoculation',
+        name: 'Inoculation',
+        stage: 'substrate',
+        conditions: {},
+        alarms: { enabled: false },
+        optional: false,
+        provenance: 'cultivator',
+      },
+    ],
+    transitions: [],
+  };
+
+  /**
+   * Client de terrain.
+   *
+   * Les surcharges sont typées librement et converties **une seule fois**, ici :
+   * un test qui remplace `printLabel` n'a pas à reconstruire la signature
+   * complète de la méthode pour rendre deux champs.
+   */
+  function clientTerrain(overrides: Record<string, unknown> = {}): ApiClient {
+    return fakeClient({
+      listUnits: (stage: string) =>
+        Promise.resolve({ ok: true, data: stage === 'substrate' ? [unit] : [] }),
+      listProcessTemplates: () =>
+        Promise.resolve({ ok: true, data: [{ id: 't-1', name: 'Pleurote' }] }),
+      listProcessVersions: () =>
+        Promise.resolve({
+          ok: true,
+          data: [
+            { id: 'pv-1', versionNumber: 1, status: 'published', graph: graphe },
+            { id: 'pv-2', versionNumber: 2, status: 'draft', graph: graphe },
+          ],
+        }),
+      ...overrides,
+    } as unknown as Partial<ApiClient>);
+  }
+
+  function afficher(client: ApiClient = clientTerrain()) {
+    render(
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+        capturer={CAPTURER}
+      />,
+    );
+  }
+
+  it('ouvre sur la liste de ce qui tourne', async () => {
+    afficher();
+
+    expect(await screen.findByText('Pleurote bloc 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nouvelle unité' })).toBeInTheDocument();
+  });
+
+  it('ouvre la fiche depuis la liste', async () => {
+    afficher();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+
+    expect(await screen.findByRole('heading', { name: 'Pleurote bloc 1' })).toBeInTheDocument();
+  });
+
+  it('revient à la liste depuis la fiche', async () => {
+    afficher();
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await screen.findByRole('heading', { name: 'Pleurote bloc 1' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retour à la liste' }));
+
+    expect(screen.getByRole('button', { name: 'Nouvelle unité' })).toBeInTheDocument();
+  });
+
+  /** Une unité épinglée à un brouillon serait rattachée à un graphe mouvant. */
+  it('ne propose que les versions publiées à la création', async () => {
+    afficher();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle unité' }));
+
+    const choix = within(await screen.findByLabelText('Process'))
+      .getAllByRole('option')
+      .map((option) => option.textContent);
+    expect(choix).toEqual(['Pleurote — version 1']);
+  });
+
+  it('crée une unité puis ouvre sa fiche', async () => {
+    const createUnit = vi.fn(() => Promise.resolve({ ok: true, data: { unit } }));
+    afficher(clientTerrain({ createUnit }));
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle unité' }));
+    await userEvent.type(await screen.findByLabelText('Nom de l’unité'), 'Bloc neuf');
+    await userEvent.click(screen.getByRole('button', { name: 'Créer l’unité' }));
+
+    await waitFor(() => {
+      expect(createUnit).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Bloc neuf', processVersionId: 'pv-1' }),
+      );
+    });
+    expect(await screen.findByRole('heading', { name: 'Pleurote bloc 1' })).toBeInTheDocument();
+  });
+
+  it('remonte le refus du serveur à la création', async () => {
+    afficher(
+      clientTerrain({
+        createUnit: () =>
+          mutationFailed({
+            code: 'VALIDATION_FAILED',
+            message: 'Étape inconnue.',
+            hint: 'Corrige.',
+          }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle unité' }));
+    await userEvent.type(await screen.findByLabelText('Nom de l’unité'), 'Bloc neuf');
+    await userEvent.click(screen.getByRole('button', { name: 'Créer l’unité' }));
+
+    expect(await screen.findByText('Corrige.')).toBeInTheDocument();
+  });
+
+  /** Une unité créée hors ligne n'aurait ni code public ni QR. */
+  it('se rabat sur le message quand le refus de création n’a pas d’indice', async () => {
+    afficher(
+      clientTerrain({
+        createUnit: () => mutationFailed({ code: 'CONFLICT', message: 'Nom déjà pris.' }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle unité' }));
+    await userEvent.type(await screen.findByLabelText('Nom de l’unité'), 'Bloc neuf');
+    await userEvent.click(screen.getByRole('button', { name: 'Créer l’unité' }));
+
+    expect(await screen.findByText('Nom déjà pris.')).toBeInTheDocument();
+  });
+
+  it('refuse franchement de créer une unité hors ligne', async () => {
+    afficher(
+      clientTerrain({
+        createUnit: () => Promise.resolve({ ok: true, queued: true, pendingCount: 1 }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle unité' }));
+    await userEvent.type(await screen.findByLabelText('Nom de l’unité'), 'Bloc neuf');
+    await userEvent.click(screen.getByRole('button', { name: 'Créer l’unité' }));
+
+    expect(await screen.findByText(/Création impossible hors ligne/)).toBeInTheDocument();
+  });
+
+  it('annule la création et revient à la liste', async () => {
+    afficher();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle unité' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Annuler' }));
+
+    expect(screen.getByRole('button', { name: 'Nouvelle unité' })).toBeInTheDocument();
+  });
+
+  it('attribue un QR puis propose l’impression', async () => {
+    const assignQr = vi.fn(() =>
+      Promise.resolve({ ok: true, data: { token: 'ZBAKASUB2THMWYV7PUNGJF', printCount: 0 } }),
+    );
+    afficher(clientTerrain({ assignQr }));
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Attribuer un QR' }));
+
+    expect(await screen.findByText('ZBAKASUB2THMWYV7PUNGJF')).toBeInTheDocument();
+    expect(assignQr).toHaveBeenCalledWith('SUB-2026-0042');
+  });
+
+  it('remonte un refus d’attribution de QR', async () => {
+    afficher(
+      clientTerrain({
+        assignQr: () => mutationFailed({ code: 'CONFLICT', message: 'Registre indisponible.' }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Attribuer un QR' }));
+
+    expect(await screen.findByText('Registre indisponible.')).toBeInTheDocument();
+  });
+
+  it('refuse d’attribuer un QR hors ligne — il vient du serveur', async () => {
+    afficher(
+      clientTerrain({
+        assignQr: () => Promise.resolve({ ok: true, queued: true, pendingCount: 1 }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Attribuer un QR' }));
+
+    expect(await screen.findByText(/Attribution impossible hors ligne/)).toBeInTheDocument();
+  });
+
+  it('imprime et annonce une réimpression au même QR', async () => {
+    let compte = 0;
+    afficher(
+      clientTerrain({
+        getQr: () => {
+          compte += 1;
+          return Promise.resolve({ ok: true, data: { token: 'TOKEN', printCount: compte } });
+        },
+        printLabel: () =>
+          Promise.resolve({ ok: true, data: { status: 'printed', isReprint: true } }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /imprimer/i }));
+
+    expect(await screen.findByText(/même QR que la précédente/)).toBeInTheDocument();
+  });
+
+  it('annonce une première impression sans parler de réimpression', async () => {
+    afficher(
+      clientTerrain({
+        getQr: () => Promise.resolve({ ok: true, data: { token: 'TOKEN', printCount: 0 } }),
+        printLabel: () =>
+          Promise.resolve({ ok: true, data: { status: 'printed', isReprint: false } }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Imprimer l’étiquette' }));
+
+    expect(await screen.findByText('Étiquette imprimée.')).toBeInTheDocument();
+  });
+
+  it('remonte un refus d’impression', async () => {
+    afficher(
+      clientTerrain({
+        getQr: () => Promise.resolve({ ok: true, data: { token: 'TOKEN', printCount: 0 } }),
+        printLabel: () => mutationFailed({ code: 'CONFLICT', message: 'Imprimante injoignable.' }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Imprimer l’étiquette' }));
+
+    expect(await screen.findByText('Imprimante injoignable.')).toBeInTheDocument();
+  });
+
+  it('refuse d’imprimer hors ligne — l’imprimante est jointe par le serveur', async () => {
+    afficher(
+      clientTerrain({
+        getQr: () => Promise.resolve({ ok: true, data: { token: 'TOKEN', printCount: 0 } }),
+        printLabel: () => Promise.resolve({ ok: true, queued: true, pendingCount: 1 }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Imprimer l’étiquette' }));
+
+    expect(await screen.findByText(/Impression impossible hors ligne/)).toBeInTheDocument();
+  });
+
+  it('dit si l’imprimante répond', async () => {
+    afficher(
+      clientTerrain({
+        getQr: () => Promise.resolve({ ok: true, data: { token: 'TOKEN', printCount: 0 } }),
+        testPrinter: () =>
+          Promise.resolve({ ok: true, data: { transport: 'nimbot-b21', reachable: true } }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Tester l’imprimante' }));
+
+    expect(await screen.findByText(/elle répond/)).toBeInTheDocument();
+  });
+
+  it('dit comment réagir quand l’imprimante ne répond pas', async () => {
+    afficher(
+      clientTerrain({
+        getQr: () => Promise.resolve({ ok: true, data: { token: 'TOKEN', printCount: 0 } }),
+        testPrinter: () =>
+          Promise.resolve({ ok: true, data: { transport: 'nimbot-b21', reachable: false } }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Tester l’imprimante' }));
+
+    expect(await screen.findByText(/aucune réponse/)).toBeInTheDocument();
+  });
+
+  it('remonte l’échec du test imprimante', async () => {
+    afficher(
+      clientTerrain({
+        getQr: () => Promise.resolve({ ok: true, data: { token: 'TOKEN', printCount: 0 } }),
+        testPrinter: () => mutationFailed({ code: 'CONFLICT', message: 'Serveur muet.' }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Tester l’imprimante' }));
+
+    expect(await screen.findByText('Serveur muet.')).toBeInTheDocument();
+  });
+
+  it('attache une photo prise depuis la fiche', async () => {
+    const addPhoto = vi.fn(mutationOk);
+    afficher(clientTerrain({ addPhoto }));
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Prendre une photo' }));
+    await screen.findByLabelText('Viseur de prise de photo');
+    await userEvent.click(screen.getByRole('button', { name: 'Prendre la photo' }));
+
+    await waitFor(() => {
+      expect(addPhoto).toHaveBeenCalledWith('SUB-2026-0042', {
+        data: 'data:image/jpeg;base64,AAAA',
+      });
+    });
+  });
+
+  it('affiche les photos déjà prises, servies par l’API', async () => {
+    const photo: DomainEvent = {
+      id: 'e-photo',
+      type: 'unit.photo_added',
+      occurredAt: '2026-08-10T08:00:00.000Z',
+      recordedAt: '2026-08-10T08:00:00.000Z',
+      source: 'manual',
+      unitId: 'u-1',
+      payload: { photoId: 'ph-1', contentType: 'image/jpeg', byteSize: 2048, note: 'bordure' },
+    };
+    afficher(
+      clientTerrain({
+        getTimeline: () => Promise.resolve({ ok: true, data: [photo] }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: /Pleurote bloc 1/ }));
+
+    // L'image est servie par l'API, pas par une donnée embarquée dans la page.
+    expect(await screen.findByRole('img', { name: 'bordure' })).toHaveAttribute(
+      'src',
+      '/api/photos/ph-1',
+    );
+  });
+
+  it('survit à une liste indisponible sans écran blanc', async () => {
+    afficher(
+      clientTerrain({
+        listUnits: () => mutationFailed({ code: 'CONFLICT', message: 'base muette' }),
+      }),
+    );
+
+    // Pas d'unité, mais l'écran reste utilisable : on peut créer ou scanner.
+    expect(await screen.findByText(/Aucune unité en cours/)).toBeInTheDocument();
+  });
+
+  it('survit à des process indisponibles', async () => {
+    afficher(
+      clientTerrain({
+        listProcessTemplates: () => mutationFailed({ code: 'CONFLICT', message: 'muet' }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle unité' }));
+
+    expect(await screen.findByText(/Aucun process publié/)).toBeInTheDocument();
+  });
+
+  it('survit à des versions indisponibles', async () => {
+    afficher(
+      clientTerrain({
+        listProcessVersions: () => mutationFailed({ code: 'CONFLICT', message: 'muet' }),
+      }),
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle unité' }));
+
+    expect(await screen.findByText(/Aucun process publié/)).toBeInTheDocument();
   });
 });

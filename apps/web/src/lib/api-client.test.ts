@@ -285,6 +285,84 @@ describe('process', () => {
     expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual(graph);
   });
 
+  it('liste les unités d’un stade', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: [] })));
+    await makeClient(fetchImpl).listUnits('substrate');
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units?stage=substrate`);
+  });
+
+  it('crée une unité avec son corps complet', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).createUnit({
+      name: 'Bloc 12',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+    });
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units`);
+    expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual({
+      name: 'Bloc 12',
+      stage: 'substrate',
+      processVersionId: 'pv-1',
+      stepId: 'inoculation',
+    });
+  });
+
+  /** Lire le QR ne doit pas en créer un : c'est une lecture, pas une écriture. */
+  it('lit le QR d’une unité sans l’attribuer', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).getQr('SUB-2026-0042');
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units/SUB-2026-0042/qr`);
+    expect(fetchImpl.mock.calls[0]?.[1]).toBeUndefined();
+  });
+
+  it('attribue un QR', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).assignQr('SUB-2026-0042');
+    expect(firstInit(fetchImpl).method).toBe('POST');
+  });
+
+  it('imprime le nombre de copies demandé', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).printLabel('SUB-2026-0042', 2);
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units/SUB-2026-0042/label/print`);
+    expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual({ copies: 2 });
+  });
+
+  it('imprime un seul exemplaire par défaut', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).printLabel('SUB-2026-0042');
+    expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual({ copies: 1 });
+  });
+
+  it('teste l’imprimante sans rien imprimer', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).testPrinter();
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/printer/test`);
+    expect(fetchImpl.mock.calls[0]?.[1]).toBeUndefined();
+  });
+
+  it('envoie une photo en base64, dans du JSON', async () => {
+    const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
+    await makeClient(fetchImpl).addPhoto('SUB-2026-0042', { data: 'AAAA', note: 'bordure' });
+
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(`${BASE}/api/units/SUB-2026-0042/photos`);
+    expect(JSON.parse(firstInit(fetchImpl).body as string)).toEqual({
+      data: 'AAAA',
+      note: 'bordure',
+    });
+  });
+
+  it('donne l’adresse d’affichage d’une photo', () => {
+    expect(makeClient(mockFetch(() => Promise.resolve(jsonResponse({})))).photoUrl('ph 1/2')).toBe(
+      `${BASE}/api/photos/ph%201%2F2`,
+    );
+  });
+
   it('publie une version', async () => {
     const fetchImpl = mockFetch(() => Promise.resolve(jsonResponse({ data: {} })));
     await makeClient(fetchImpl).publishProcessVersion('v-1');

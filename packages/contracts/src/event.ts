@@ -96,6 +96,31 @@ export const unitObservedEventSchema = z.object({
   }),
 });
 
+/**
+ * Photo attachée à une unité.
+ *
+ * La photo entre dans le **journal**, pas dans un coin à part : c'est ce qui la
+ * rend traçable et rejouable comme le reste. Une image rangée hors du journal
+ * serait invisible à la reconstruction d'état et disparaîtrait d'un audit.
+ *
+ * L'événement ne porte que la **référence** — l'octet vit sur le disque, comme
+ * une pièce jointe. Mettre l'image dans le journal le rendrait illisible et
+ * impossible à rejouer sans tout charger en mémoire.
+ */
+export const unitPhotoAddedEventSchema = z.object({
+  ...baseEventFields,
+  type: z.literal('unit.photo_added'),
+  unitId: idSchema,
+  payload: z.object({
+    photoId: idSchema,
+    /** Type MIME réel, vérifié à l'enregistrement. */
+    contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+    /** Taille en octets — sert à repérer une sauvegarde incomplète. */
+    byteSize: z.number().int().positive(),
+    note: z.string().optional(),
+  }),
+});
+
 export const unitMeasuredEventSchema = z.object({
   ...baseEventFields,
   type: z.literal('unit.measured'),
@@ -156,6 +181,7 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   unitMovedEventSchema,
   unitObservedEventSchema,
   unitMeasuredEventSchema,
+  unitPhotoAddedEventSchema,
   unitStatusChangedEventSchema,
   harvestRecordedEventSchema,
   productCreatedEventSchema,

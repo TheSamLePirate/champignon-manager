@@ -40,6 +40,9 @@ const webRoot = process.env['CHAMPI_WEB_ROOT'] ?? './apps/web/dist';
 const printerAddress = process.env['CHAMPI_PRINTER_ADDRESS'];
 const { app, seed } = await assembleServer({
   seed: process.env['CHAMPI_SEED'] !== 'false',
+  ...(process.env['CHAMPI_FILES_DIR'] === undefined
+    ? {}
+    : { filesDir: process.env['CHAMPI_FILES_DIR'] }),
   ...(printerAddress === undefined
     ? {}
     : { transport: new B21Transport(createB21Driver({ address: printerAddress })) }),

@@ -56,6 +56,23 @@ if (container !== null) {
             video: { facingMode: { ideal: 'environment' } },
           })
         }
+        capturer={(source) => {
+          /*
+           * Capture d'une image fixe du flux vidéo.
+           *
+           * On redimensionne à 1280 px de large au plus : une photo d'iPhone
+           * pèse plusieurs mégaoctets, et le Pi n'a pas à les stocker pour
+           * documenter un front de colonisation. Le JPEG à 0,82 garde le détail
+           * utile sans faire gonfler la sauvegarde.
+           */
+          const largeur = Math.min(source.videoWidth, 1280);
+          const hauteur = Math.round((source.videoHeight / source.videoWidth) * largeur);
+          const canvas = document.createElement('canvas');
+          canvas.width = largeur;
+          canvas.height = hauteur;
+          canvas.getContext('2d')?.drawImage(source, 0, 0, largeur, hauteur);
+          return canvas.toDataURL('image/jpeg', 0.82);
+        }}
         detecter={async (source) => {
           const codes = await new BarcodeDetector({ formats: ['qr_code'] }).detect(source);
           return codes.map((code) => code.rawValue);

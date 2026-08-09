@@ -52,6 +52,7 @@ const EVENT_LABEL: Readonly<Record<DomainEvent['type'], string>> = {
   'unit.moved': 'Déplacée',
   'unit.observed': 'Observation',
   'unit.measured': 'Mesure',
+  'unit.photo_added': 'Photo',
   'unit.status_changed': 'Changement de statut',
   'harvest.recorded': 'Récolte',
   'product.created': 'Produit final',
@@ -115,6 +116,8 @@ export function describeEvent(event: DomainEvent): string {
       const kind = OBSERVATION_LABEL[event.payload.kind] ?? event.payload.kind;
       return `${kind} — gravité ${GRAVITE_LABEL[event.payload.severity]}`;
     }
+    case 'unit.photo_added':
+      return event.payload.note ?? '';
     case 'unit.measured': {
       const metrique = METRIQUE_LABEL[event.payload.metric];
       if (event.payload.quantity !== undefined) {

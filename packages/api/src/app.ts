@@ -40,6 +40,7 @@ import {
 import type {
   HarvestRepository,
   MongoConnection,
+  PhotoStore,
   ProcessRepository,
   QrRepository,
   UnitRepository,
@@ -68,6 +69,8 @@ export interface AppDependencies {
   readonly processes: ProcessRepository;
   readonly harvests: HarvestRepository;
   readonly printQueue: PrintQueue;
+  /** Dépôt des images. Le journal ne garde que la référence. */
+  readonly photos: PhotoStore;
   /** Horloge injectée : aucune lecture d'horloge ambiante dans la logique. */
   readonly now: () => string;
   readonly newId: () => string;
@@ -144,6 +147,13 @@ const productBodySchema = z.object({
       }),
     )
     .min(1),
+});
+
+const photoBodySchema = z.object({
+  /** Image en base64, avec ou sans préfixe `data:` — c'est ce que produit un canvas. */
+  data: z.string().min(1),
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']).default('image/jpeg'),
+  note: z.string().min(1).optional(),
 });
 
 const createUnitBodySchema = z.object({
@@ -689,6 +699,34 @@ export function createApp(deps: AppDependencies): Hono {
   });
 
   /** Attribue un QR à une unité, si elle n'en a pas déjà un. */
+  /**
+   * Le QR d'une unité, s'il existe.
+   *
+   * Lecture séparée de l'attribution : l'écran doit pouvoir demander « cette
+   * unité a-t-elle une étiquette ? » sans en créer une au passage. Sans cette
+   * route, afficher l'état d'une étiquette obligeait à l'attribuer.
+   */
+  app.get('/api/units/:reference/qr', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const entry = await deps.qr.findByTarget('unit', unit.id);
+    if (entry === null) {
+      return c.json(
+        errorBody(
+          appError('NOT_FOUND', `L'unité ${unit.publicCode} n'a pas encore de QR.`, {
+            hint: `Appelle POST /api/units/${unit.publicCode}/qr pour lui en attribuer un.`,
+            path: 'reference',
+          }),
+        ),
+        404,
+      );
+    }
+    return c.json({ data: entry });
+  });
+
   app.post('/api/units/:reference/qr', async (c) => {
     const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
     if (unit === null) {
@@ -917,6 +955,117 @@ export function createApp(deps: AppDependencies): Hono {
         kinds: relevantObservationKinds(unit.stage),
         note: 'La liste complète existe à tous les stades ; seuls les types sans objet sont masqués.',
       },
+    });
+  });
+
+  /**
+   * Attache une photo à une unité.
+   *
+   * L'image part sur le disque, la **référence** entre dans le journal : c'est
+   * ce qui la rend traçable et rejouable. Le corps est du JSON comme le reste
+   * de l'API — un agent dépose une photo sans monter d'envoi multipart.
+   */
+  app.post('/api/units/:reference/photos', async (c) => {
+    const unit = await deps.units.findByIdOrPublicCode(c.req.param('reference'));
+    if (unit === null) {
+      return notFound(c.req.param('reference'), c);
+    }
+
+    const rawBody: unknown = await c.req.json().catch(() => null);
+    const parsed = photoBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return c.json(
+        errorBody(
+          appError('VALIDATION_FAILED', 'Corps de requête invalide.', {
+            hint: 'Attendu : { data: "<base64>", contentType?: "image/jpeg", note?: string }.',
+            path: firstIssuePath(parsed.error.issues),
+          }),
+        ),
+        400,
+      );
+    }
+
+    const photoId = deps.newId();
+    if (isDryRun(c.req.url)) {
+      return c.json({ dryRun: true, data: { wouldStore: { unitId: unit.id, photoId } } });
+    }
+
+    const stored = await deps.photos.enregistrer(
+      photoId,
+      parsed.data.contentType,
+      parsed.data.data,
+    );
+    if (!stored.ok) {
+      return c.json(errorBody(stored.error), statusForError(stored.error.code));
+    }
+
+    const nowIso = deps.now();
+    const event: DomainEvent = domainEventSchema.parse({
+      id: deps.newId(),
+      type: 'unit.photo_added',
+      occurredAt: nowIso,
+      recordedAt: nowIso,
+      source: 'manual',
+      unitId: unit.id,
+      payload: {
+        photoId: stored.value.photoId,
+        contentType: stored.value.contentType,
+        byteSize: stored.value.byteSize,
+        ...(parsed.data.note === undefined ? {} : { note: parsed.data.note }),
+      },
+    });
+
+    const saved = await deps.units.saveWithEvent(
+      { ...unit, updatedAt: nowIso, version: unit.version + 1 },
+      event,
+      unit.version,
+    );
+    if (!saved.ok) {
+      return c.json(errorBody(saved.error), statusForError(saved.error.code));
+    }
+    return c.json({ data: { unit: saved.value, event, photo: stored.value } });
+  });
+
+  /**
+   * Rend l'image elle-même.
+   *
+   * Le type est relu **depuis le journal** : c'est lui qui fait foi, pas
+   * l'extension du fichier ni un paramètre d'URL.
+   */
+  app.get('/api/photos/:photoId', async (c) => {
+    const photoId = c.req.param('photoId');
+    const event = await deps.units.findPhotoEvent(photoId);
+    if (event === null) {
+      return c.json(
+        errorBody(
+          appError('NOT_FOUND', `Aucune photo « ${photoId} » dans le journal.`, {
+            hint: 'Vérifie la référence : elle vient d’un événement unit.photo_added.',
+            path: 'photoId',
+          }),
+        ),
+        404,
+      );
+    }
+
+    const octets = await deps.photos.lire(photoId, event.payload.contentType);
+    if (octets === null) {
+      // Le journal la référence mais le fichier manque : restauration
+      // incomplète, pas erreur de programmation. On le dit franchement.
+      return c.json(
+        errorBody(
+          appError('NOT_FOUND', `L'image « ${photoId} » est référencée mais absente du disque.`, {
+            hint: 'Le journal la connaît ; le fichier manque. Vérifie la restauration des pièces jointes (docs/23 §4).',
+            path: 'photoId',
+          }),
+        ),
+        404,
+      );
+    }
+
+    return c.body(octets.buffer as ArrayBuffer, 200, {
+      'Content-Type': event.payload.contentType,
+      // Une photo ne change jamais : son identifiant est déjà son empreinte.
+      'Cache-Control': 'public, max-age=31536000, immutable',
     });
   });
 

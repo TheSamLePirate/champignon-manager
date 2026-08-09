@@ -145,6 +145,69 @@ export class ApiClient {
     return this.post(`/api/units/${encodeURIComponent(reference)}/measurements`, body);
   }
 
+  /**
+   * Unités d'un stade.
+   *
+   * L'écran de terrain s'ouvre là-dessus : en chambre on arrive par une
+   * étiquette, mais depuis le bureau on veut voir ce qui tourne.
+   */
+  listUnits(stage: CultureUnit['stage']): Promise<ApiResult<CultureUnit[]>> {
+    return this.get(`/api/units?stage=${encodeURIComponent(stage)}`);
+  }
+
+  createUnit(body: {
+    name: string;
+    stage: CultureUnit['stage'];
+    processVersionId: string;
+    stepId: string;
+    parentUnitId?: string | null;
+    substrateWeight?: { value: number; unit: string; kind: 'substrate' };
+  }): Promise<MutationResult<{ unit: CultureUnit; event: DomainEvent }>> {
+    return this.post('/api/units', body);
+  }
+
+  /** Lit le QR d'une unité, sans en créer. `null` quand elle n'en a pas encore. */
+  getQr(reference: string): Promise<ApiResult<{ token: string; printCount: number }>> {
+    return this.get(`/api/units/${encodeURIComponent(reference)}/qr`);
+  }
+
+  /** Attribue un QR, ou rend celui qui existe déjà — le token ne change jamais. */
+  assignQr(
+    reference: string,
+  ): Promise<MutationResult<{ token: string; printCount: number } & Record<string, unknown>>> {
+    return this.post(`/api/units/${encodeURIComponent(reference)}/qr`, {});
+  }
+
+  printLabel(
+    reference: string,
+    copies = 1,
+  ): Promise<MutationResult<{ status: string; isReprint: boolean; attempts: number }>> {
+    return this.post(`/api/units/${encodeURIComponent(reference)}/label/print`, { copies });
+  }
+
+  testPrinter(): Promise<ApiResult<{ transport: string; reachable: boolean }>> {
+    return this.get('/api/printer/test');
+  }
+
+  /**
+   * Attache une photo.
+   *
+   * L'image part en base64 dans du JSON, comme le reste de l'API : c'est ce que
+   * produit un canvas, et cela évite un envoi multipart qu'un agent ne saurait
+   * pas former.
+   */
+  addPhoto(
+    reference: string,
+    body: { data: string; contentType?: string; note?: string },
+  ): Promise<MutationResult<{ photo: { photoId: string }; event: DomainEvent }>> {
+    return this.post(`/api/units/${encodeURIComponent(reference)}/photos`, body);
+  }
+
+  /** Adresse d'affichage d'une photo. Le navigateur la met en cache pour toujours. */
+  photoUrl(photoId: string): string {
+    return `${this.options.baseUrl}/api/photos/${encodeURIComponent(photoId)}`;
+  }
+
   listProcessTemplates(): Promise<
     ApiResult<{ id: string; name: string; currentVersionId?: string }[]>
   > {

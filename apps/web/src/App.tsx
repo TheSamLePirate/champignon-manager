@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { CultureUnit, DomainEvent } from '@champi/contracts';
+import type { CultureUnit, DomainEvent, ProcessGraph, Stage } from '@champi/contracts';
 import { StatusBanner } from './components/StatusBanner.js';
 import { ScanPanel, type RecognisedScan } from './components/ScanPanel.js';
 import { UnitSheet, type NextStep } from './components/UnitSheet.js';
 import { ProcessWorkbench } from './components/ProcessWorkbench.js';
 import { ObservationForm, type ObservationDraft } from './components/ObservationForm.js';
 import { MeasureForm, type MeasureDraft } from './components/MeasureForm.js';
+import { UnitList } from './components/UnitList.js';
+import { UnitForm, type ProcessChoice, type UnitDraft } from './components/UnitForm.js';
+import { LabelPanel } from './components/LabelPanel.js';
+import { PhotoPanel } from './components/PhotoPanel.js';
 import type { ApiClient, MutationResult } from './lib/api-client.js';
 import type { OfflineQueue } from './lib/offline-queue.js';
 import type { ScanEnvironment } from './lib/scanner.js';
@@ -34,6 +38,8 @@ export interface AppProps {
   /** Accès caméra et décodage QR, injectés depuis le point d'entrée. */
   readonly ouvrirCamera: () => Promise<MediaStream>;
   readonly detecter: (source: HTMLVideoElement) => Promise<readonly string[]>;
+  /** Capture une image fixe du flux vidéo, en data-URL. Injectée : pas de canvas en test. */
+  readonly capturer: (source: HTMLVideoElement) => string;
 }
 
 interface LoadedUnit {
@@ -42,11 +48,20 @@ interface LoadedUnit {
   readonly nominalNext: readonly NextStep[];
 }
 
-/** Les deux vues de l'application. */
+/** Les vues de l'application. « Récoltes » arrive avec la vague 2. */
 type Vue = 'terrain' | 'process';
 
-/** Formulaire ouvert sous la fiche. Un seul à la fois : l'écran reste lisible. */
-type Saisie = 'aucune' | 'observation' | 'mesure';
+/** Les cinq stades, dans l'ordre de la chaîne de propagation. */
+const STAGES: readonly Stage[] = ['gelose', 'liquid_culture', 'grain', 'substrate', 'fruiting'];
+
+/** Formulaire ouvert. Un seul à la fois : l'écran reste lisible à bout de bras. */
+type Saisie = 'aucune' | 'observation' | 'mesure' | 'creation';
+
+/** Étiquette d'une unité, telle que l'écran la connaît. */
+interface Etiquette {
+  readonly token: string;
+  readonly printCount: number;
+}
 
 export function App({
   client,
@@ -56,6 +71,7 @@ export function App({
   now,
   ouvrirCamera,
   detecter,
+  capturer,
 }: AppProps): React.JSX.Element {
   const [vue, setVue] = useState<Vue>('terrain');
   const [saisie, setSaisie] = useState<Saisie>('aucune');
@@ -64,6 +80,10 @@ export function App({
   const [busy, setBusy] = useState(false);
   const [pendingCount, setPendingCount] = useState(queue.pendingCount());
   const [failedCount, setFailedCount] = useState(queue.failed().length);
+  const [unites, setUnites] = useState<readonly CultureUnit[]>([]);
+  const [chargementListe, setChargementListe] = useState(true);
+  const [etiquette, setEtiquette] = useState<Etiquette | null>(null);
+  const [processes, setProcesses] = useState<readonly ProcessChoice[]>([]);
 
   const refreshQueueCounts = useCallback(() => {
     setPendingCount(queue.pendingCount());
@@ -77,6 +97,46 @@ export function App({
     }
     void client.flushQueue().then(refreshQueueCounts);
   }, [online, client, refreshQueueCounts]);
+
+  /**
+   * Charge les unités de tous les stades.
+   *
+   * Cinq requêtes en parallèle plutôt qu'une : l'API liste **par stade**, et
+   * inventer un paramètre « tous » côté serveur pour l'écran d'accueil aurait
+   * ajouté une route que personne d'autre n'utilise.
+   */
+  const chargerListe = useCallback(async () => {
+    setChargementListe(true);
+    const lots = await Promise.all(STAGES.map((stage) => client.listUnits(stage)));
+    setUnites(lots.flatMap((lot) => (lot.ok ? lot.data : [])));
+    setChargementListe(false);
+  }, [client]);
+
+  /** Versions publiées, pour que la création propose des process utilisables. */
+  const chargerProcess = useCallback(async () => {
+    const templates = await client.listProcessTemplates();
+    if (!templates.ok) {
+      return;
+    }
+    const parModele = await Promise.all(
+      templates.data.map(async (template) => {
+        const versions = await client.listProcessVersions(template.id);
+        if (!versions.ok) {
+          return [];
+        }
+        // Seules les versions **publiées** : une unité épinglée à un brouillon
+        // se retrouverait rattachée à un graphe encore mouvant.
+        return versions.data
+          .filter((version) => version.status === 'published')
+          .map((version) => ({
+            versionId: version.id,
+            label: `${template.name} — version ${String(version.versionNumber)}`,
+            graph: version.graph as ProcessGraph,
+          }));
+      }),
+    );
+    setProcesses(parModele.flat());
+  }, [client]);
 
   /** Charge la fiche complète : identité, historique et suites possibles. */
   const loadUnit = useCallback(
@@ -99,10 +159,22 @@ export function App({
         events: timeline.ok ? timeline.data : [],
         nominalNext: steps.ok ? steps.data.nominal : [],
       });
+      // L'étiquette se **lit** sans être créée : demander « a-t-elle un QR ? »
+      // ne doit pas lui en attribuer un.
+      const qr = await client.getQr(reference);
+      setEtiquette(qr.ok ? { token: qr.data.token, printCount: qr.data.printCount } : null);
       setMessage(null);
     },
     [client],
   );
+
+  // La liste et les process se chargent à l'ouverture de la vue terrain.
+  useEffect(() => {
+    if (vue === 'terrain') {
+      void chargerListe();
+      void chargerProcess();
+    }
+  }, [vue, chargerListe, chargerProcess]);
 
   const openUnit = useCallback(
     async (input: RecognisedScan) => {
@@ -153,6 +225,98 @@ export function App({
     [loadUnit, refreshQueueCounts],
   );
 
+  /** Crée une unité, puis ouvre directement sa fiche : c'est la suite du geste. */
+  const creerUnite = useCallback(
+    async (draft: UnitDraft) => {
+      setBusy(true);
+      try {
+        const result = await client.createUnit(draft);
+        if ('queued' in result) {
+          // Une unité créée hors ligne n'aurait ni code public ni QR : on refuse
+          // franchement plutôt que de promettre une fiche qui n'existe pas.
+          setMessage('Création impossible hors ligne — reconnecte-toi pour démarrer une unité.');
+          return;
+        }
+        if (!result.ok) {
+          setMessage(result.error.hint ?? result.error.message);
+          return;
+        }
+        setSaisie('aucune');
+        await loadUnit(result.data.unit.publicCode);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [client, loadUnit],
+  );
+
+  /** Attribue un QR. Idempotent côté serveur : rappeler ne change pas le token. */
+  const attribuerQr = useCallback(
+    async (reference: string) => {
+      setBusy(true);
+      try {
+        const result = await client.assignQr(reference);
+        if ('queued' in result || !result.ok) {
+          setMessage(
+            'queued' in result
+              ? 'Attribution impossible hors ligne — le QR doit venir du serveur.'
+              : (result.error.hint ?? result.error.message),
+          );
+          return;
+        }
+        setEtiquette({ token: result.data.token, printCount: result.data.printCount });
+      } finally {
+        setBusy(false);
+      }
+    },
+    [client],
+  );
+
+  const imprimer = useCallback(
+    async (reference: string) => {
+      setBusy(true);
+      try {
+        const result = await client.printLabel(reference, 1);
+        if ('queued' in result) {
+          setMessage('Impression impossible hors ligne — l’imprimante est jointe par le serveur.');
+          return;
+        }
+        if (!result.ok) {
+          setMessage(result.error.hint ?? result.error.message);
+          return;
+        }
+        setMessage(
+          result.data.isReprint
+            ? 'Étiquette réimprimée — elle porte le même QR que la précédente.'
+            : 'Étiquette imprimée.',
+        );
+        const qr = await client.getQr(reference);
+        if (qr.ok) {
+          setEtiquette({ token: qr.data.token, printCount: qr.data.printCount });
+        }
+      } finally {
+        setBusy(false);
+      }
+    },
+    [client],
+  );
+
+  const testerImprimante = useCallback(async () => {
+    setBusy(true);
+    try {
+      const result = await client.testPrinter();
+      setMessage(
+        !result.ok
+          ? (result.error.hint ?? result.error.message)
+          : result.data.reachable
+            ? `Imprimante « ${result.data.transport} » : elle répond.`
+            : `Imprimante « ${result.data.transport} » : aucune réponse. Vérifie qu’elle est allumée et qu’aucune autre application ne la tient.`,
+      );
+    } finally {
+      setBusy(false);
+    }
+  }, [client]);
+
   const runAction = useCallback(
     async (action: () => Promise<MutationResult<unknown>>, reference: string) => {
       setBusy(true);
@@ -197,6 +361,42 @@ export function App({
       </nav>
 
       {vue === 'process' && <ProcessWorkbench client={client} onMessage={setMessage} />}
+
+      {vue === 'terrain' && loaded === null && saisie !== 'creation' && (
+        <>
+          <button
+            type="button"
+            className="bouton--principal"
+            onClick={() => {
+              setSaisie('creation');
+              setMessage(null);
+            }}
+          >
+            Nouvelle unité
+          </button>
+          <UnitList
+            unites={unites}
+            nowIso={now()}
+            chargement={chargementListe}
+            onOuvrir={(unite) => {
+              void loadUnit(unite.publicCode);
+            }}
+          />
+        </>
+      )}
+
+      {vue === 'terrain' && saisie === 'creation' && (
+        <UnitForm
+          processes={processes}
+          busy={busy}
+          onCancel={() => {
+            setSaisie('aucune');
+          }}
+          onSubmit={(draft: UnitDraft) => {
+            void creerUnite(draft);
+          }}
+        />
+      )}
 
       {message !== null && (
         <p className="message" role="status">
@@ -254,6 +454,48 @@ export function App({
               }}
             />
           )}
+
+          <LabelPanel
+            token={etiquette?.token ?? null}
+            printCount={etiquette?.printCount ?? 0}
+            busy={busy}
+            onAssigner={() => {
+              void attribuerQr(loaded.unit.publicCode);
+            }}
+            onImprimer={() => {
+              void imprimer(loaded.unit.publicCode);
+            }}
+            onTester={() => {
+              void testerImprimante();
+            }}
+          />
+
+          <PhotoPanel
+            events={loaded.events}
+            urlDe={(photoId) => client.photoUrl(photoId)}
+            ouvrirCamera={ouvrirCamera}
+            capturer={capturer}
+            busy={busy}
+            onPhoto={(dataUrl) => {
+              void runAction(
+                () => client.addPhoto(loaded.unit.publicCode, { data: dataUrl }),
+                loaded.unit.publicCode,
+              );
+            }}
+          />
+
+          <button
+            type="button"
+            className="bouton--secondaire"
+            onClick={() => {
+              setLoaded(null);
+              setEtiquette(null);
+              setMessage(null);
+              void chargerListe();
+            }}
+          >
+            Retour à la liste
+          </button>
         </UnitSheet>
       )}
 

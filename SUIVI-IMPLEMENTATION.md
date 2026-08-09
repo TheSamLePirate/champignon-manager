@@ -26,10 +26,10 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **1137** |
-| Scénarios end-to-end | — | **135** (API, CLI, Chrome, WebKit/iPhone) |
+| Tests unitaires et d'intégration | — | **1233** |
+| Scénarios end-to-end | — | **155** (API, CLI, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
-| Score de mutation global | ≥ 90 % | **92,23 %** |
+| Score de mutation global | ≥ 90 % | **91,95 %** |
 | Mutants sans couverture | 0 | **0** (voir D-24) |
 | Score de mutation `domain` | ≥ 90 % | **93,25 %** |
 | Score de mutation `contracts` | ≥ 90 % | ⚠️ **84,97 %** (voir D-4) |
@@ -747,6 +747,44 @@ sur du vrai matériel. C'était le risque P0-4, ouvert depuis le cadrage.
 Deux gardes mortes supprimées au passage : l'élément vidéo passe par un **état**
 plutôt qu'une `ref`, ce qui rend son absence réelle au premier rendu au lieu
 d'être une garde qu'aucun chemin n'atteignait.
+
+### D-34 — Vague 1 : l'application devient autonome, et les photos existent enfin
+
+Constat de départ, mesuré et non supposé : **l'API expose 28 opérations,
+l'interface en utilisait 13**. Il manquait de quoi démarrer une culture, voir ce
+qui tourne, étiqueter, imprimer, photographier — tout cela n'existait qu'en
+ligne de commande.
+
+**Le stockage des photos n'existait pas.** Une observation ne portait qu'un
+`photoId`, sans image derrière. La chaîne complète a été ajoutée : événement
+`unit.photo_added` dans les contrats, rejeu, dépôt sur disque, routes de dépôt
+et de relecture. Deux choix structurants :
+
+1. **L'image va sur le disque, sa référence au journal.** Une base gonflée de
+   binaires devient lente à sauvegarder — et c'est la sauvegarde qui protège la
+   traçabilité. Le journal reste léger, rejouable, auditable.
+2. **Le type de l'image se lit dans le journal**, jamais dans l'extension du
+   fichier : un fichier renommé sur le disque ne doit pas changer ce que
+   l'application croit servir.
+
+Conséquence à connaître : **sauvegarder la base ne suffit plus.** Le script
+archive déjà le dossier de fichiers ; c'est devenu indispensable.
+
+Ajouts d'interface : liste des unités groupée par stade, création d'unité,
+panneau d'étiquette (QR, impression, réimpression, test imprimante), panneau
+photos avec prise de vue et galerie. Une route de **lecture** du QR a dû être
+ajoutée — demander « cette unité a-t-elle une étiquette ? » ne doit pas lui en
+attribuer une.
+
+Quatre replis morts supprimés au passage : `TYPES[...] ?? 'bin'` sur une
+énumération fermée, un `try/catch` autour de `Buffer.from(..., 'base64')` qui ne
+lève jamais, un rétrécissement de type que le filtre Mongo rendait
+inatteignable — remplacé par un parsing avec le schéma précis — et une boucle
+d'arrêt de caméra dupliquée entre le bouton et le démontage.
+
+L'onglet « Récoltes » n'est **pas** livré dans cette vague : une troisième
+langue qui dirait « à venir » serait exactement le défaut de D-28, un
+affordance qui ne mène nulle part. Il arrivera avec son contenu.
 
 ---
 

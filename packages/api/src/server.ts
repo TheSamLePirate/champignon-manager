@@ -1,6 +1,7 @@
 import {
   connect,
   HarvestRepository,
+  PhotoStore,
   ProcessRepository,
   QrRepository,
   UnitRepository,
@@ -24,6 +25,12 @@ export interface ServerOptions {
   readonly dbName?: string;
   /** Transport d'impression. Le faux transport sert au développement et aux E2E. */
   readonly transport?: PrintTransport;
+  /**
+   * Dossier des images. Les photos vivent sur le disque, jamais dans la base :
+   * une base gonflée de binaires devient lente à sauvegarder, et c'est la
+   * sauvegarde qui protège la traçabilité.
+   */
+  readonly filesDir?: string;
   /**
    * Installe le modèle de process par défaut si la base est vierge.
    *
@@ -52,6 +59,7 @@ export async function assembleServer(options: ServerOptions = {}): Promise<Assem
   const qr = new QrRepository(connection);
   const processes = new ProcessRepository(connection);
   const harvests = new HarvestRepository(connection);
+  const photos = new PhotoStore(options.filesDir ?? './fichiers');
 
   await units.ensureIndexes();
   await qr.ensureIndexes();
@@ -67,6 +75,7 @@ export async function assembleServer(options: ServerOptions = {}): Promise<Assem
     qr,
     processes,
     harvests,
+    photos,
     printQueue: new PrintQueue(transport),
     now: () => new Date().toISOString(),
     newId: () => crypto.randomUUID(),

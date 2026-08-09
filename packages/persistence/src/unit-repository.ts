@@ -2,6 +2,7 @@ import {
   appError,
   cultureUnitSchema,
   domainEventSchema,
+  unitPhotoAddedEventSchema,
   type CultureUnit,
   type DomainEvent,
 } from '@champi/contracts';
@@ -104,6 +105,30 @@ export class UnitRepository {
       const { _id, ...rest } = document;
       return domainEventSchema.parse({ ...rest, id: _id });
     });
+  }
+
+  /**
+   * Retrouve l'événement qui a déposé une photo.
+   *
+   * C'est le journal qui fait foi sur le type de l'image, pas l'extension du
+   * fichier : un fichier renommé sur le disque ne doit pas changer ce que
+   * l'application croit servir.
+   */
+  async findPhotoEvent(
+    photoId: string,
+  ): Promise<(DomainEvent & { type: 'unit.photo_added' }) | null> {
+    const document = await this.events.findOne({
+      type: 'unit.photo_added',
+      'payload.photoId': photoId,
+    });
+    if (document === null) {
+      return null;
+    }
+    const { _id, ...rest } = document;
+    // On valide avec le schéma **précis** plutôt que l'union : le type est
+    // alors garanti par construction, sans rétrécissement après coup — donc
+    // sans branche que le filtre Mongo rend inatteignable.
+    return unitPhotoAddedEventSchema.parse({ ...rest, id: _id });
   }
 
   /** Crée une unité et son événement de naissance, atomiquement. */
