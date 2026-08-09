@@ -31,6 +31,9 @@ export interface AppProps {
   readonly online: boolean;
   /** Horloge. Elle n'existe qu'ici : le reste de l'interface la reçoit. */
   readonly now: () => string;
+  /** Accès caméra et décodage QR, injectés depuis le point d'entrée. */
+  readonly ouvrirCamera: () => Promise<MediaStream>;
+  readonly detecter: (source: HTMLVideoElement) => Promise<readonly string[]>;
 }
 
 interface LoadedUnit {
@@ -45,7 +48,15 @@ type Vue = 'terrain' | 'process';
 /** Formulaire ouvert sous la fiche. Un seul à la fois : l'écran reste lisible. */
 type Saisie = 'aucune' | 'observation' | 'mesure';
 
-export function App({ client, queue, environment, online, now }: AppProps): React.JSX.Element {
+export function App({
+  client,
+  queue,
+  environment,
+  online,
+  now,
+  ouvrirCamera,
+  detecter,
+}: AppProps): React.JSX.Element {
   const [vue, setVue] = useState<Vue>('terrain');
   const [saisie, setSaisie] = useState<Saisie>('aucune');
   const [loaded, setLoaded] = useState<LoadedUnit | null>(null);
@@ -254,6 +265,8 @@ export function App({ client, queue, environment, online, now }: AppProps): Reac
       {vue === 'terrain' && (
         <ScanPanel
           environment={environment}
+          ouvrirCamera={ouvrirCamera}
+          detecter={detecter}
           compact={loaded !== null}
           onScan={(input) => {
             void openUnit(input);

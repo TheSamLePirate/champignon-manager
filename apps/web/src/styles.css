@@ -939,3 +939,43 @@ legend {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Viseur.
+ *
+ * Plein cadre et carré : on approche le téléphone d'une étiquette de 50×30 mm,
+ * et un aperçu timbre-poste oblige à viser deux fois. Le fond noir fait
+ * ressortir le QR à travers la condensation.
+ */
+.viseur {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.viseur__video {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  border-radius: var(--rayon);
+  object-fit: cover;
+}
+
+.viseur__consigne,
+.viseur__refus {
+  margin: 0;
+  color: var(--encre-douce);
+}
+
+.viseur__refus {
+  padding: 0.85rem 1rem;
+  background: var(--creux);
+  border-radius: var(--rayon);
+  border-left: 6px solid var(--rouille);
+  color: var(--rouille);
+}
+
+.scan__camera {
+  min-height: var(--cible-large);
+  font-size: 1.15rem;
+}

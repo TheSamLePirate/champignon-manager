@@ -12,7 +12,7 @@
 | 3 | Persistance MongoDB, transactions, migrations | 4–5 j | ✅ **terminé** |
 | 4 | API Hono, OpenAPI, idempotence, erreurs | 5–6 j | ✅ **terminé** |
 | 5 | QR, publicCode, printJobs, Nimbot B21 | 3–4 j | ✅ **terminé** |
-| 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ⚠️ **terminé, capture caméra reportée** |
+| 6 | Socle web, scanner, file d'attente locale, a11y | 5–6 j | ✅ **terminé** — scan caméra validé sur iPhone (D-33) |
 | 7 | Suivi d'unité : fiche, timeline, étapes, mesures | 5–6 j | ✅ **terminé** |
 | 8 | Récolte → produit → traçabilité | 4–5 j | ✅ **terminé** |
 | 9 | Éditeur de process graphique | 11–15 j | ⚠️ **terminé après correction** (voir D-28) |
@@ -26,7 +26,7 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé · ⚠️ terminé avec
 
 | Indicateur | Cible | Réel |
 | --- | --- | --- |
-| Tests unitaires et d'intégration | — | **1121** |
+| Tests unitaires et d'intégration | — | **1137** |
 | Scénarios end-to-end | — | **135** (API, CLI, Chrome, WebKit/iPhone) |
 | Couverture lignes / branches / fonctions / instructions | 100 % | **100 % / 100 % / 100 % / 100 %** |
 | Score de mutation global | ≥ 90 % | **92,23 %** |
@@ -711,6 +711,43 @@ Le compose le dit en clair et `docs/23` §6 propose d'imprimer depuis l'hôte.
 La réserve « impression non branchée » du rapport d'audit est donc **remplacée**,
 pas supprimée : elle porte maintenant sur le Pi et le conteneur.
 
+### D-33 — ⚠️ Le scanner caméra n'existait pas — et il fonctionne désormais sur iPhone
+
+Découvert en répondant à une remarque du client : « pour scanner la fiche, l'app
+doit tourner en https ». La remarque était juste, mais le problème était plus
+profond : **la capture caméra n'existait nulle part.**
+
+`scanner.ts` ne faisait que *diagnostiquer* l'environnement — aucun
+`getUserMedia`, aucun élément vidéo, aucun décodage. `ScanPanel` l'annonçait
+d'ailleurs : « la capture caméra sera activée après validation sur iPhone ».
+Même servie en HTTPS, l'application n'aurait donc rien scanné. Le lot 6 était
+marqué « capture caméra reportée » ; en réalité elle n'était pas commencée.
+
+**Le piège de fond : Safari n'implémente pas `BarcodeDetector`.** Le diagnostic
+exigeait ce support et aurait donc affiché « ce navigateur ne sait pas décoder
+les QR » sur le seul appareil qui compte. L'application embarque désormais son
+propre décodeur WebAssembly, servi en local comme le reste ; le navigateur ne
+fournit que la caméra.
+
+Le viseur reçoit **caméra et décodeur en paramètres**, ce qui le rend testable
+sans matériel (14 tests) : ouverture, lecture, refus d'autorisation, résistance
+à une image illisible, et libération de la caméra — une caméra oubliée chauffe
+le téléphone et vide la batterie en pleine tournée. Deux détails iOS qui ne
+s'inventent pas : `playsInline`, sans lequel Safari bascule en plein écran et
+rend le cadrage impossible, et `facingMode: environment`, sans quoi on filme le
+plafond.
+
+**Vérifié de bout en bout, physiquement, le 09/08/2026** : étiquette imprimée
+sur la B21 → application servie en HTTPS par `tailscale serve` (certificat
+valide) → Safari sur iPhone → scan du QR → **la fiche s'ouvre**.
+
+La chaîne complète — ruban, token opaque, radio, réseau, caméra, décodeur — tient
+sur du vrai matériel. C'était le risque P0-4, ouvert depuis le cadrage.
+
+Deux gardes mortes supprimées au passage : l'élément vidéo passe par un **état**
+plutôt qu'une `ref`, ce qui rend son absence réelle au premier rendu au lieu
+d'être une garde qu'aucun chemin n'atteignait.
+
 ---
 
 ## Prochaine étape
@@ -718,11 +755,14 @@ pas supprimée : elle porte maintenant sur le Pi et le conteneur.
 **La tranche verticale est complète.** Les douze lots sont livrés, la CI produit
 son rapport d'audit, la production se déploie et se sauvegarde.
 
-Ce qui reste n'est pas du code mais de la **mise en service sur place** :
-dérouler la recette de `docs/23` §7 chez le cultivateur — scan caméra sur
-iPhone réel, impression B21 branchée, budgets de performance rejoués sur le Pi
-avec `CHAMPI_PERF_FACTOR`. Les trois réserves du rapport d'audit se lèvent là,
-et nulle part ailleurs.
+**Deux des trois réserves d'origine sont levées** (09/08/2026, sur matériel) :
+l'impression B21 sort une étiquette, et son QR scanné depuis un iPhone réel
+ouvre la fiche.
+
+Reste ce qui ne se vérifie qu'à la ferme : les **budgets de performance rejoués
+sur le Raspberry Pi** (`CHAMPI_PERF_FACTOR`), et l'**impression depuis le Pi** —
+le conteneur n'imprime volontairement pas (`docs/23` §6). La recette de
+`docs/23` §8 les couvre.
 
 Ensuite seulement, élargir : stockage des photos (aujourd'hui seul le `photoId`
 est enregistré), stades amont (gélose, culture liquide, grain) au-delà de leur

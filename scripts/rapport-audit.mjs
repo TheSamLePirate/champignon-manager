@@ -161,6 +161,12 @@ const PROMESSES = [
     origine: 'q12_4',
   },
   {
+    promesse: 'Le scan caméra ouvre la fiche depuis un iPhone réel',
+    preuve:
+      'Vérifié le 09/08/2026 : Safari iOS sur tailnet HTTPS (tailscale serve), QR d’une étiquette B21 imprimée → la fiche SUB-2026-0001 s’ouvre. Safari n’ayant pas BarcodeDetector, le décodage passe par un décodeur embarqué.',
+    origine: 'claude-critics.md P0-4',
+  },
+  {
     promesse: 'L’étiquette sort réellement de la Nimbot B21',
     preuve:
       'Vérifié sur matériel le 09/08/2026 : POST /api/units/SUB-2026-0001/label/print → status « printed », une étiquette imprimée (B21_Pro-HC19050441)',
@@ -229,12 +235,6 @@ const RESERVES = [
     detail:
       'Le pilote Nimbot B21 Pro est branché et une étiquette est réellement sortie le 09/08/2026 (B21_Pro-HC19050441, via POST /label/print). Restent non vérifiés : l’impression depuis le Pi, et depuis un conteneur — que l’image de production ne permet pas volontairement (modules natifs, D-Bus hôte).',
     origine: 'docs/23 §6',
-  },
-  {
-    sujet: 'Capture caméra non validée sur iPhone',
-    detail:
-      'getUserMedia sous Safari iOS via tailscale serve n’a jamais été testé sur un appareil réel. La saisie manuelle du code sert de repli permanent.',
-    origine: 'suivi D-11',
   },
   {
     sujet: 'Mutation limitée à domain et contracts',

@@ -275,15 +275,17 @@ Trois propriétés qui rendent l'outil utilisable sans documentation :
 | 2 | L'application répond | `curl -s localhost:3000/api/health` |
 | 3 | Le modèle par défaut est là et publié | `champi process:list` |
 | 4 | L'URL Tailscale s'ouvre en HTTPS sur l'iPhone | Safari, URL MagicDNS |
-| 5 | **Le scan caméra fonctionne sur l'iPhone réel** | Scanner une étiquette imprimée |
+| 5 | Le scan caméra ouvre la fiche | Safari sur iPhone, scanner une étiquette imprimée — ✅ validé le 09/08/2026 |
 | 6 | L'imprimante répond **et sort une étiquette** | `champi printer:test`, puis `champi label:print <code>` |
 | 7 | La sauvegarde s'exécute **et se vérifie** | `bun run sauvegarde` |
 | 8 | Une restauration se déroule sans écart | `node scripts/sauvegarde.mjs verifier <archive>` |
 | 9 | Les budgets de performance tiennent **sur le Pi** | `CHAMPI_PERF_FACTOR=6 bun run e2e` |
 
-Les points **5**, **6** et **9** ne peuvent pas être vérifiés depuis une machine
-de développement — ils sont ouverts jusqu'à la mise en service réelle, et
-figurent comme réserves dans le rapport d'audit.
+Les points **5** et **6** ont été vérifiés sur matériel le 09/08/2026, depuis un
+Mac : étiquette imprimée sur la B21, scan du QR depuis un iPhone réel via
+`tailscale serve`. Restent ouverts le point **9** — les budgets de performance
+sur le Pi — et l'impression **depuis le Pi**, que le conteneur ne permet pas
+(§6). Ce sont les réserves qui subsistent au rapport d'audit.
 
 ---
 

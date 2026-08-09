@@ -10,7 +10,6 @@ import {
 const capable: ScanEnvironment = {
   isSecureContext: true,
   hasMediaDevices: true,
-  hasBarcodeDetector: true,
 };
 
 const TOKEN = 'ABCDEFGHJKMNPQRSTUVWXY';
@@ -43,19 +42,19 @@ describe('diagnoseScanning', () => {
     expect(result.message).toContain('à la main');
   });
 
-  it('signale un navigateur sans décodeur QR, en rappelant le repli', () => {
-    const result = diagnoseScanning({ ...capable, hasBarcodeDetector: false });
-    expect(result.available).toBe(false);
-    if (result.available) return;
-    expect(result.reason).toBe('no-barcode-detector');
-    expect(result.message).toContain('saisie manuelle');
+  /**
+   * Safari n'implémente pas `BarcodeDetector` — et c'est le navigateur du
+   * cultivateur. L'application embarque son propre décodeur : l'absence de
+   * support natif n'est donc plus un motif de blocage.
+   */
+  it('n’exige pas de décodeur QR natif', () => {
+    expect(diagnoseScanning(capable).available).toBe(true);
   });
 
   it('donne la priorité au HTTPS quand plusieurs causes se cumulent', () => {
     const result = diagnoseScanning({
       isSecureContext: false,
       hasMediaDevices: false,
-      hasBarcodeDetector: false,
     });
     expect(result.available).toBe(false);
     if (result.available) return;
@@ -69,33 +68,19 @@ describe('readScanEnvironment', () => {
       readScanEnvironment({
         isSecureContext: true,
         navigator: { mediaDevices: {} },
-        BarcodeDetector: {},
       }),
     ).toEqual(capable);
   });
 
   it('détecte l’absence de caméra', () => {
-    const environment = readScanEnvironment({
-      isSecureContext: true,
-      navigator: {},
-      BarcodeDetector: {},
-    });
+    const environment = readScanEnvironment({ isSecureContext: true, navigator: {} });
     expect(environment.hasMediaDevices).toBe(false);
-  });
-
-  it('détecte l’absence de décodeur', () => {
-    const environment = readScanEnvironment({
-      isSecureContext: true,
-      navigator: { mediaDevices: {} },
-    });
-    expect(environment.hasBarcodeDetector).toBe(false);
   });
 
   it('détecte un contexte non sécurisé', () => {
     const environment = readScanEnvironment({
       isSecureContext: false,
       navigator: { mediaDevices: {} },
-      BarcodeDetector: {},
     });
     expect(environment.isSecureContext).toBe(false);
   });

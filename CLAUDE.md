@@ -170,5 +170,6 @@ Dans les docs, marquer ces points **« à confirmer »** plutôt que d'inventer 
 3. ✅ ~~Dé-risquer l'impression Nimbot B21~~ — **testée, fonctionne**.
 4. ✅ ~~Définir la tranche verticale MVP et estimer la charge~~ — **`docs/22`**, 12 lots. Exigences : éditeur de process **graphique**, 100 % de couverture + mutation, E2E + rapport d'audit, application **pilotable à 100 % par un LLM** (API + CLI ; le serveur MCP a été écarté — D-20).
 5. ✅ ~~Écrire la tranche verticale~~ — **les douze lots sont livrés.** 1044 tests, 117 scénarios E2E, 100 % de couverture, 92,23 % de mutation, rapport d'audit publié en CI.
-6. **Ce qui reste ne s'écrit pas ici : ça se vérifie à la ferme.** Dérouler la recette de `docs/23` §7 — scan caméra sur **iPhone réel**, impression **B21 branchée**, budgets de performance rejoués **sur le Pi** (`CHAMPI_PERF_FACTOR`). Ce sont les trois réserves du rapport d'audit ; aucune ne se lève depuis une machine de développement.
-7. Ensuite seulement, élargir : stockage des photos (seul le `photoId` est enregistré aujourd'hui), stades amont au-delà du modèle par défaut, alarmes.
+6. ✅ ~~Impression B21 et scan caméra~~ — **vérifiés sur matériel le 09/08/2026** : une étiquette sort de la B21, son QR scanné depuis un iPhone réel (Safari, HTTPS Tailscale) ouvre la fiche. Deux des trois réserves d'origine sont levées.
+7. **Ce qui reste ne se vérifie qu'à la ferme** : budgets de performance rejoués **sur le Raspberry Pi** (`CHAMPI_PERF_FACTOR`), et impression **depuis le Pi** — le conteneur n'imprime volontairement pas (`docs/23` §6). Dérouler la recette de `docs/23` §8.
+8. Ensuite seulement, élargir : stockage des photos (seul le `photoId` est enregistré aujourd'hui), stades amont au-delà du modèle par défaut, alarmes.

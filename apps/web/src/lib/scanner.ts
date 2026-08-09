@@ -1,13 +1,18 @@
 /**
  * Scanner QR web.
  *
- * ⚠️ **Point de risque restant du projet.** Le scanner exige `getUserMedia`,
- * donc un contexte sécurisé sous Safari iOS. Tailscale fournit HTTPS via
- * `tailscale serve` et un certificat Let's Encrypt (docs/21, P0-4) — le chemin
- * est correct sur le papier, mais **n'a pas encore été validé sur un iPhone
- * réel**. C'est le seul spike encore ouvert.
+ * **Validé sur iPhone réel le 09/08/2026** : Safari iOS, application servie en
+ * HTTPS par `tailscale serve`, étiquette imprimée sur la B21 — le scan ouvre la
+ * fiche. C'était le dernier risque ouvert du projet (P0-4).
  *
- * Ce module est écrit pour que ce risque ne bloque rien :
+ * Deux conditions restent structurantes, et ce module les rend visibles :
+ *
+ * - **HTTPS obligatoire** : `getUserMedia` exige un contexte sécurisé. Une
+ *   adresse IP en clair ne marchera jamais, c'est la première cause d'échec ;
+ * - **Safari n'implémente pas `BarcodeDetector`** : l'application embarque son
+ *   propre décodeur. Le navigateur ne fournit que la caméra.
+ *
+ * Ce module est écrit pour qu'aucun de ces deux points ne bloque le travail :
  *
  * - il **diagnostique** l'environnement au lieu d'échouer sur un message
  *   générique — un opérateur en chambre doit savoir si le problème vient du
@@ -21,13 +26,11 @@ export type ScanCapability =
   | { readonly available: true }
   | { readonly available: false; readonly reason: ScanBlockReason; readonly message: string };
 
-export type ScanBlockReason =
-  'insecure-context' | 'no-camera-api' | 'no-barcode-detector' | 'permission-denied';
+export type ScanBlockReason = 'insecure-context' | 'no-camera-api' | 'permission-denied';
 
 export interface ScanEnvironment {
   readonly isSecureContext: boolean;
   readonly hasMediaDevices: boolean;
-  readonly hasBarcodeDetector: boolean;
 }
 
 /**
@@ -54,14 +57,10 @@ export function diagnoseScanning(environment: ScanEnvironment): ScanCapability {
         "Ce navigateur n'expose pas de caméra. Sur iPhone, utilise Safari ; sinon, saisis le code de l'étiquette à la main.",
     };
   }
-  if (!environment.hasBarcodeDetector) {
-    return {
-      available: false,
-      reason: 'no-barcode-detector',
-      message:
-        'Ce navigateur ne sait pas décoder les QR nativement. La saisie manuelle du code reste disponible.',
-    };
-  }
+  // Plus de vérification du décodage natif : Safari n'implémente pas
+  // `BarcodeDetector`, et c'est précisément le navigateur du cultivateur.
+  // L'application embarque donc son propre décodeur — le navigateur n'a
+  // besoin de fournir que la caméra.
   return { available: true };
 }
 
@@ -69,12 +68,10 @@ export function diagnoseScanning(environment: ScanEnvironment): ScanCapability {
 export function readScanEnvironment(win: {
   isSecureContext: boolean;
   navigator: { mediaDevices?: unknown };
-  BarcodeDetector?: unknown;
 }): ScanEnvironment {
   return {
     isSecureContext: win.isSecureContext,
     hasMediaDevices: win.navigator.mediaDevices !== undefined,
-    hasBarcodeDetector: win.BarcodeDetector !== undefined,
   };
 }
 

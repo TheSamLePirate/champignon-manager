@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { diagnoseScanning, interpretScan, type ScanEnvironment } from '../lib/scanner.js';
+import { CameraScanner } from './CameraScanner.js';
 
 /**
  * Panneau de scan, avec saisie manuelle en repli permanent.
@@ -22,6 +23,10 @@ export type RecognisedScan =
 export interface ScanPanelProps {
   readonly environment: ScanEnvironment;
   readonly onScan: (input: RecognisedScan) => void;
+  /** Ouvre la caméra. Injecté : le composant reste testable sans matériel. */
+  readonly ouvrirCamera: () => Promise<MediaStream>;
+  /** Décode les QR d'une image. Injecté pour la même raison. */
+  readonly detecter: (source: HTMLVideoElement) => Promise<readonly string[]>;
   /**
    * Une fiche est déjà ouverte : le panneau se réduit à l'essentiel.
    *
@@ -34,9 +39,12 @@ export interface ScanPanelProps {
 export function ScanPanel({
   environment,
   onScan,
+  ouvrirCamera,
+  detecter,
   compact = false,
 }: ScanPanelProps): React.JSX.Element {
   const [manual, setManual] = useState('');
+  const [viseurOuvert, setViseurOuvert] = useState(false);
   const capability = diagnoseScanning(environment);
   const interpreted = interpretScan(manual);
   const canSubmit = manual.trim().length > 0 && interpreted.kind !== 'unknown';
@@ -45,16 +53,31 @@ export function ScanPanel({
     <section className="scan" aria-labelledby="scan-title">
       <h2 id="scan-title">{compact ? 'Scanner une autre étiquette' : 'Scanner une étiquette'}</h2>
 
-      {compact ? null : capability.available ? (
-        // ⚠️ La capture caméra n'est pas encore branchée : elle attend la
-        // validation de `getUserMedia` sous Safari iOS via `tailscale serve`,
-        // dernier spike ouvert du projet (docs/22 §9). Annoncer honnêtement
-        // l'attente vaut mieux qu'un bouton qui ne ferait rien.
-        <p className="scan__unavailable" role="status">
-          Cet appareil peut scanner. La capture caméra sera activée après validation sur iPhone — en
-          attendant, saisis le code imprimé sous le QR.
-        </p>
-      ) : (
+      {capability.available ? (
+        viseurOuvert ? (
+          <CameraScanner
+            ouvrirCamera={ouvrirCamera}
+            detecter={detecter}
+            onScan={(input) => {
+              setViseurOuvert(false);
+              onScan(input);
+            }}
+            onFermer={() => {
+              setViseurOuvert(false);
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            className="scan__camera"
+            onClick={() => {
+              setViseurOuvert(true);
+            }}
+          >
+            Scanner avec la caméra
+          </button>
+        )
+      ) : compact ? null : (
         // Le diagnostic remplace le bouton : dire *pourquoi* ça ne marche pas
         // vaut mieux qu'un bouton qui échoue.
         <p className="scan__unavailable" role="status">

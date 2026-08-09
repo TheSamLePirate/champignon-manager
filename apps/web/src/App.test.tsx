@@ -13,8 +13,11 @@ const NOW = () => '2026-08-13T09:00:00.000Z';
 const capable: ScanEnvironment = {
   isSecureContext: true,
   hasMediaDevices: true,
-  hasBarcodeDetector: true,
 };
+
+/** Caméra et décodeur factices : aucun test n'ouvre de vraie caméra. */
+const CAMERA = () => Promise.resolve({ getTracks: () => [] } as unknown as MediaStream);
+const DETECTER = () => Promise.resolve([]);
 
 const unit: CultureUnit = {
   id: 'u-1',
@@ -104,6 +107,8 @@ describe('App', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
     expect(screen.getByRole('heading', { name: 'Champignon Manager' })).toBeInTheDocument();
@@ -120,6 +125,8 @@ describe('App', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
     await scan('SUB-2026-0042');
@@ -146,6 +153,8 @@ describe('App', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
@@ -166,6 +175,8 @@ describe('App', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
     await scan('SUB-2026-0042');
@@ -185,7 +196,15 @@ describe('App', () => {
     });
 
     render(
-      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
     await scan('SUB-2026-9999');
 
@@ -198,7 +217,15 @@ describe('App', () => {
     });
 
     render(
-      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
     await scan('SUB-2026-9999');
 
@@ -211,7 +238,15 @@ describe('App', () => {
     });
 
     render(
-      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
 
@@ -230,7 +265,15 @@ describe('App', () => {
     });
 
     render(
-      <App client={fakeClient()} queue={queue} environment={capable} online={true} now={NOW} />,
+      <App
+        client={fakeClient()}
+        queue={queue}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
     // Le panneau de scan porte lui aussi un `status` : on cible le bandeau.
     const banners = screen.getAllByRole('status');
@@ -252,6 +295,8 @@ describe('App', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
     expect(flushQueue).toHaveBeenCalled();
@@ -268,6 +313,8 @@ describe('App', () => {
         environment={capable}
         online={false}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
     expect(flushQueue).not.toHaveBeenCalled();
@@ -282,6 +329,8 @@ describe('App', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
 
@@ -296,7 +345,15 @@ describe('App', () => {
 describe('actions depuis la fiche', () => {
   async function openSheet(client: ApiClient): Promise<void> {
     render(
-      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
     await scan('SUB-2026-0042');
     await screen.findByRole('heading', { name: 'Pleurote bloc 1' });
@@ -486,7 +543,15 @@ describe('résolution de QR — chemins d’échec', () => {
         }),
     });
     render(
-      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
 
@@ -498,7 +563,15 @@ describe('résolution de QR — chemins d’échec', () => {
       resolveQr: () => mutationFailed({ code: 'NOT_FOUND', message: 'Token illisible.' }),
     });
     render(
-      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
     await scan('ABCDEFGHJKMNPQRSTUVWXY');
 
@@ -540,6 +613,8 @@ describe('vues', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
 
@@ -556,6 +631,8 @@ describe('vues', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
 
@@ -574,6 +651,8 @@ describe('vues', () => {
         environment={capable}
         online={true}
         now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
       />,
     );
 
@@ -590,7 +669,15 @@ describe('vues', () => {
       getUnit: () => mutationFailed({ code: 'NOT_FOUND', message: 'Unité inconnue.' }),
     });
     render(
-      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
 
     await scan('SUB-2026-0042');
@@ -606,7 +693,15 @@ describe('vues', () => {
         mutationFailed({ code: 'NOT_FOUND', message: 'Base injoignable.' }),
     });
     render(
-      <App client={client} queue={makeQueue()} environment={capable} online={true} now={NOW} />,
+      <App
+        client={client}
+        queue={makeQueue()}
+        environment={capable}
+        online={true}
+        now={NOW}
+        ouvrirCamera={CAMERA}
+        detecter={DETECTER}
+      />,
     );
 
     await userEvent.click(screen.getByRole('button', { name: 'Process' }));
